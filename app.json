@@ -1,0 +1,27 @@
+{
+  "expo": {
+    "name": "HealthCompetitionApp",
+    "slug": "health-competition-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "platforms": [
+      "ios",
+      "android",
+      "web"
+    ],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.healthcompetition.app"
+    },
+    "android": {
+      "package": "com.healthcompetition.app"
+    },
+    "web": {
+      "bundler": "webpack"
+    }
+  }
+}
