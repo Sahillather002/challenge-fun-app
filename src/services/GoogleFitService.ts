@@ -1,12 +1,42 @@
-import { Alert, Platform } from 'react-native';
+import { Platform } from "react-native";
+import * as AuthSession from "expo-auth-session";
+import * as SecureStore from "expo-secure-store";
+import Constants from "expo-constants";
 
-// Mock Google Fit service for Expo compatibility
-// In a real app, you would use Expo's health APIs or other health tracking solutions
+const GOOGLE_FIT_SCOPES = [
+  "https://www.googleapis.com/auth/fitness.activity.read",
+  "https://www.googleapis.com/auth/fitness.location.read",
+  "https://www.googleapis.com/auth/fitness.body.read",
+];
+
+// Web-compatible storage wrapper
+const storage = {
+  async getItem(key: string): Promise<string | null> {
+    if (Platform.OS === 'web') {
+      return localStorage.getItem(key);
+    }
+    return await SecureStore.getItemAsync(key);
+  },
+  async setItem(key: string, value: string): Promise<void> {
+    if (Platform.OS === 'web') {
+      localStorage.setItem(key, value);
+    } else {
+      await SecureStore.setItemAsync(key, value);
+    }
+  },
+  async deleteItem(key: string): Promise<void> {
+    if (Platform.OS === 'web') {
+      localStorage.removeItem(key);
+    } else {
+      await SecureStore.deleteItemAsync(key);
+    }
+  }
+};
 
 export class GoogleFitService {
   private static instance: GoogleFitService;
+  private accessToken: string | null = null;
   private isAuthorized = false;
-  private mockSteps = 0;
 
   static getInstance(): GoogleFitService {
     if (!GoogleFitService.instance) {
@@ -15,16 +45,60 @@ export class GoogleFitService {
     return GoogleFitService.instance;
   }
 
+  /**
+   * Authorize Google Fit via OAuth
+   */
   async authorize(): Promise<boolean> {
     try {
-      // Mock authorization for demo purposes
-      // In a real app, you would implement actual health app authorization
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      this.isAuthorized = true;
-      console.log('Health tracking authorization successful');
-      return true;
+      // Try stored token first
+      const storedToken = await storage.getItem("google_fit_token");
+      if (storedToken) {
+        this.accessToken = storedToken;
+        this.isAuthorized = true;
+        return true;
+      }
+
+      const clientId = Constants.expoConfig?.extra?.googleFitClientId;
+      if (!clientId) {
+        throw new Error("Google Fit Client ID not configured");
+      }
+
+      // For web, use different redirect URI
+      const redirectUri = Platform.OS === 'web' 
+        ? window.location.origin 
+        : AuthSession.makeRedirectUri({ scheme: 'com.healthcompetition.app' });
+
+      console.log('OAuth Config:', { clientId, redirectUri, platform: Platform.OS });
+
+      // Create discovery document for Google OAuth
+      const discovery = {
+        authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
+      };
+
+      // Create auth request - implicit flow without PKCE
+      const request = new AuthSession.AuthRequest({
+        clientId,
+        scopes: GOOGLE_FIT_SCOPES,
+        redirectUri,
+        responseType: AuthSession.ResponseType.Token,
+        usePKCE: false, // Disable PKCE for implicit flow
+      });
+
+      // Prompt for authorization
+      const result = await request.promptAsync(discovery);
+
+      console.log('OAuth Result:', result);
+
+      if (result.type === "success" && result.params.access_token) {
+        this.accessToken = result.params.access_token;
+        this.isAuthorized = true;
+        await storage.setItem("google_fit_token", this.accessToken);
+        return true;
+      }
+
+      return false;
     } catch (error) {
-      console.error('Health tracking authorization error:', error);
+      console.error("Google Fit authorization failed:", error);
       return false;
     }
   }
@@ -33,138 +107,167 @@ export class GoogleFitService {
     return this.isAuthorized;
   }
 
+  private async ensureAuthorized(): Promise<void> {
+    if (!this.isAuthorized || !this.accessToken) {
+      const authorized = await this.authorize();
+      if (!authorized) {
+        throw new Error("Google Fit not authorized");
+      }
+    }
+  }
+
+  /**
+   * Get today’s total steps
+   */
   async getTodaySteps(): Promise<number> {
-    if (!this.isAuthorized) {
-      const authorized = await this.authorize();
-      if (!authorized) {
-        throw new Error('Health tracking not authorized');
-      }
-    }
+    await this.ensureAuthorized();
 
-    try {
-      // Mock step data for demo purposes
-      // In a real app, you would fetch actual health data
-      this.mockSteps = Math.floor(Math.random() * 8000) + 4000;
-      return this.mockSteps;
-    } catch (error) {
-      console.error('Error getting today steps:', error);
-      return 0;
-    }
+    const now = new Date();
+    const startOfDay = new Date(now.setHours(0, 0, 0, 0)).getTime();
+    const endOfDay = Date.now();
+
+    return await this.fetchStepCount(startOfDay, endOfDay);
   }
 
+  /**
+   * Get weekly total steps
+   */
   async getWeeklySteps(): Promise<number> {
-    if (!this.isAuthorized) {
-      const authorized = await this.authorize();
-      if (!authorized) {
-        throw new Error('Health tracking not authorized');
-      }
-    }
+    await this.ensureAuthorized();
 
-    try {
-      // Mock weekly step data
-      return Math.floor(Math.random() * 50000) + 30000;
-    } catch (error) {
-      console.error('Error getting weekly steps:', error);
-      return 0;
-    }
+    const end = new Date();
+    const start = new Date();
+    start.setDate(end.getDate() - 7);
+
+    return await this.fetchStepCount(start.getTime(), end.getTime());
   }
 
+  /**
+   * Get monthly total steps
+   */
   async getMonthlySteps(): Promise<number> {
-    if (!this.isAuthorized) {
-      const authorized = await this.authorize();
-      if (!authorized) {
-        throw new Error('Health tracking not authorized');
-      }
-    }
+    await this.ensureAuthorized();
 
-    try {
-      // Mock monthly step data
-      return Math.floor(Math.random() * 200000) + 150000;
-    } catch (error) {
-      console.error('Error getting monthly steps:', error);
-      return 0;
-    }
+    const end = new Date();
+    const start = new Date();
+    start.setMonth(end.getMonth() - 1);
+
+    return await this.fetchStepCount(start.getTime(), end.getTime());
   }
 
-  async getStepsForDateRange(startDate: Date, endDate: Date): Promise<any[]> {
-    if (!this.isAuthorized) {
-      const authorized = await this.authorize();
-      if (!authorized) {
-        throw new Error('Health tracking not authorized');
-      }
-    }
+  /**
+   * Get daily step counts within a date range
+   */
+  async getStepsForDateRange(startDate: Date, endDate: Date): Promise<{ date: string; steps: number }[]> {
+    await this.ensureAuthorized();
 
-    try {
-      // Mock step data for date range
-      const days = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-      const mockData = [];
-      
-      for (let i = 0; i < days; i++) {
-        const date = new Date(startDate);
-        date.setDate(date.getDate() + i);
-        
-        mockData.push({
-          date: date.toISOString().split('T')[0],
-          steps: Math.floor(Math.random() * 8000) + 4000,
-        });
-      }
-      
-      return mockData;
-    } catch (error) {
-      console.error('Error getting steps for date range:', error);
-      return [];
-    }
+    const response = await this.fetchStepsByBucket(startDate.getTime(), endDate.getTime(), 86400000);
+
+    return response.map((bucket: any) => {
+      const steps = bucket.dataset[0]?.point?.reduce(
+        (sum: number, p: any) => sum + (p.value[0]?.intVal || 0),
+        0
+      );
+      return {
+        date: new Date(bucket.startTimeMillis).toISOString().split("T")[0],
+        steps: steps || 0,
+      };
+    });
   }
 
+  /**
+   * Start mock step recording (for UX flow)
+   */
   async startRecordingSteps(): Promise<void> {
-    if (!this.isAuthorized) {
-      const authorized = await this.authorize();
-      if (!authorized) {
-        throw new Error('Health tracking not authorized');
-      }
-    }
-
-    try {
-      // Mock step recording
-      console.log('Started recording steps');
-    } catch (error) {
-      console.error('Error starting step recording:', error);
-    }
+    await this.ensureAuthorized();
+    console.log("Started recording steps (Google Fit does this automatically)");
   }
 
   async stopRecordingSteps(): Promise<void> {
-    try {
-      // Mock stop recording
-      console.log('Stopped recording steps');
-    } catch (error) {
-      console.error('Error stopping step recording:', error);
-    }
+    console.log("Stopped recording steps (no explicit stop needed for Google Fit)");
   }
 
   async disconnect(): Promise<void> {
-    try {
-      this.isAuthorized = false;
-      console.log('Disconnected from health tracking');
-    } catch (error) {
-      console.error('Error disconnecting health tracking:', error);
-    }
+    await storage.deleteItem("google_fit_token");
+    this.accessToken = null;
+    this.isAuthorized = false;
+    console.log("Disconnected from Google Fit");
   }
 
-  // Helper method to check if health tracking is available
   static isHealthTrackingAvailable(): boolean {
-    return Platform.OS === 'ios' || Platform.OS === 'android';
+    return Platform.OS === "android"; // Google Fit is Android-only
   }
 
-  // Method to get user's fitness goals
   async getDailyGoal(): Promise<number> {
-    // This would typically be stored in your app's preferences
-    return 10000; // 10,000 steps default goal
+    // You can store user goals in storage or backend
+    const stored = await storage.getItem("daily_goal");
+    return stored ? parseInt(stored) : 10000; // default 10,000
   }
 
-  // Method to save user's fitness goals
   async saveDailyGoal(steps: number): Promise<void> {
-    // This would save to your app's preferences or backend
+    await storage.setItem("daily_goal", steps.toString());
     console.log(`Daily goal set to ${steps} steps`);
+  }
+
+  // 🔒 Internal method to fetch total steps between timestamps
+  private async fetchStepCount(startTimeMillis: number, endTimeMillis: number): Promise<number> {
+    const response = await fetch(
+      `https://www.googleapis.com/fitness/v1/users/me/dataset:aggregate`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${this.accessToken}`,
+        },
+        body: JSON.stringify({
+          aggregateBy: [
+            {
+              dataTypeName: "com.google.step_count.delta",
+              dataSourceId: "derived:com.google.step_count.delta:com.google.android.gms:estimated_steps",
+            },
+          ],
+          bucketByTime: { durationMillis: endTimeMillis - startTimeMillis },
+          startTimeMillis,
+          endTimeMillis,
+        }),
+      }
+    );
+
+    const data = await response.json();
+
+    if (!data.bucket?.length) return 0;
+
+    const steps = data.bucket[0].dataset[0]?.point?.reduce(
+      (sum: number, p: any) => sum + (p.value[0]?.intVal || 0),
+      0
+    );
+
+    return steps || 0;
+  }
+
+  // 🔒 Internal method to fetch bucketed step data for date ranges
+  private async fetchStepsByBucket(startTimeMillis: number, endTimeMillis: number, durationMillis: number): Promise<any[]> {
+    const response = await fetch(`https://www.googleapis.com/fitness/v1/users/me/dataset:aggregate`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${this.accessToken}`,
+      },
+      body: JSON.stringify({
+        aggregateBy: [
+          {
+            dataTypeName: "com.google.step_count.delta",
+            dataSourceId: "derived:com.google.step_count.delta:com.google.android.gms:estimated_steps",
+          },
+        ],
+        bucketByTime: { durationMillis },
+        startTimeMillis,
+        endTimeMillis,
+      }),
+    });
+
+    const data = await response.json();
+    return data.bucket || [];
   }
 }
 

@@ -16,7 +16,7 @@ import {
   RadioButton,
 } from 'react-native-paper';
 import { useRoute } from '@react-navigation/native';
-import { useAuth } from '../../context/MockAuthContext';
+import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { Payment } from '../../types';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';

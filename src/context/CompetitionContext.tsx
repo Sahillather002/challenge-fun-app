@@ -14,8 +14,8 @@ interface CompetitionState {
 
 interface CompetitionContextType extends CompetitionState {
   createCompetition: (competitionData: Partial<Competition>) => Promise<void>;
-  joinCompetition: (competitionId: string) => Promise<void>;
-  updateSteps: (competitionId: string, steps: number) => Promise<void>;
+  joinCompetition: (competitionId: string, userId: string) => Promise<void>;
+  updateSteps: (competitionId: string, userId: string, steps: number) => Promise<void>;
   getLeaderboard: (competitionId: string) => Promise<void>;
   getUserSteps: (competitionId: string) => Promise<void>;
 }
@@ -60,14 +60,13 @@ export const CompetitionProvider: React.FC<{ children: React.ReactNode }> = ({ c
   });
 
   useEffect(() => {
-    const unsubscribe = firebaseHelpers.firestore.onSnapshot('competitions', (snapshot) => {
+    const unsubscribe = firebaseHelpers.firestore.onSnapshot('competitions', (snapshot: any) => {
       const competitions = snapshot.docs.map((doc: any) => ({
         id: doc.id,
-        ...(doc.data ? doc.data() : doc.data),
+        ...doc.data(),
       })) as Competition[];
       dispatch({ type: 'SET_COMPETITIONS', payload: competitions });
     });
-
     return unsubscribe;
   }, []);
 
@@ -90,36 +89,41 @@ export const CompetitionProvider: React.FC<{ children: React.ReactNode }> = ({ c
         prizes: competitionData.prizes || { first: 60, second: 30, third: 10 },
       };
 
+
       const docRef = await firebaseHelpers.firestore.addDoc('competitions', newCompetition);
       dispatch({ type: 'SET_CURRENT_COMPETITION', payload: { ...newCompetition, id: docRef.id } });
     } catch (error: any) {
-      dispatch({ type: 'SET_ERROR', payload: error.message });
+      console.error('Create competition error:', error);
     }
+
+
   };
 
-  const joinCompetition = async (competitionId: string) => {
+  const joinCompetition = async (competitionId: string, userId: string) => {
     try {
       // Note: arrayUnion needs platform-specific handling
       const competitionDoc = await firebaseHelpers.firestore.getDoc('competitions', competitionId);
-      const competition = competitionDoc.data ? competitionDoc.data() : competitionDoc.data;
+      const competition = competitionDoc.data();
+      if (!competition) {
+        throw new Error('Competition not found');
+      }
       const participants = competition.participants || [];
-      participants.push(competitionId);
+      participants.push(userId);
       await firebaseHelpers.firestore.updateDoc('competitions', competitionId, { participants });
     } catch (error: any) {
       dispatch({ type: 'SET_ERROR', payload: error.message });
     }
   };
 
-  const updateSteps = async (competitionId: string, steps: number) => {
+  const updateSteps = async (competitionId: string, userId: string, steps: number) => {
     try {
       const stepData: StepData = {
-        userId: '', // This would come from auth context
+        userId,
         competitionId,
         date: new Date().toISOString().split('T')[0],
         steps,
         timestamp: new Date(),
       };
-
       await firebaseHelpers.firestore.addDoc('steps', stepData);
     } catch (error: any) {
       dispatch({ type: 'SET_ERROR', payload: error.message });
@@ -128,62 +132,37 @@ export const CompetitionProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   const getLeaderboard = async (competitionId: string) => {
     try {
-      let stepsSnapshot;
-      if (Platform.OS === 'web') {
-        const { query, where, getDocs, collection } = require('firebase/firestore');
-        const { firestore } = require('../config/firebase');
-        const stepsRef = collection(firestore, 'steps');
-        const q = query(stepsRef, where('competitionId', '==', competitionId));
-        stepsSnapshot = await getDocs(q);
-      } else {
-        const { firestore } = require('../config/firebase');
-        stepsSnapshot = await firestore().collection('steps').where('competitionId', '==', competitionId).get();
-      }
+      const q = firebaseHelpers.firestore.query('steps', { type: 'where', field: 'competitionId', operator: '==', value: competitionId });
+      const snapshot = await firebaseHelpers.firestore.getDocs(q);
+      const stepsData = snapshot.docs.map((doc: any) => doc.data() as StepData);
 
-      const stepsData = stepsSnapshot.docs.map((doc: any) => (doc.data ? doc.data() : doc.data) as StepData);
-      
-      // Aggregate steps by user
-      const userStepsMap = new Map<string, number>();
-      stepsData.forEach(step => {
-        const currentSteps = userStepsMap.get(step.userId) || 0;
-        userStepsMap.set(step.userId, currentSteps + step.steps);
-      });
 
-      // Convert to leaderboard entries
-      const leaderboard: LeaderboardEntry[] = Array.from(userStepsMap.entries())
-        .map(([userId, totalSteps], index) => ({
-          userId,
-          userName: `User ${userId}`, // This would fetch actual user names
-          totalSteps,
-          rank: index + 1,
-        }))
+      const userSteps = new Map<string, number>();
+      stepsData.forEach(s => userSteps.set(s.userId, (userSteps.get(s.userId) || 0) + s.steps));
+
+      const leaderboard = Array.from(userSteps.entries())
+        .map(([userId, totalSteps]) => ({ userId, totalSteps }))
         .sort((a, b) => b.totalSteps - a.totalSteps)
-        .map((entry, index) => ({ ...entry, rank: index + 1 }));
+        .map((entry, i) => ({ ...entry, rank: i + 1, userName: `User ${entry.userId}` }));
 
       dispatch({ type: 'SET_LEADERBOARD', payload: leaderboard });
     } catch (error: any) {
-      dispatch({ type: 'SET_ERROR', payload: error.message });
+      console.error('Leaderboard error:', error);
+      dispatch({ type: 'SET_ERROR', payload: error.message || 'Failed to load leaderboard' });
     }
+
+
   };
 
   const getUserSteps = async (competitionId: string) => {
     try {
-      let stepsSnapshot;
-      if (Platform.OS === 'web') {
-        const { query, where, getDocs, collection } = require('firebase/firestore');
-        const { firestore } = require('../config/firebase');
-        const stepsRef = collection(firestore, 'steps');
-        const q = query(stepsRef, where('competitionId', '==', competitionId));
-        stepsSnapshot = await getDocs(q);
-      } else {
-        const { firestore } = require('../config/firebase');
-        stepsSnapshot = await firestore().collection('steps').where('competitionId', '==', competitionId).get();
-      }
-
-      const stepsData = stepsSnapshot.docs.map((doc: any) => (doc.data ? doc.data() : doc.data) as StepData);
+      const q = firebaseHelpers.firestore.query('steps', { type: 'where', field: 'competitionId', operator: '==', value: competitionId });
+      const snapshot = await firebaseHelpers.firestore.getDocs(q);
+      const stepsData = snapshot.docs.map((doc: any) => doc.data() as StepData);
       dispatch({ type: 'SET_USER_STEPS', payload: stepsData });
     } catch (error: any) {
-      dispatch({ type: 'SET_ERROR', payload: error.message });
+      console.error('Get user steps error:', error);
+      dispatch({ type: 'SET_ERROR', payload: error.message || 'Failed to load user steps' });
     }
   };
 
@@ -205,8 +184,6 @@ export const CompetitionProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
 export const useCompetition = () => {
   const context = useContext(CompetitionContext);
-  if (context === undefined) {
-    throw new Error('useCompetition must be used within a CompetitionProvider');
-  }
+  if (!context) throw new Error('useCompetition must be used within a CompetitionProvider');
   return context;
 };

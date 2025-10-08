@@ -18,7 +18,7 @@ import {
 } from 'react-native-paper';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useCompetition } from '../../context/MockCompetitionContext';
-import { useAuth } from '../../context/MockAuthContext';
+import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { Competition } from '../../types';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';

@@ -11,8 +11,8 @@ import {
   ScrollView,
 } from 'react-native';
 import { Button, Card, Title, Paragraph } from 'react-native-paper';
-import { useAuth } from '../../context/MockAuthContext';
 import { useTheme } from '../../context/ThemeContext';
+import { useAuth } from '../../context/AuthContext';
 
 const RegisterScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const [formData, setFormData] = useState({
@@ -73,7 +73,7 @@ const RegisterScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   };
 
   return (
-    <KeyboardAvoidingView 
+    <KeyboardAvoidingView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
@@ -94,7 +94,7 @@ const RegisterScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             <TextInput
               style={[
                 styles.input,
-                { 
+                {
                   backgroundColor: theme.colors.surfaceVariant,
                   color: theme.colors.onSurfaceVariant,
                   borderColor: theme.colors.outline
@@ -109,7 +109,7 @@ const RegisterScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             <TextInput
               style={[
                 styles.input,
-                { 
+                {
                   backgroundColor: theme.colors.surfaceVariant,
                   color: theme.colors.onSurfaceVariant,
                   borderColor: theme.colors.outline
@@ -128,7 +128,7 @@ const RegisterScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                 style={[
                   styles.input,
                   styles.passwordInput,
-                  { 
+                  {
                     backgroundColor: theme.colors.surfaceVariant,
                     color: theme.colors.onSurfaceVariant,
                     borderColor: theme.colors.outline
@@ -155,7 +155,7 @@ const RegisterScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                 style={[
                   styles.input,
                   styles.passwordInput,
-                  { 
+                  {
                     backgroundColor: theme.colors.surfaceVariant,
                     color: theme.colors.onSurfaceVariant,
                     borderColor: theme.colors.outline
@@ -180,7 +180,7 @@ const RegisterScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             <TextInput
               style={[
                 styles.input,
-                { 
+                {
                   backgroundColor: theme.colors.surfaceVariant,
                   color: theme.colors.onSurfaceVariant,
                   borderColor: theme.colors.outline
@@ -195,7 +195,7 @@ const RegisterScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             <TextInput
               style={[
                 styles.input,
-                { 
+                {
                   backgroundColor: theme.colors.surfaceVariant,
                   color: theme.colors.onSurfaceVariant,
                   borderColor: theme.colors.outline

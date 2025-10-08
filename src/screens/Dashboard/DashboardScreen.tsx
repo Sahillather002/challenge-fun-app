@@ -16,7 +16,7 @@ import {
   ProgressBar,
 } from 'react-native-paper';
 import { LineChart, BarChart } from 'react-native-chart-kit';
-import { useAuth } from '../../context/MockAuthContext';
+import { useAuth } from '../../context/AuthContext';
 import { useCompetition } from '../../context/MockCompetitionContext';
 import { useTheme } from '../../context/ThemeContext';
 import GoogleFitCard from '../../components/GoogleFitCard';

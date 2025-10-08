@@ -11,8 +11,8 @@ import {
   ScrollView,
 } from 'react-native';
 import { Button, Card, Title, Paragraph } from 'react-native-paper';
-import { useAuth } from '../../context/MockAuthContext';
 import { useTheme } from '../../context/ThemeContext';
+import { useAuth } from '../../context/AuthContext';
 
 const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const [email, setEmail] = useState('');
@@ -44,7 +44,7 @@ const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   };
 
   return (
-    <KeyboardAvoidingView 
+    <KeyboardAvoidingView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
@@ -61,11 +61,11 @@ const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         <Card style={styles.card}>
           <Card.Content>
             <Title style={styles.cardTitle}>Welcome Back</Title>
-            
+
             <TextInput
               style={[
                 styles.input,
-                { 
+                {
                   backgroundColor: theme.colors.surfaceVariant,
                   color: theme.colors.onSurfaceVariant,
                   borderColor: theme.colors.outline
@@ -84,7 +84,7 @@ const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                 style={[
                   styles.input,
                   styles.passwordInput,
-                  { 
+                  {
                     backgroundColor: theme.colors.surfaceVariant,
                     color: theme.colors.onSurfaceVariant,
                     borderColor: theme.colors.outline

@@ -3,12 +3,12 @@ const createExpoWebpackConfigAsync = require('@expo/webpack-config');
 module.exports = async function (env, argv) {
   const config = await createExpoWebpackConfigAsync(env, argv);
 
-  // Exclude React Native Firebase packages from web builds
-  config.externals = {
-    ...config.externals,
-    '@react-native-firebase/app': 'commonjs @react-native-firebase/app',
-    '@react-native-firebase/auth': 'commonjs @react-native-firebase/auth',
-    '@react-native-firebase/firestore': 'commonjs @react-native-firebase/firestore',
+  // Completely ignore React Native Firebase packages on web
+  config.resolve.alias = {
+    ...config.resolve.alias,
+    '@react-native-firebase/app': false,
+    '@react-native-firebase/auth': false,
+    '@react-native-firebase/firestore': false,
   };
 
   // Add resolve fallbacks for Node.js modules
@@ -16,6 +16,13 @@ module.exports = async function (env, argv) {
     ...config.resolve.fallback,
     'react-native/Libraries/vendor/emitter/EventEmitter': false,
   };
+
+  // Ignore these modules during bundling
+  config.plugins.push(
+    new (require('webpack')).IgnorePlugin({
+      resourceRegExp: /@react-native-firebase/,
+    })
+  );
 
   return config;
 };

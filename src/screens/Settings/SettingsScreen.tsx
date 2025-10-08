@@ -17,7 +17,7 @@ import {
   List,
   Divider,
 } from 'react-native-paper';
-import { useAuth } from '../../context/MockAuthContext';
+import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 

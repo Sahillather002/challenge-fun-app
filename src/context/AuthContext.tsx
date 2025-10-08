@@ -43,19 +43,59 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
 
   useEffect(() => {
-    const unsubscribe = firebaseHelpers.auth.onAuthStateChanged(async (firebaseUser) => {
-      if (firebaseUser) {
-        try {
-          const userDoc = await firebaseHelpers.firestore.getDoc('users', firebaseUser.uid);
-          if (userDoc.exists) {
-            const userData = userDoc.data ? userDoc.data() : userDoc.data;
-            dispatch({ type: 'SET_USER', payload: userData as User });
+    const unsubscribe = firebaseHelpers.auth.onAuthStateChanged(async (firebaseUser: any) => {
+      if (!firebaseUser) {
+        dispatch({ type: 'SET_USER', payload: null });
+        return;
+      }
+
+      try {
+        const userDoc = await firebaseHelpers.firestore.getDoc('users', firebaseUser.uid);
+        if (userDoc.exists()) {
+          const data = userDoc.data();
+          dispatch({ type: 'SET_USER', payload: data as User });
+        } else {
+          // User document doesn't exist yet - create a basic user object from Firebase Auth
+          const basicUser: User = {
+            id: firebaseUser.uid,
+            email: firebaseUser.email || '',
+            name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
+            company: '',
+            department: '',
+            totalSteps: 0,
+            competitionsWon: 0,
+            joinedDate: new Date(),
+          };
+          
+          // Try to create the user document
+          try {
+            await firebaseHelpers.firestore.setDoc('users', firebaseUser.uid, basicUser);
+            dispatch({ type: 'SET_USER', payload: basicUser });
+          } catch (createError) {
+            console.warn('Could not create user document, using basic user:', createError);
+            // Still set the user even if we can't create the document
+            dispatch({ type: 'SET_USER', payload: basicUser });
           }
-        } catch (error) {
+        }
+      } catch (error: any) {
+        console.error('Failed to fetch user data:', error);
+        
+        // If offline or connection error, create a basic user from auth data
+        if (error.code === 'unavailable' || error.message?.includes('offline')) {
+          const basicUser: User = {
+            id: firebaseUser.uid,
+            email: firebaseUser.email || '',
+            name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
+            company: '',
+            department: '',
+            totalSteps: 0,
+            competitionsWon: 0,
+            joinedDate: new Date(),
+          };
+          dispatch({ type: 'SET_USER', payload: basicUser });
+        } else {
           dispatch({ type: 'SET_ERROR', payload: 'Failed to fetch user data' });
         }
-      } else {
-        dispatch({ type: 'SET_USER', payload: null });
       }
     });
 
@@ -67,8 +107,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       await firebaseHelpers.auth.signInWithEmailAndPassword(email, password);
     } catch (error: any) {
-      dispatch({ type: 'SET_ERROR', payload: error.message });
-      throw error;
+      console.error('Login error:', error);
+      
+      // Provide user-friendly error messages
+      let errorMessage = 'Login failed';
+      
+      if (error.code === 'auth/invalid-login-credentials' || error.code === 'auth/invalid-credential') {
+        errorMessage = 'Invalid email or password. Please check your credentials and try again.';
+      } else if (error.code === 'auth/user-not-found') {
+        errorMessage = 'No account found with this email. Please register first.';
+      } else if (error.code === 'auth/wrong-password') {
+        errorMessage = 'Incorrect password. Please try again.';
+      } else if (error.code === 'auth/invalid-email') {
+        errorMessage = 'Invalid email address format.';
+      } else if (error.code === 'auth/user-disabled') {
+        errorMessage = 'This account has been disabled. Please contact support.';
+      } else if (error.code === 'auth/too-many-requests') {
+        errorMessage = 'Too many failed login attempts. Please try again later.';
+      } else if (error.code === 'auth/network-request-failed') {
+        errorMessage = 'Network error. Please check your internet connection.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      dispatch({ type: 'SET_ERROR', payload: errorMessage });
+      throw new Error(errorMessage);
     }
   };
 
@@ -77,9 +140,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const { email, password, ...otherData } = userData;
       const userCredential = await firebaseHelpers.auth.createUserWithEmailAndPassword(email, password);
-      
+      const uid = userCredential.user.uid;
+
       const newUser: User = {
-        id: userCredential.user.uid,
+        id: uid,
         email,
         ...otherData,
         totalSteps: 0,
@@ -87,11 +151,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         joinedDate: new Date(),
       };
 
-      await firebaseHelpers.firestore.setDoc('users', newUser.id, newUser);
+      await firebaseHelpers.firestore.setDoc('users', uid, newUser);
       dispatch({ type: 'SET_USER', payload: newUser });
     } catch (error: any) {
-      dispatch({ type: 'SET_ERROR', payload: error.message });
-      throw error;
+      console.error('Registration error:', error);
+      
+      // Provide user-friendly error messages
+      let errorMessage = 'Registration failed';
+      
+      if (error.code === 'auth/email-already-in-use') {
+        errorMessage = 'This email is already registered. Please login instead.';
+      } else if (error.code === 'auth/invalid-email') {
+        errorMessage = 'Invalid email address format.';
+      } else if (error.code === 'auth/weak-password') {
+        errorMessage = 'Password is too weak. Please use at least 6 characters.';
+      } else if (error.code === 'auth/operation-not-allowed') {
+        errorMessage = 'Email/password accounts are not enabled. Please contact support.';
+      } else if (error.code === 'auth/network-request-failed') {
+        errorMessage = 'Network error. Please check your internet connection.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      dispatch({ type: 'SET_ERROR', payload: errorMessage });
+      throw new Error(errorMessage);
     }
   };
 
@@ -100,18 +183,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await firebaseHelpers.auth.signOut();
       dispatch({ type: 'SET_USER', payload: null });
     } catch (error: any) {
-      dispatch({ type: 'SET_ERROR', payload: error.message });
+      console.error('Logout error:', error);
+      dispatch({ type: 'SET_ERROR', payload: error.message || 'Logout failed' });
     }
   };
 
   const updateUser = async (userData: Partial<User>) => {
     if (!state.user) return;
-    
     try {
       await firebaseHelpers.firestore.updateDoc('users', state.user.id, userData);
       dispatch({ type: 'SET_USER', payload: { ...state.user, ...userData } });
     } catch (error: any) {
-      dispatch({ type: 'SET_ERROR', payload: error.message });
+      console.error('Update user error:', error);
+      dispatch({ type: 'SET_ERROR', payload: error.message || 'Update failed' });
     }
   };
 
@@ -132,8 +216,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
+  if (!context) throw new Error('useAuth must be used within an AuthProvider');
   return context;
 };
