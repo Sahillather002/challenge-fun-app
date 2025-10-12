@@ -20,6 +20,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useCompetition } from '../../context/MockCompetitionContext';
 import { useTheme } from '../../context/ThemeContext';
 import GoogleFitCard from '../../components/GoogleFitCard';
+import GoogleFitService from '../../services/GoogleFitService';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const { width } = Dimensions.get('window');
@@ -28,26 +29,68 @@ const DashboardScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const [currentSteps, setCurrentSteps] = useState(0);
   const [weeklySteps, setWeeklySteps] = useState(0);
   const [stepHistory, setStepHistory] = useState([0, 0, 0, 0, 0, 0, 0]);
+  const [isConnected, setIsConnected] = useState(false);
+  const [loading, setLoading] = useState(false);
   const { user } = useAuth();
   const { competitions, currentCompetition } = useCompetition();
   const { theme } = useTheme();
 
+  const googleFitService = GoogleFitService.getInstance();
+
   useEffect(() => {
-    // Initialize dashboard data
-    generateMockData();
+    // Check if Google Fit is connected and fetch real data
+    checkConnectionAndFetchData();
   }, []);
 
-  const generateMockData = () => {
-    // Mock step history for the week
-    const mockHistory = Array.from({ length: 7 }, () => 
-      Math.floor(Math.random() * 8000) + 4000
-    );
-    setStepHistory(mockHistory);
-    setWeeklySteps(mockHistory.reduce((a, b) => a + b, 0));
+  const checkConnectionAndFetchData = async () => {
+    try {
+      const connected = await googleFitService.isAuthorizedCheck();
+      setIsConnected(connected);
+      if (connected) {
+        await fetchWeeklyData();
+      }
+    } catch (error) {
+      console.error('Error checking connection:', error);
+    }
+  };
+
+  const fetchWeeklyData = async () => {
+    setLoading(true);
+    try {
+      // Get last 7 days of step data
+      const endDate = new Date();
+      const startDate = new Date();
+      startDate.setDate(endDate.getDate() - 6); // Last 7 days including today
+
+      const weeklyData = await googleFitService.getStepsForDateRange(startDate, endDate);
+      
+      // Ensure we always have 7 days of data (fill missing days with 0)
+      const stepsArray = new Array(7).fill(0);
+      weeklyData.forEach((day, index) => {
+        if (index < 7) {
+          stepsArray[index] = day.steps;
+        }
+      });
+      
+      setStepHistory(stepsArray);
+      
+      // Calculate total weekly steps
+      const total = stepsArray.reduce((a, b) => a + b, 0);
+      setWeeklySteps(total);
+    } catch (error) {
+      console.error('Error fetching weekly data:', error);
+      // If error, keep zeros or previous data
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleStepsUpdate = (steps: number) => {
     setCurrentSteps(steps);
+    // Also refresh weekly data when steps update
+    if (isConnected) {
+      fetchWeeklyData();
+    }
   };
 
   const activeCompetitions = competitions.filter(c => c.status === 'active');

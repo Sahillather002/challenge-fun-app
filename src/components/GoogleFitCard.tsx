@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Alert,
   Animated,
+  Platform,
 } from 'react-native';
 import { Card, Title, Paragraph, Button, ProgressBar } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -17,22 +18,51 @@ interface GoogleFitCardProps {
   competitionId?: string;
 }
 
-const GoogleFitCard: React.FC<GoogleFitCardProps> = ({ 
-  onStepsUpdate, 
-  competitionId 
+const GoogleFitCard: React.FC<GoogleFitCardProps> = ({
+  onStepsUpdate,
+  competitionId
 }) => {
   const [steps, setSteps] = useState(0);
   const [dailyGoal, setDailyGoal] = useState(10000);
   const [loading, setLoading] = useState(false);
   const [connected, setConnected] = useState(false);
   const [lastSync, setLastSync] = useState<Date | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [pulseAnimation] = useState(new Animated.Value(1));
   const { theme } = useTheme();
 
   const googleFitService = GoogleFitService.getInstance();
 
   useEffect(() => {
-    checkConnection();
+    const initializeConnection = async () => {
+      // Check if we're returning from OAuth
+      const urlToken = googleFitService.checkUrlForToken();
+      const authPending = Platform.OS === 'web' ?
+        localStorage.getItem('google_fit_auth_pending') === 'true' : false;
+
+      if (urlToken) {
+        console.log('OAuth callback detected, token received');
+        if (Platform.OS === 'web') {
+          localStorage.removeItem('google_fit_auth_pending');
+        }
+        setConnected(true);
+        await fetchSteps();
+        if (Platform.OS === 'web') {
+          alert('Google Fit connected successfully!');
+        }
+      } else if (authPending) {
+        // We expected a token but didn't get one - auth was cancelled
+        if (Platform.OS === 'web') {
+          localStorage.removeItem('google_fit_auth_pending');
+          console.log('OAuth flow was cancelled or failed');
+        }
+      } else {
+        // Normal connection check
+        await checkConnection();
+      }
+    };
+
+    initializeConnection();
   }, []);
 
   useEffect(() => {
@@ -55,16 +85,31 @@ const GoogleFitCard: React.FC<GoogleFitCardProps> = ({
   const connectGoogleFit = async () => {
     setLoading(true);
     try {
+      // Start the OAuth flow - will redirect to Google and back
       const authorized = await googleFitService.authorize();
+
       if (authorized) {
         setConnected(true);
-        Alert.alert('Success', 'Google Fit connected successfully!');
-        fetchSteps();
+        if (Platform.OS === 'web') {
+          alert('Google Fit connected successfully!');
+        } else {
+          Alert.alert('Success', 'Google Fit connected successfully!');
+        }
+        await fetchSteps();
       } else {
-        Alert.alert('Error', 'Failed to connect to Google Fit');
+        if (Platform.OS === 'web') {
+          alert('Failed to connect to Google Fit. Please try again.');
+        } else {
+          Alert.alert('Error', 'Failed to connect to Google Fit');
+        }
       }
     } catch (error: any) {
-      Alert.alert('Error', 'Failed to connect to Google Fit: ' + error.message);
+      console.error('Connection error:', error);
+      if (Platform.OS === 'web') {
+        alert('Failed to connect to Google Fit: ' + error.message);
+      } else {
+        Alert.alert('Error', 'Failed to connect to Google Fit: ' + error.message);
+      }
     } finally {
       setLoading(false);
     }
@@ -72,7 +117,10 @@ const GoogleFitCard: React.FC<GoogleFitCardProps> = ({
 
   const fetchSteps = async () => {
     try {
+      setError(null);
+      console.log('Fetching steps from Google Fit...');
       const todaySteps = await googleFitService.getTodaySteps();
+      console.log('Steps fetched successfully:', todaySteps);
       setSteps(todaySteps);
       setLastSync(new Date());
       onStepsUpdate?.(todaySteps);
@@ -92,6 +140,19 @@ const GoogleFitCard: React.FC<GoogleFitCardProps> = ({
       ]).start();
     } catch (error: any) {
       console.error('Error fetching steps:', error);
+      const errorMessage = error.message || 'Failed to fetch steps';
+      setError(errorMessage);
+      
+      // If authentication failed, disconnect
+      if (errorMessage.includes('Authentication failed')) {
+        setConnected(false);
+      }
+      
+      if (Platform.OS === 'web') {
+        alert('Error fetching steps: ' + errorMessage);
+      } else {
+        Alert.alert('Error', 'Failed to fetch steps: ' + errorMessage);
+      }
     }
   };
 
@@ -109,10 +170,10 @@ const GoogleFitCard: React.FC<GoogleFitCardProps> = ({
       <Card.Content>
         <View style={styles.header}>
           <View style={styles.titleContainer}>
-            <Icon 
-              name="google-fit" 
-              size={24} 
-              color={theme.colors.primary} 
+            <Icon
+              name="google-fit"
+              size={24}
+              color={theme.colors.primary}
             />
             <Title style={[styles.title, { color: theme.colors.onSurface }]}>
               Google Fit
@@ -131,6 +192,11 @@ const GoogleFitCard: React.FC<GoogleFitCardProps> = ({
             <Paragraph style={[styles.connectText, { color: theme.colors.onSurfaceVariant }]}>
               Connect Google Fit to track your steps automatically
             </Paragraph>
+            {error && (
+              <Text style={[styles.errorText, { color: '#FF5252' }]}>
+                {error}
+              </Text>
+            )}
             <Button
               mode="contained"
               onPress={connectGoogleFit}
@@ -143,6 +209,14 @@ const GoogleFitCard: React.FC<GoogleFitCardProps> = ({
           </View>
         ) : (
           <View style={styles.connectedContainer}>
+            {error && (
+              <View style={styles.errorContainer}>
+                <Icon name="alert-circle" size={20} color="#FF5252" />
+                <Text style={[styles.errorText, { color: '#FF5252' }]}>
+                  {error}
+                </Text>
+              </View>
+            )}
             <View style={styles.stepsContainer}>
               <Animated.View style={{ transform: [{ scale: pulseAnimation }] }}>
                 <Text style={[styles.stepsNumber, { color: theme.colors.primary }]}>
@@ -179,16 +253,16 @@ const GoogleFitCard: React.FC<GoogleFitCardProps> = ({
                 onPress={syncSteps}
                 disabled={loading}
               >
-                <Icon 
-                  name="refresh" 
-                  size={20} 
-                  color={theme.colors.primary} 
+                <Icon
+                  name="refresh"
+                  size={20}
+                  color={theme.colors.primary}
                 />
                 <Text style={[styles.syncText, { color: theme.colors.primary }]}>
                   {loading ? 'Syncing...' : 'Sync Now'}
                 </Text>
               </TouchableOpacity>
-              
+
               {lastSync && (
                 <Text style={[styles.lastSyncText, { color: theme.colors.onSurfaceVariant }]}>
                   Last sync: {lastSync.toLocaleTimeString()}
@@ -297,6 +371,20 @@ const styles = StyleSheet.create({
   lastSyncText: {
     fontSize: 12,
     marginTop: 8,
+  },
+  errorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 12,
+    backgroundColor: '#FFEBEE',
+    borderRadius: 8,
+    marginBottom: 16,
+  },
+  errorText: {
+    fontSize: 14,
+    marginLeft: 8,
+    textAlign: 'center',
   },
 });
 
