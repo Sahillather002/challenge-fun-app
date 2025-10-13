@@ -12,15 +12,13 @@ import { MockCompetitionProvider } from './src/context/MockCompetitionContext';
 // Import Screens
 import LoginScreen from './src/screens/Auth/LoginScreen';
 import RegisterScreen from './src/screens/Auth/RegisterScreen';
-import DashboardScreen from './src/screens/Dashboard/DashboardScreen';
-import CompetitionScreen from './src/screens/Competition/CompetitionScreen';
 import CreateCompetitionScreen from './src/screens/Competition/CreateCompetitionScreen';
-import ProfileScreen from './src/screens/Profile/ProfileScreen';
-import LeaderboardScreen from './src/screens/Leaderboard/LeaderboardScreen';
 import PaymentScreen from './src/screens/Payment/PaymentScreen';
-import RewardsScreen from './src/screens/Rewards/RewardsScreen';
 import SettingsScreen from './src/screens/Settings/SettingsScreen';
 import GoogleFitAccountScreen from './src/screens/Settings/GoogleFitAccountScreen';
+
+// Import Tab Navigator
+import MainTabNavigator from './src/navigation/MainTabNavigator';
 
 const Stack = createStackNavigator();
 
@@ -37,13 +35,9 @@ function AppContent() {
             <Stack.Navigator initialRouteName="Login" screenOptions={{ headerShown: false }}>
               <Stack.Screen name="Login" component={LoginScreen} />
               <Stack.Screen name="Register" component={RegisterScreen} />
-              <Stack.Screen name="Dashboard" component={DashboardScreen} />
-              <Stack.Screen name="Competition" component={CompetitionScreen} />
+              <Stack.Screen name="Main" component={MainTabNavigator} />
               <Stack.Screen name="CreateCompetition" component={CreateCompetitionScreen} />
-              <Stack.Screen name="Profile" component={ProfileScreen} />
-              <Stack.Screen name="Leaderboard" component={LeaderboardScreen} />
               <Stack.Screen name="Payment" component={PaymentScreen} />
-              <Stack.Screen name="Rewards" component={RewardsScreen} />
               <Stack.Screen name="Settings" component={SettingsScreen} />
               <Stack.Screen name="GoogleFitAccount" component={GoogleFitAccountScreen} options={{ title: 'Google Fit Account' }} />
             </Stack.Navigator>

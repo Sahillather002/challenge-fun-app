@@ -146,14 +146,23 @@ const SettingsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   );
 
   return (
-    <ScrollView 
-      style={[styles.container, { backgroundColor: theme.colors.background }]}
-      contentContainerStyle={styles.contentContainer}
-    >
-      {/* Header */}
-      <View style={styles.header}>
-        <Title style={styles.headerTitle}>Settings</Title>
+    <View style={{ flex: 1 }}>
+      {/* Header with back button */}
+      <View style={[styles.headerBar, { backgroundColor: theme.colors.surface }]}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Icon name="arrow-left" size={24} color={theme.colors.onSurface} />
+        </TouchableOpacity>
+        <Title style={[styles.headerBarTitle, { color: theme.colors.onSurface }]}>Settings</Title>
+        <View style={{ width: 40 }} />
       </View>
+
+      <ScrollView 
+        style={[styles.container, { backgroundColor: theme.colors.background }]}
+        contentContainerStyle={styles.contentContainer}
+      >
 
       {/* Account Settings */}
       <Card style={[styles.card, { backgroundColor: theme.colors.surface }]}>
@@ -469,11 +478,28 @@ const SettingsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
           Made with ❤️ for healthy competition
         </Text>
       </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  headerBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  backButton: {
+    padding: 8,
+  },
+  headerBarTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
   container: {
     flex: 1,
   },

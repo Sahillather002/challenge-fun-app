@@ -120,13 +120,25 @@ const CreateCompetitionScreen: React.FC<{ navigation: any }> = ({ navigation }) 
   };
 
   return (
-    <ScrollView 
-      style={[styles.container, { backgroundColor: theme.colors.background }]}
-      contentContainerStyle={styles.contentContainer}
-    >
-      <Card style={[styles.card, { backgroundColor: theme.colors.surface }]}>
-        <Card.Content>
-          <Title style={styles.cardTitle}>Create New Competition</Title>
+    <View style={{ flex: 1 }}>
+      {/* Header with back button */}
+      <View style={[styles.headerBar, { backgroundColor: theme.colors.surface }]}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Icon name="arrow-left" size={24} color={theme.colors.onSurface} />
+        </TouchableOpacity>
+        <Title style={[styles.headerTitle, { color: theme.colors.onSurface }]}>Create Competition</Title>
+        <View style={{ width: 40 }} />
+      </View>
+
+      <ScrollView 
+        style={[styles.container, { backgroundColor: theme.colors.background }]}
+        contentContainerStyle={styles.contentContainer}
+      >
+        <Card style={[styles.card, { backgroundColor: theme.colors.surface }]}>
+          <Card.Content>
 
           <TextInput
             label="Competition Name"
@@ -329,22 +341,39 @@ const CreateCompetitionScreen: React.FC<{ navigation: any }> = ({ navigation }) 
           >
             {loading ? 'Creating...' : 'Create Competition'}
           </Button>
-        </Card.Content>
-      </Card>
+          </Card.Content>
+        </Card>
 
-      {showPicker && (
-        <DateTimePicker
-          value={formData[pickerMode === 'start' ? 'startDate' : 'endDate']}
-          mode="date"
-          display="default"
-          onChange={handleDateChange}
-        />
-      )}
-    </ScrollView>
+        {showPicker && (
+          <DateTimePicker
+            value={formData[pickerMode === 'start' ? 'startDate' : 'endDate']}
+            mode="date"
+            display="default"
+            onChange={handleDateChange}
+          />
+        )}
+      </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  headerBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  backButton: {
+    padding: 8,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
   container: {
     flex: 1,
   },

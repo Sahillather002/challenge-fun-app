@@ -145,12 +145,14 @@ const DashboardScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             </Paragraph>
           </View>
         </View>
-        <TouchableOpacity
-          style={[styles.notificationButton, { backgroundColor: theme.colors.surfaceVariant }]}
-          onPress={() => navigation.navigate('Notifications')}
-        >
-          <Icon name="bell" size={24} color={theme.colors.primary} />
-        </TouchableOpacity>
+        <View style={styles.headerButtons}>
+          <TouchableOpacity
+            style={[styles.headerButton, { backgroundColor: theme.colors.surfaceVariant }]}
+            onPress={() => navigation.navigate('Settings')}
+          >
+            <Icon name="cog" size={24} color={theme.colors.primary} />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Google Fit Card */}
@@ -335,6 +337,14 @@ const styles = StyleSheet.create({
   },
   userCompany: {
     fontSize: 14,
+  },
+  headerButtons: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  headerButton: {
+    padding: 8,
+    borderRadius: 20,
   },
   notificationButton: {
     padding: 8,

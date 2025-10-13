@@ -5,8 +5,9 @@ import {
   StyleSheet,
   ScrollView,
   Platform,
+  TouchableOpacity,
 } from 'react-native';
-import { Card, Button, List, Divider, Switch, ActivityIndicator } from 'react-native-paper';
+import { Card, Button, List, Divider, Switch, ActivityIndicator, Title } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
@@ -140,9 +141,22 @@ const GoogleFitAccountScreen: React.FC<{ navigation: any }> = ({ navigation }) =
   }
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      {/* Header */}
-      <Card style={[styles.card, { backgroundColor: theme.colors.surface }]}>
+    <View style={{ flex: 1 }}>
+      {/* Header with back button */}
+      <View style={[styles.headerBar, { backgroundColor: theme.colors.surface }]}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Icon name="arrow-left" size={24} color={theme.colors.onSurface} />
+        </TouchableOpacity>
+        <Title style={[styles.headerBarTitle, { color: theme.colors.onSurface }]}>Google Fit Account</Title>
+        <View style={{ width: 40 }} />
+      </View>
+
+      <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+        {/* Header */}
+        <Card style={[styles.card, { backgroundColor: theme.colors.surface }]}>
         <Card.Content>
           <View style={styles.header}>
             <Icon name="google-fit" size={48} color={theme.colors.primary} />
@@ -306,11 +320,28 @@ const GoogleFitAccountScreen: React.FC<{ navigation: any }> = ({ navigation }) =
           </Card.Content>
         </Card>
       )}
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  headerBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  backButton: {
+    padding: 8,
+  },
+  headerBarTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
   container: {
     flex: 1,
   },

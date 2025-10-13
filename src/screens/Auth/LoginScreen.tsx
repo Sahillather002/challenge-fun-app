@@ -21,10 +21,10 @@ const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { login, loading, error, user } = useAuth();
   const { theme, isDark } = useTheme();
 
-  // Auto-navigate to Dashboard if user is already logged in
+  // Auto-navigate to Main if user is already logged in
   useEffect(() => {
     if (user && !loading) {
-      navigation.replace('Dashboard');
+      navigation.replace('Main');
     }
   }, [user, loading, navigation]);
 
@@ -36,8 +36,8 @@ const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
     try {
       await login(email, password);
-      // Navigate to Dashboard after successful login
-      navigation.replace('Dashboard');
+      // Navigate to Main after successful login
+      navigation.replace('Main');
     } catch (error: any) {
       Alert.alert('Login Failed', error.message);
     }
