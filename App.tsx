@@ -8,6 +8,7 @@ import { Platform, View, Text, ActivityIndicator } from 'react-native';
 import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 import { AuthProvider } from './src/context/AuthContext';
 import { MockCompetitionProvider } from './src/context/MockCompetitionContext';
+import { ToastProvider } from './src/context/ToastContext';
 
 // Import Screens
 import LoginScreen from './src/screens/Auth/LoginScreen';
@@ -30,18 +31,20 @@ function AppContent() {
     <PaperProvider theme={theme} settings={{ icon: (props) => <MaterialCommunityIcons {...props} /> }}>
       <AuthProvider>
         <MockCompetitionProvider>
-          <NavigationContainer>
-            <StatusBar style={isDark ? 'light' : 'dark'} />
-            <Stack.Navigator initialRouteName="Login" screenOptions={{ headerShown: false }}>
-              <Stack.Screen name="Login" component={LoginScreen} />
-              <Stack.Screen name="Register" component={RegisterScreen} />
-              <Stack.Screen name="Main" component={MainTabNavigator} />
-              <Stack.Screen name="CreateCompetition" component={CreateCompetitionScreen} />
-              <Stack.Screen name="Payment" component={PaymentScreen} />
-              <Stack.Screen name="Settings" component={SettingsScreen} />
-              <Stack.Screen name="GoogleFitAccount" component={GoogleFitAccountScreen} options={{ title: 'Google Fit Account' }} />
-            </Stack.Navigator>
-          </NavigationContainer>
+          <ToastProvider>
+            <NavigationContainer>
+              <StatusBar style={isDark ? 'light' : 'dark'} />
+              <Stack.Navigator initialRouteName="Login" screenOptions={{ headerShown: false }}>
+                <Stack.Screen name="Login" component={LoginScreen} />
+                <Stack.Screen name="Register" component={RegisterScreen} />
+                <Stack.Screen name="Main" component={MainTabNavigator} />
+                <Stack.Screen name="CreateCompetition" component={CreateCompetitionScreen} />
+                <Stack.Screen name="Payment" component={PaymentScreen} />
+                <Stack.Screen name="Settings" component={SettingsScreen} />
+                <Stack.Screen name="GoogleFitAccount" component={GoogleFitAccountScreen} options={{ title: 'Google Fit Account' }} />
+              </Stack.Navigator>
+            </NavigationContainer>
+          </ToastProvider>
         </MockCompetitionProvider>
       </AuthProvider>
     </PaperProvider>

@@ -5,7 +5,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Alert,
   Linking,
 } from 'react-native';
 import {
@@ -19,6 +18,7 @@ import {
 } from 'react-native-paper';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
+import { useToast } from '../../context/ToastContext';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const SettingsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
@@ -49,6 +49,7 @@ const SettingsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
   const { user, logout } = useAuth();
   const { theme, isDark, toggleTheme } = useTheme();
+  const toast = useToast();
 
   const updateSetting = (category: string, key: string, value: boolean) => {
     setSettings(prev => ({
@@ -60,61 +61,32 @@ const SettingsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     }));
   };
 
-  const handleLogout = () => {
-    Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Logout',
-          style: 'destructive',
-          onPress: async () => {
-            await logout();
-          },
-        },
-      ]
-    );
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast.success('Logged out successfully');
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Login' }],
+      });
+    } catch (error: any) {
+      toast.error('Failed to logout');
+    }
   };
 
   const handleDeleteAccount = () => {
-    Alert.alert(
-      'Delete Account',
-      'This action cannot be undone. All your data will be permanently deleted.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => {
-            // In a real app, you would call your backend to delete the account
-            Alert.alert('Account Deleted', 'Your account has been deleted successfully.');
-          },
-        },
-      ]
-    );
+    // In a real app, you would call your backend to delete the account
+    toast.warning('Account deletion feature coming soon');
   };
 
   const handleClearCache = () => {
-    Alert.alert(
-      'Clear Cache',
-      'This will clear all cached data. You may need to login again.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Clear',
-          onPress: () => {
-            // Clear cache logic
-            Alert.alert('Cache Cleared', 'Cache has been cleared successfully.');
-          },
-        },
-      ]
-    );
+    // Clear cache logic
+    toast.success('Cache cleared successfully');
   };
 
   const openLink = (url: string) => {
     Linking.openURL(url).catch(() => {
-      Alert.alert('Error', 'Unable to open the link.');
+      toast.error('Unable to open the link');
     });
   };
 
@@ -185,7 +157,7 @@ const SettingsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             description="Update your password"
             left={(props) => <List.Icon {...props} icon="lock" />}
             right={(props) => <List.Icon {...props} icon="chevron-right" />}
-            onPress={() => Alert.alert('Info', 'Change password feature coming soon!')}
+            onPress={() => toast.info('Change password feature coming soon!')}
             titleStyle={{ color: theme.colors.onSurface }}
             descriptionStyle={{ color: theme.colors.onSurfaceVariant }}
           />
@@ -196,7 +168,7 @@ const SettingsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             description="Manage your payment options"
             left={(props) => <List.Icon {...props} icon="credit-card" />}
             right={(props) => <List.Icon {...props} icon="chevron-right" />}
-            onPress={() => Alert.alert('Info', 'Payment methods feature coming soon!')}
+            onPress={() => toast.info('Payment methods feature coming soon!')}
             titleStyle={{ color: theme.colors.onSurface }}
             descriptionStyle={{ color: theme.colors.onSurfaceVariant }}
           />

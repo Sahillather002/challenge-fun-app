@@ -5,7 +5,6 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -13,6 +12,7 @@ import {
 import { Button, Card, Title, Paragraph } from 'react-native-paper';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../context/ToastContext';
 
 const RegisterScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const [formData, setFormData] = useState({
@@ -27,11 +27,12 @@ const RegisterScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { register, loading, error, user } = useAuth();
   const { theme } = useTheme();
+  const toast = useToast();
 
-  // Auto-navigate to Dashboard if user is already logged in
+  // Auto-navigate to Main if user is already logged in
   useEffect(() => {
     if (user && !loading) {
-      navigation.replace('Dashboard');
+      navigation.replace('Main');
     }
   }, [user, loading, navigation]);
 
@@ -39,17 +40,17 @@ const RegisterScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     const { name, email, password, confirmPassword, company, department } = formData;
 
     if (!name || !email || !password || !company || !department) {
-      Alert.alert('Error', 'Please fill in all fields');
+      toast.error('Please fill in all fields');
       return;
     }
 
     if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match');
+      toast.error('Passwords do not match');
       return;
     }
 
     if (password.length < 6) {
-      Alert.alert('Error', 'Password must be at least 6 characters');
+      toast.error('Password must be at least 6 characters');
       return;
     }
 
@@ -61,10 +62,11 @@ const RegisterScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         company,
         department,
       });
-      // Navigate to Dashboard after successful registration
-      navigation.replace('Dashboard');
+      toast.success('Registration successful!');
+      // Navigate to Main after successful registration
+      navigation.replace('Main');
     } catch (error: any) {
-      Alert.alert('Registration Failed', error.message);
+      toast.error(error.message || 'Registration failed');
     }
   };
 

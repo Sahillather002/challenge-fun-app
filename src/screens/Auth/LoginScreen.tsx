@@ -5,7 +5,6 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -13,6 +12,7 @@ import {
 import { Button, Card, Title, Paragraph } from 'react-native-paper';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../context/ToastContext';
 
 const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const [email, setEmail] = useState('');
@@ -20,6 +20,7 @@ const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const [showPassword, setShowPassword] = useState(false);
   const { login, loading, error, user } = useAuth();
   const { theme, isDark } = useTheme();
+  const toast = useToast();
 
   // Auto-navigate to Main if user is already logged in
   useEffect(() => {
@@ -30,16 +31,17 @@ const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert('Error', 'Please fill in all fields');
+      toast.error('Please fill in all fields');
       return;
     }
 
     try {
       await login(email, password);
+      toast.success('Login successful!');
       // Navigate to Main after successful login
       navigation.replace('Main');
     } catch (error: any) {
-      Alert.alert('Login Failed', error.message);
+      toast.error(error.message || 'Login failed');
     }
   };
 
@@ -125,7 +127,7 @@ const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
             <TouchableOpacity
               style={styles.forgotPassword}
-              onPress={() => Alert.alert('Info', 'Password reset feature coming soon!')}
+              onPress={() => toast.info('Password reset feature coming soon!')}
             >
               <Text style={[styles.forgotPasswordText, { color: theme.colors.primary }]}>
                 Forgot Password?

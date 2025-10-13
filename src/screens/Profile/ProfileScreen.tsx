@@ -5,7 +5,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Alert,
 } from 'react-native';
 import {
   Card,
@@ -20,10 +19,14 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
+import { useToast } from '../../context/ToastContext';
+import { firebaseHelpers } from '../../utils/firebaseHelpers';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const ProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const [isEditing, setIsEditing] = useState(false);
+  const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [updating, setUpdating] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -40,6 +43,7 @@ const ProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   });
   const { user, updateUser, logout } = useAuth();
   const { theme, isDark, toggleTheme } = useTheme();
+  const toast = useToast();
 
   React.useEffect(() => {
     if (user) {
@@ -51,16 +55,38 @@ const ProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         phone: '',
         bio: '',
       });
+      // Load existing profile image
+      if (user.profileImage) {
+        setProfileImage(user.profileImage);
+      }
     }
   }, [user]);
 
   const handleUpdateProfile = async () => {
     try {
-      await updateUser(formData);
+      setUpdating(true);
+      
+      // Validate required fields
+      if (!formData.name.trim()) {
+        toast.error('Name is required');
+        setUpdating(false);
+        return;
+      }
+
+      // Update user profile
+      await updateUser({
+        name: formData.name,
+        company: formData.company,
+        department: formData.department,
+      });
+      
       setIsEditing(false);
-      Alert.alert('Success', 'Profile updated successfully!');
+      toast.success('Profile updated successfully!');
     } catch (error: any) {
-      Alert.alert('Error', 'Failed to update profile: ' + error.message);
+      console.error('Profile update error:', error);
+      toast.error('Failed to update profile: ' + (error.message || 'Unknown error'));
+    } finally {
+      setUpdating(false);
     }
   };
 
@@ -70,7 +96,7 @@ const ProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
       
       if (permissionResult.granted === false) {
-        Alert.alert('Permission Required', 'Please grant camera roll permissions to upload a profile picture.');
+        toast.warning('Please grant camera roll permissions to upload a profile picture.');
         return;
       }
 
@@ -83,30 +109,49 @@ const ProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       });
 
       if (!result.canceled && result.assets[0]) {
-        // In a real app, you would upload this to your backend
-        Alert.alert('Success', 'Profile picture updated!');
-        console.log('Selected image:', result.assets[0].uri);
+        const imageUri = result.assets[0].uri;
+        setProfileImage(imageUri);
+        
+        try {
+          setUpdating(true);
+          toast.info('Uploading profile picture...');
+          
+          // Upload to Firebase Storage
+          const imagePath = `profile-images/${user?.id}/${Date.now()}.jpg`;
+          const downloadURL = await firebaseHelpers.storage.uploadImage(imageUri, imagePath);
+          
+          // Update user profile with image URL
+          await updateUser({ profileImage: downloadURL });
+          
+          toast.success('Profile picture updated successfully!');
+          console.log('Image uploaded:', downloadURL);
+        } catch (uploadError: any) {
+          console.error('Image upload error:', uploadError);
+          toast.error('Failed to upload image: ' + (uploadError.message || 'Unknown error'));
+          setProfileImage(null); // Reset on error
+        } finally {
+          setUpdating(false);
+        }
       }
-    } catch (error) {
-      Alert.alert('Error', 'Failed to pick image');
+    } catch (error: any) {
+      console.error('Image picker error:', error);
+      toast.error('Failed to pick image: ' + (error.message || 'Unknown error'));
     }
   };
 
-  const handleLogout = () => {
-    Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Logout',
-          style: 'destructive',
-          onPress: async () => {
-            await logout();
-          },
-        },
-      ]
-    );
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast.success('Logged out successfully');
+      // Navigate to Login screen
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Login' }],
+      });
+    } catch (error: any) {
+      console.error('Logout error:', error);
+      toast.error('Failed to logout. Please try again.');
+    }
   };
 
   const updateFormData = (field: string, value: string) => {
@@ -133,12 +178,19 @@ const ProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       <Card style={[styles.headerCard, { backgroundColor: theme.colors.surface }]}>
         <Card.Content>
           <View style={styles.profileHeader}>
-            <TouchableOpacity onPress={handleImageUpload}>
-              <Avatar.Text
-                size={80}
-                label={user?.name?.charAt(0).toUpperCase() || 'U'}
-                style={{ backgroundColor: theme.colors.primary }}
-              />
+            <TouchableOpacity onPress={handleImageUpload} activeOpacity={0.7}>
+              {profileImage ? (
+                <Avatar.Image
+                  size={80}
+                  source={{ uri: profileImage }}
+                />
+              ) : (
+                <Avatar.Text
+                  size={80}
+                  label={user?.name?.charAt(0).toUpperCase() || 'U'}
+                  style={{ backgroundColor: theme.colors.primary }}
+                />
+              )}
               <View style={styles.cameraIcon}>
                 <Icon name="camera" size={20} color="white" />
               </View>
@@ -239,8 +291,22 @@ const ProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
               <View style={styles.formActions}>
                 <Button
                   mode="outlined"
-                  onPress={() => setIsEditing(false)}
+                  onPress={() => {
+                    setIsEditing(false);
+                    // Reset form data to original user data
+                    if (user) {
+                      setFormData({
+                        name: user.name || '',
+                        email: user.email || '',
+                        company: user.company || '',
+                        department: user.department || '',
+                        phone: '',
+                        bio: '',
+                      });
+                    }
+                  }}
                   style={styles.cancelButton}
+                  disabled={updating}
                 >
                   Cancel
                 </Button>
@@ -248,8 +314,10 @@ const ProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                   mode="contained"
                   onPress={handleUpdateProfile}
                   style={[styles.saveButton, { backgroundColor: theme.colors.primary }]}
+                  loading={updating}
+                  disabled={updating}
                 >
-                  Save Changes
+                  {updating ? 'Saving...' : 'Save Changes'}
                 </Button>
               </View>
             </View>

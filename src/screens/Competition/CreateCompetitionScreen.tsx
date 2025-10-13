@@ -4,7 +4,6 @@ import {
   Text,
   ScrollView,
   StyleSheet,
-  Alert,
   TouchableOpacity,
 } from 'react-native';
 import {
@@ -20,6 +19,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { useCompetition } from '../../context/MockCompetitionContext';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
+import { useToast } from '../../context/ToastContext';
 import { Competition } from '../../types';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
@@ -46,15 +46,16 @@ const CreateCompetitionScreen: React.FC<{ navigation: any }> = ({ navigation }) 
   const { createCompetition, loading } = useCompetition();
   const { user } = useAuth();
   const { theme } = useTheme();
+  const toast = useToast();
 
   const handleCreateCompetition = async () => {
     if (!formData.name || !formData.description) {
-      Alert.alert('Error', 'Please fill in all required fields');
+      toast.error('Please fill in all required fields');
       return;
     }
 
     if (formData.rules.length === 0) {
-      Alert.alert('Error', 'Please add at least one rule');
+      toast.error('Please add at least one rule');
       return;
     }
 
@@ -76,10 +77,10 @@ const CreateCompetitionScreen: React.FC<{ navigation: any }> = ({ navigation }) 
       };
 
       await createCompetition(competitionData);
-      Alert.alert('Success', 'Competition created successfully!');
+      toast.success('Competition created successfully!');
       navigation.goBack();
     } catch (error: any) {
-      Alert.alert('Error', 'Failed to create competition: ' + error.message);
+      toast.error('Failed to create competition: ' + error.message);
     }
   };
 

@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Alert,
   ScrollView,
 } from 'react-native';
 import {
@@ -18,6 +17,7 @@ import {
 import { useRoute } from '@react-navigation/native';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
+import { useToast } from '../../context/ToastContext';
 import { Payment } from '../../types';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
@@ -37,6 +37,7 @@ const PaymentScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
   const { theme } = useTheme();
+  const toast = useToast();
 
   const entryFee = 50; // Default entry fee
   const convenienceFee = 2;
@@ -45,19 +46,19 @@ const PaymentScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const handlePayment = async () => {
     // Validate form based on payment method
     if (paymentMethod === 'upi' && !formData.upiId) {
-      Alert.alert('Error', 'Please enter your UPI ID');
+      toast.error('Please enter your UPI ID');
       return;
     }
 
     if (paymentMethod === 'card') {
       if (!formData.cardNumber || !formData.cardHolder || !formData.expiryDate || !formData.cvv) {
-        Alert.alert('Error', 'Please fill in all card details');
+        toast.error('Please fill in all card details');
         return;
       }
     }
 
     if (paymentMethod === 'netbanking' && !formData.bankName) {
-      Alert.alert('Error', 'Please select your bank');
+      toast.error('Please select your bank');
       return;
     }
 
@@ -81,20 +82,12 @@ const PaymentScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       // In a real app, you would save this to your backend
       console.log('Payment processed:', paymentData);
 
-      Alert.alert(
-        'Payment Successful!',
-        `You have successfully paid ₹${totalAmount} to join the competition.`,
-        [
-          {
-            text: 'OK',
-            onPress: () => {
-              navigation.navigate('Competition');
-            },
-          },
-        ]
-      );
+      toast.success(`Payment successful! ₹${totalAmount} paid.`);
+      setTimeout(() => {
+        navigation.navigate('Competition');
+      }, 1000);
     } catch (error: any) {
-      Alert.alert('Payment Failed', error.message);
+      toast.error('Payment failed: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -117,7 +110,7 @@ const PaymentScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         right={
           <TextInput.Icon
             icon="account-search"
-            onPress={() => Alert.alert('Info', 'UPI verification feature coming soon!')}
+            onPress={() => toast.info('UPI verification feature coming soon!')}
           />
         }
       />
@@ -131,7 +124,7 @@ const PaymentScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             <TouchableOpacity
               key={app}
               style={[styles.upiAppButton, { backgroundColor: theme.colors.surfaceVariant }]}
-              onPress={() => Alert.alert('Info', `${app} integration coming soon!`)}
+              onPress={() => toast.info(`${app} integration coming soon!`)}
             >
               <Text style={[styles.upiAppText, { color: theme.colors.onSurface }]}>
                 {app}

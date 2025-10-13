@@ -1,4 +1,4 @@
-import { auth, firestore } from '../config/firebase';
+import { auth, firestore, storage } from '../config/firebase';
 import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
@@ -16,6 +16,12 @@ import {
   query,
   getDocs
 } from 'firebase/firestore';
+import {
+  ref,
+  uploadBytes,
+  getDownloadURL,
+  deleteObject
+} from 'firebase/storage';
 
 export const firebaseHelpers = {
   auth: {
@@ -33,20 +39,40 @@ export const firebaseHelpers = {
     collection: (collectionName: string) => collection(firestore, collectionName),
     doc: (collectionName: string, docId: string) => doc(firestore, collectionName, docId),
     getDoc: async (collectionName: string, docId: string) => {
-      const docRef = doc(firestore, collectionName, docId);
-      return getDoc(docRef);
+      try {
+        const docRef = doc(firestore, collectionName, docId);
+        return await getDoc(docRef);
+      } catch (error: any) {
+        console.error('Firestore getDoc error:', error);
+        throw error;
+      }
     },
     setDoc: async (collectionName: string, docId: string, data: any) => {
-      const docRef = doc(firestore, collectionName, docId);
-      return setDoc(docRef, data);
+      try {
+        const docRef = doc(firestore, collectionName, docId);
+        return await setDoc(docRef, data, { merge: true });
+      } catch (error: any) {
+        console.error('Firestore setDoc error:', error);
+        throw error;
+      }
     },
     updateDoc: async (collectionName: string, docId: string, data: any) => {
-      const docRef = doc(firestore, collectionName, docId);
-      return updateDoc(docRef, data);
+      try {
+        const docRef = doc(firestore, collectionName, docId);
+        return await updateDoc(docRef, data);
+      } catch (error: any) {
+        console.error('Firestore updateDoc error:', error);
+        throw error;
+      }
     },
     addDoc: async (collectionName: string, data: any) => {
-      const collectionRef = collection(firestore, collectionName);
-      return addDoc(collectionRef, data);
+      try {
+        const collectionRef = collection(firestore, collectionName);
+        return await addDoc(collectionRef, data);
+      } catch (error: any) {
+        console.error('Firestore addDoc error:', error);
+        throw error;
+      }
     },
     onSnapshot: (collectionName: string, callback: (snapshot: any) => void) => {
       const collectionRef = collection(firestore, collectionName);
@@ -57,5 +83,42 @@ export const firebaseHelpers = {
       return query(collectionRef, ...queryConstraints);
     },
     getDocs: async (queryRef: any) => getDocs(queryRef),
+  },
+
+  storage: {
+    uploadImage: async (uri: string, path: string): Promise<string> => {
+      try {
+        // Convert URI to blob for web
+        const response = await fetch(uri);
+        const blob = await response.blob();
+        
+        const storageRef = ref(storage, path);
+        await uploadBytes(storageRef, blob);
+        const downloadURL = await getDownloadURL(storageRef);
+        
+        return downloadURL;
+      } catch (error: any) {
+        console.error('Storage upload error:', error);
+        throw error;
+      }
+    },
+    deleteImage: async (path: string) => {
+      try {
+        const storageRef = ref(storage, path);
+        await deleteObject(storageRef);
+      } catch (error: any) {
+        console.error('Storage delete error:', error);
+        throw error;
+      }
+    },
+    getDownloadURL: async (path: string): Promise<string> => {
+      try {
+        const storageRef = ref(storage, path);
+        return await getDownloadURL(storageRef);
+      } catch (error: any) {
+        console.error('Storage getDownloadURL error:', error);
+        throw error;
+      }
+    },
   },
 };

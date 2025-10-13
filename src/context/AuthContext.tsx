@@ -189,13 +189,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const updateUser = async (userData: Partial<User>) => {
-    if (!state.user) return;
+    if (!state.user) {
+      throw new Error('No user logged in');
+    }
+    
     try {
       await firebaseHelpers.firestore.updateDoc('users', state.user.id, userData);
-      dispatch({ type: 'SET_USER', payload: { ...state.user, ...userData } });
+      const updatedUser = { ...state.user, ...userData };
+      dispatch({ type: 'SET_USER', payload: updatedUser });
     } catch (error: any) {
       console.error('Update user error:', error);
-      dispatch({ type: 'SET_ERROR', payload: error.message || 'Update failed' });
+      const errorMessage = error.message || 'Failed to update profile';
+      dispatch({ type: 'SET_ERROR', payload: errorMessage });
+      throw new Error(errorMessage);
     }
   };
 
