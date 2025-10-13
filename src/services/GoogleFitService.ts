@@ -36,7 +36,40 @@ const storage = {
 export class GoogleFitService {
   private static instance: GoogleFitService;
   private accessToken: string | null = null;
+  private tokenExpiresAt: number | null = null;
   private isAuthorized = false;
+  private useMockData = false; // Set to true for testing without Android device
+
+  private constructor() {
+    // Load token from storage on initialization
+    this.loadTokenFromStorage();
+  }
+
+  private async loadTokenFromStorage() {
+    try {
+      const storedToken = await storage.getItem("google_fit_token");
+      const storedExpiry = await storage.getItem("google_fit_token_expiry");
+      
+      if (storedToken && storedExpiry) {
+        const expiresAt = parseInt(storedExpiry);
+        const now = Date.now();
+        
+        // Check if token is still valid (with 5 min buffer)
+        if (expiresAt > now + 300000) {
+          this.accessToken = storedToken;
+          this.tokenExpiresAt = expiresAt;
+          this.isAuthorized = true;
+          console.log('✅ Valid token loaded from storage');
+          console.log('⏰ Token expires in:', Math.round((expiresAt - now) / 60000), 'minutes');
+        } else {
+          console.log('⚠️ Token expired, clearing...');
+          await this.disconnect();
+        }
+      }
+    } catch (error) {
+      console.error('Error loading token from storage:', error);
+    }
+  }
 
   static getInstance(): GoogleFitService {
     if (!GoogleFitService.instance) {
@@ -46,7 +79,17 @@ export class GoogleFitService {
   }
 
   /**
+   * Manually set the access token (used after OAuth callback)
+   */
+  setAccessToken(token: string): void {
+    this.accessToken = token;
+    this.isAuthorized = true;
+    console.log('Access token set, service is now authorized');
+  }
+
+  /**
    * Check if URL contains OAuth callback token
+   * This should only run in the popup window, not the main app
    */
   checkUrlForToken(): string | null {
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
@@ -55,8 +98,30 @@ export class GoogleFitService {
         const params = new URLSearchParams(hash.substring(1));
         const token = params.get('access_token');
         if (token) {
-          // Clear the hash from URL
-          window.history.replaceState(null, '', window.location.pathname + window.location.search);
+          console.log('🔑 Token found in URL (popup window)');
+          
+          // Extract expiry time (Google returns expires_in in seconds)
+          const expiresIn = params.get('expires_in');
+          const expiresAt = expiresIn ? Date.now() + (parseInt(expiresIn) * 1000) : Date.now() + 3600000; // Default 1 hour
+          
+          // This is the popup window - send message to opener and close
+          if (window.opener && !window.opener.closed) {
+            console.log('📤 Sending token to parent window');
+            window.opener.postMessage({
+              type: 'GOOGLE_FIT_AUTH_SUCCESS',
+              token: token,
+              expiresAt: expiresAt
+            }, window.location.origin);
+            
+            // Clear the hash and close popup
+            window.history.replaceState(null, '', window.location.pathname);
+            window.close();
+          } else {
+            // No opener - this might be main window after redirect
+            // Clear the hash to prevent re-processing
+            window.history.replaceState(null, '', window.location.pathname + window.location.search);
+          }
+          
           return token;
         }
       }
@@ -79,13 +144,13 @@ export class GoogleFitService {
       }
 
       // Check if we just returned from OAuth (token in URL)
-      const urlToken = this.checkUrlForToken();
-      console.log("my url token", urlToken);
-      if (urlToken) {
-        this.accessToken = urlToken;
-        this.isAuthorized = true;
-        await storage.setItem("google_fit_token", this.accessToken);
-        return true;
+      // This will handle the popup callback and send message to parent
+      this.checkUrlForToken();
+      
+      // Check if token is expired
+      if (this.tokenExpiresAt && Date.now() >= this.tokenExpiresAt - 300000) {
+        console.log('⚠️ Token expired or expiring soon, need to re-authenticate');
+        await this.disconnect();
       }
 
       const clientId = Constants.expoConfig?.extra?.googleFitClientId;
@@ -114,14 +179,18 @@ export class GoogleFitService {
         authUrl.searchParams.append('prompt', 'consent'); // Force consent screen
 
         console.log('Full OAuth URL:', authUrl.toString());
-
-        // Mark that we're starting auth flow
-        localStorage.setItem('google_fit_auth_pending', 'true');
         
-        // Redirect in the same window (not popup)
-        window.location.href = authUrl.toString();
+        // IMPORTANT: Try to open in a new tab to avoid "disallowed_useragent" error
+        // This ensures Google sees it as a proper browser, not a webview
+        const newWindow = window.open(authUrl.toString(), '_blank');
         
-        // Return false because we're redirecting (will complete on return)
+        if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+          // Popup was blocked - fall back to same-window redirect
+          console.warn('Popup blocked, falling back to same-window redirect');
+          window.location.href = authUrl.toString();
+        }
+        
+        // Return false because auth will complete when user returns to the app
         return false;
       }
 
@@ -157,7 +226,15 @@ export class GoogleFitService {
       if (result.type === "success" && result.params.access_token) {
         this.accessToken = result.params.access_token;
         this.isAuthorized = true;
+        
+        // Calculate expiry time (default 1 hour if not provided)
+        const expiresIn = parseInt(result.params.expires_in || '3600');
+        this.tokenExpiresAt = Date.now() + (expiresIn * 1000);
+        
         await storage.setItem("google_fit_token", this.accessToken);
+        await storage.setItem("google_fit_token_expiry", this.tokenExpiresAt.toString());
+        
+        console.log('✅ Token saved with expiry:', new Date(this.tokenExpiresAt).toLocaleString());
         return true;
       }
 
@@ -172,9 +249,21 @@ export class GoogleFitService {
     // Check if we have a stored token
     if (!this.isAuthorized) {
       const storedToken = await storage.getItem("google_fit_token");
-      if (storedToken) {
-        this.accessToken = storedToken;
-        this.isAuthorized = true;
+      const storedExpiry = await storage.getItem("google_fit_token_expiry");
+      
+      if (storedToken && storedExpiry) {
+        const expiresAt = parseInt(storedExpiry);
+        const now = Date.now();
+        
+        // Check if token is still valid (with 5 min buffer)
+        if (expiresAt > now + 300000) {
+          this.accessToken = storedToken;
+          this.tokenExpiresAt = expiresAt;
+          this.isAuthorized = true;
+        } else {
+          console.log('⚠️ Token expired during check');
+          await this.disconnect();
+        }
       }
     }
     return this.isAuthorized;
@@ -190,7 +279,15 @@ export class GoogleFitService {
   }
 
   /**
-   * Get today’s total steps
+   * Enable mock data mode for testing without Android device
+   */
+  enableMockData(enabled: boolean = true): void {
+    this.useMockData = enabled;
+    console.log(`Mock data mode: ${enabled ? 'ENABLED' : 'DISABLED'}`);
+  }
+
+  /**
+   * Get today's total steps
    */
   async getTodaySteps(): Promise<number> {
     await this.ensureAuthorized();
@@ -199,7 +296,18 @@ export class GoogleFitService {
     const startOfDay = new Date(now.setHours(0, 0, 0, 0)).getTime();
     const endOfDay = Date.now();
 
-    return await this.fetchStepCount(startOfDay, endOfDay);
+    try {
+      return await this.fetchStepCount(startOfDay, endOfDay);
+    } catch (error: any) {
+      // If no data source available and mock mode enabled, return mock data
+      if (this.useMockData && error.message.includes('datasource not found')) {
+        console.warn('⚠️ No real step data available. Using mock data for development.');
+        console.warn('📱 To get real data: Install Google Fit on an Android device and record steps.');
+        const mockSteps = Math.floor(Math.random() * 8000) + 2000; // Random 2000-10000
+        return mockSteps;
+      }
+      throw error;
+    }
   }
 
   /**
@@ -264,7 +372,9 @@ export class GoogleFitService {
 
   async disconnect(): Promise<void> {
     await storage.deleteItem("google_fit_token");
+    await storage.deleteItem("google_fit_token_expiry");
     this.accessToken = null;
+    this.tokenExpiresAt = null;
     this.isAuthorized = false;
     console.log("Disconnected from Google Fit");
   }
@@ -293,12 +403,8 @@ export class GoogleFitService {
         hasToken: !!this.accessToken
       });
 
-      // Try multiple data sources for better compatibility
-      const dataSources = [
-        "derived:com.google.step_count.delta:com.google.android.gms:estimated_steps",
-        "derived:com.google.step_count.delta:com.google.android.gms:merge_step_deltas",
-      ];
-
+      // Request step data from ALL available sources
+      // Don't specify dataSourceId to get data from any source the user has
       const response = await fetch(
         `https://www.googleapis.com/fitness/v1/users/me/dataset:aggregate`,
         {
@@ -308,10 +414,12 @@ export class GoogleFitService {
             Authorization: `Bearer ${this.accessToken}`,
           },
           body: JSON.stringify({
-            aggregateBy: dataSources.map(dataSourceId => ({
-              dataTypeName: "com.google.step_count.delta",
-              dataSourceId,
-            })),
+            aggregateBy: [
+              {
+                dataTypeName: "com.google.step_count.delta",
+                // Don't specify dataSourceId - let Google Fit return data from any available source
+              },
+            ],
             bucketByTime: { durationMillis: endTimeMillis - startTimeMillis },
             startTimeMillis,
             endTimeMillis,
@@ -323,15 +431,32 @@ export class GoogleFitService {
 
       // Check for authentication errors
       if (response.status === 401 || response.status === 403) {
-        console.error('Authentication error - token may be expired');
+        console.error('🔒 Authentication error - token expired');
         // Clear invalid token
         await this.disconnect();
-        throw new Error('Authentication failed. Please reconnect to Google Fit.');
+        throw new Error('TOKEN_EXPIRED');
       }
 
       if (!response.ok) {
         const errorText = await response.text();
         console.error('API Error Response:', errorText);
+        console.error('Full error details:', {
+          status: response.status,
+          statusText: response.statusText,
+          headers: Object.fromEntries(response.headers.entries()),
+          body: errorText
+        });
+        
+        // Parse error to provide helpful message
+        try {
+          const errorJson = JSON.parse(errorText);
+          if (errorJson.error?.message?.includes('datasource not found')) {
+            throw new Error('No step data available. Google Fit may not have any recorded steps for this account. Try using the Google Fit app on an Android device to record steps first.');
+          }
+        } catch (e) {
+          // If parsing fails, use original error
+        }
+        
         throw new Error(`Google Fit API error: ${response.status} - ${errorText}`);
       }
 

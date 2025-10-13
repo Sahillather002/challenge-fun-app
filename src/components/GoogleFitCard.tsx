@@ -4,23 +4,26 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Alert,
   Animated,
   Platform,
 } from 'react-native';
-import { Card, Title, Paragraph, Button, ProgressBar } from 'react-native-paper';
+import { Card, Title, Paragraph, Button, ProgressBar, Snackbar } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import GoogleFitService from '../services/GoogleFitService';
 import { useTheme } from '../context/ThemeContext';
+import { useAuth } from '../context/AuthContext';
+import { firebaseHelpers } from '../utils/firebaseHelpers';
 
 interface GoogleFitCardProps {
   onStepsUpdate?: (steps: number) => void;
   competitionId?: string;
+  navigation?: any;
 }
 
 const GoogleFitCard: React.FC<GoogleFitCardProps> = ({
   onStepsUpdate,
-  competitionId
+  competitionId,
+  navigation
 }) => {
   const [steps, setSteps] = useState(0);
   const [dailyGoal, setDailyGoal] = useState(10000);
@@ -28,10 +31,26 @@ const GoogleFitCard: React.FC<GoogleFitCardProps> = ({
   const [connected, setConnected] = useState(false);
   const [lastSync, setLastSync] = useState<Date | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [snackbarVisible, setSnackbarVisible] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
   const [pulseAnimation] = useState(new Animated.Value(1));
   const { theme } = useTheme();
+  const { user } = useAuth();
+
+  const showToast = (message: string) => {
+    setSnackbarMessage(message);
+    setSnackbarVisible(true);
+  };
 
   const googleFitService = GoogleFitService.getInstance();
+  
+  // Enable mock data for development/testing without Android device
+  // Set to false when testing with real Android device
+  const USE_MOCK_DATA = true; // Change to false for production
+  
+  useEffect(() => {
+    googleFitService.enableMockData(USE_MOCK_DATA);
+  }, []);
 
   useEffect(() => {
     const initializeConnection = async () => {
@@ -41,14 +60,37 @@ const GoogleFitCard: React.FC<GoogleFitCardProps> = ({
         localStorage.getItem('google_fit_auth_pending') === 'true' : false;
 
       if (urlToken) {
-        console.log('OAuth callback detected, token received');
-        if (Platform.OS === 'web') {
-          localStorage.removeItem('google_fit_auth_pending');
-        }
-        setConnected(true);
-        await fetchSteps();
-        if (Platform.OS === 'web') {
-          alert('Google Fit connected successfully!');
+        console.log('OAuth callback detected, token received:', urlToken.substring(0, 20) + '...');
+        
+        // IMPORTANT: Save the token to storage
+        try {
+          if (Platform.OS === 'web') {
+            localStorage.setItem('google_fit_token', urlToken);
+            localStorage.removeItem('google_fit_auth_pending');
+          }
+          
+          // Update the service instance with the token
+          googleFitService.setAccessToken(urlToken);
+          
+          // Close this window if it was opened as a popup/tab
+          if (Platform.OS === 'web' && window.opener) {
+            // This is the OAuth callback window - notify parent and close
+            try {
+              window.opener.postMessage({ type: 'GOOGLE_FIT_AUTH_SUCCESS' }, window.location.origin);
+              setTimeout(() => window.close(), 500); // Small delay to ensure message is sent
+            } catch (e) {
+              console.log('Could not close window, user will need to manually close it');
+            }
+          }
+          
+          setConnected(true);
+          await fetchSteps();
+          
+          if (Platform.OS === 'web' && !window.opener) {
+            showToast('Google Fit connected successfully!');
+          }
+        } catch (error) {
+          console.error('Error saving token:', error);
         }
       } else if (authPending) {
         // We expected a token but didn't get one - auth was cancelled
@@ -63,6 +105,31 @@ const GoogleFitCard: React.FC<GoogleFitCardProps> = ({
     };
 
     initializeConnection();
+
+    // Listen for messages from OAuth callback window
+    if (Platform.OS === 'web') {
+      const handleMessage = async (event: MessageEvent) => {
+        if (event.origin !== window.location.origin) return;
+        
+        if (event.data.type === 'GOOGLE_FIT_AUTH_SUCCESS') {
+          console.log('Received auth success message from OAuth tab');
+          
+          // Reload token from storage (it was saved in the other tab)
+          const storedToken = localStorage.getItem('google_fit_token');
+          if (storedToken) {
+            googleFitService.setAccessToken(storedToken);
+          }
+          
+          setConnected(true);
+          setError(null);
+          await fetchSteps();
+          showToast('Google Fit connected successfully!');
+        }
+      };
+
+      window.addEventListener('message', handleMessage);
+      return () => window.removeEventListener('message', handleMessage);
+    }
   }, []);
 
   useEffect(() => {
@@ -75,8 +142,19 @@ const GoogleFitCard: React.FC<GoogleFitCardProps> = ({
 
   const checkConnection = async () => {
     try {
+      console.log('🔍 Checking Google Fit connection...');
+      
+      // Check local token only (Firestore has issues)
       const isAuthorized = await googleFitService.isAuthorizedCheck();
+      console.log('Is authorized (local token):', isAuthorized);
+      
       setConnected(isAuthorized);
+      
+      if (isAuthorized) {
+        console.log('✅ Connected via local token');
+        // Auto-fetch steps if connected
+        await fetchSteps();
+      }
     } catch (error) {
       console.error('Error checking Google Fit connection:', error);
     }
@@ -84,32 +162,44 @@ const GoogleFitCard: React.FC<GoogleFitCardProps> = ({
 
   const connectGoogleFit = async () => {
     setLoading(true);
+    setError(null);
     try {
-      // Start the OAuth flow - will redirect to Google and back
+      // Start the OAuth flow - will open new tab for web
       const authorized = await googleFitService.authorize();
 
+      // For web with new tab flow, authorized will be false (auth happens in new tab)
+      // For native, authorized will be true/false immediately
+      if (Platform.OS === 'web' && !authorized) {
+        // Web: New tab opened, waiting for callback
+        console.log('OAuth window opened, waiting for user to complete authentication...');
+        setError('Please complete authentication in the new tab...');
+        // Don't show error - the message listener will handle success
+        setLoading(false);
+        return;
+      }
+
+      // Native or immediate success
       if (authorized) {
+        // Save connection to Firestore
+        if (user?.id) {
+          await firebaseHelpers.firestore.setDoc('users', user.id, {
+            googleFit: {
+              connected: true,
+              connectedAt: new Date().toISOString(),
+              email: user.email,
+              autoSync: true,
+            }
+          });
+        }
+        
         setConnected(true);
-        if (Platform.OS === 'web') {
-          alert('Google Fit connected successfully!');
-        } else {
-          Alert.alert('Success', 'Google Fit connected successfully!');
-        }
+        showToast('Google Fit connected successfully!');
         await fetchSteps();
-      } else {
-        if (Platform.OS === 'web') {
-          alert('Failed to connect to Google Fit. Please try again.');
-        } else {
-          Alert.alert('Error', 'Failed to connect to Google Fit');
-        }
       }
     } catch (error: any) {
       console.error('Connection error:', error);
-      if (Platform.OS === 'web') {
-        alert('Failed to connect to Google Fit: ' + error.message);
-      } else {
-        Alert.alert('Error', 'Failed to connect to Google Fit: ' + error.message);
-      }
+      setError(error.message);
+      showToast('Failed to connect: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -141,17 +231,21 @@ const GoogleFitCard: React.FC<GoogleFitCardProps> = ({
     } catch (error: any) {
       console.error('Error fetching steps:', error);
       const errorMessage = error.message || 'Failed to fetch steps';
-      setError(errorMessage);
       
-      // If authentication failed, disconnect
-      if (errorMessage.includes('Authentication failed')) {
+      // Handle token expiration
+      if (errorMessage === 'TOKEN_EXPIRED') {
+        console.log('🔄 Token expired, need to reconnect');
         setConnected(false);
-      }
-      
-      if (Platform.OS === 'web') {
-        alert('Error fetching steps: ' + errorMessage);
+        setError('Session expired. Please reconnect to Google Fit.');
+        showToast('Session expired. Please reconnect to Google Fit.');
       } else {
-        Alert.alert('Error', 'Failed to fetch steps: ' + errorMessage);
+        setError(errorMessage);
+        showToast('Error fetching steps: ' + errorMessage);
+        
+        // If authentication failed, disconnect
+        if (errorMessage.includes('Authentication failed')) {
+          setConnected(false);
+        }
       }
     }
   };
@@ -179,12 +273,22 @@ const GoogleFitCard: React.FC<GoogleFitCardProps> = ({
               Google Fit
             </Title>
           </View>
-          <TouchableOpacity
-            style={[
-              styles.statusDot,
-              { backgroundColor: connected ? '#4CAF50' : '#FF5252' }
-            ]}
-          />
+          <View style={styles.headerRight}>
+            {navigation && (
+              <TouchableOpacity
+                onPress={() => navigation.navigate('GoogleFitAccount')}
+                style={styles.settingsButton}
+              >
+                <Icon name="cog" size={20} color={theme.colors.onSurfaceVariant} />
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity
+              style={[
+                styles.statusDot,
+                { backgroundColor: connected ? '#4CAF50' : '#FF5252' }
+              ]}
+            />
+          </View>
         </View>
 
         {!connected ? (
@@ -193,9 +297,22 @@ const GoogleFitCard: React.FC<GoogleFitCardProps> = ({
               Connect Google Fit to track your steps automatically
             </Paragraph>
             {error && (
-              <Text style={[styles.errorText, { color: '#FF5252' }]}>
-                {error}
-              </Text>
+              <View style={[
+                styles.messageContainer,
+                { backgroundColor: error.includes('Please complete') ? '#E3F2FD' : '#FFEBEE' }
+              ]}>
+                <Icon 
+                  name={error.includes('Please complete') ? 'information' : 'alert-circle'} 
+                  size={20} 
+                  color={error.includes('Please complete') ? '#1976D2' : '#FF5252'} 
+                />
+                <Text style={[
+                  styles.messageText, 
+                  { color: error.includes('Please complete') ? '#1976D2' : '#FF5252' }
+                ]}>
+                  {error}
+                </Text>
+              </View>
             )}
             <Button
               mode="contained"
@@ -272,6 +389,19 @@ const GoogleFitCard: React.FC<GoogleFitCardProps> = ({
           </View>
         )}
       </Card.Content>
+
+      <Snackbar
+        visible={snackbarVisible}
+        onDismiss={() => setSnackbarVisible(false)}
+        duration={3000}
+        action={{
+          label: 'OK',
+          onPress: () => setSnackbarVisible(false),
+        }}
+        style={{ backgroundColor: theme.colors.surface }}
+      >
+        {snackbarMessage}
+      </Snackbar>
     </Card>
   );
 };
@@ -295,6 +425,14 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     marginLeft: 8,
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  settingsButton: {
+    padding: 4,
   },
   statusDot: {
     width: 12,
@@ -385,6 +523,20 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginLeft: 8,
     textAlign: 'center',
+  },
+  messageContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 12,
+    borderRadius: 8,
+    marginVertical: 12,
+  },
+  messageText: {
+    fontSize: 14,
+    marginLeft: 8,
+    textAlign: 'center',
+    flex: 1,
   },
 });
 

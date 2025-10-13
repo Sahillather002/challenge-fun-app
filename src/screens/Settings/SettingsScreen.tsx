@@ -191,6 +191,17 @@ const SettingsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             titleStyle={{ color: theme.colors.onSurface }}
             descriptionStyle={{ color: theme.colors.onSurfaceVariant }}
           />
+          <Divider />
+          
+          <List.Item
+            title="Google Fit Account"
+            description="Manage your Google Fit integration"
+            left={(props) => <List.Icon {...props} icon="google-fit" />}
+            right={(props) => <List.Icon {...props} icon="chevron-right" />}
+            onPress={() => navigation.navigate('GoogleFitAccount')}
+            titleStyle={{ color: theme.colors.onSurface }}
+            descriptionStyle={{ color: theme.colors.onSurfaceVariant }}
+          />
         </Card.Content>
       </Card>
 

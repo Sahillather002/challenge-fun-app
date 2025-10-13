@@ -154,7 +154,7 @@ const DashboardScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       </View>
 
       {/* Google Fit Card */}
-      <GoogleFitCard onStepsUpdate={handleStepsUpdate} />
+      <GoogleFitCard onStepsUpdate={handleStepsUpdate} navigation={navigation} />
 
       {/* Today's Progress Card */}
       <Card style={[styles.progressCard, { backgroundColor: theme.colors.surface }]}>
