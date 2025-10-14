@@ -16,7 +16,7 @@ import {
   Searchbar,
 } from 'react-native-paper';
 import { useCompetition } from '../../context/MockCompetitionContext';
-import { useAuth } from '../../context/AuthContext';
+import { useSupabaseAuth } from '../../context/SupabaseAuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { LeaderboardEntry, Competition } from '../../types';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -26,7 +26,7 @@ const LeaderboardScreen: React.FC<{ route: any, navigation: any }> = ({ route, n
   const [refreshing, setRefreshing] = useState(false);
   const [competition, setCompetition] = useState<Competition | null>(null);
   const { leaderboard, getLeaderboard, loading } = useCompetition();
-  const { user } = useAuth();
+  const { user } = useSupabaseAuth();
   const { theme } = useTheme();
 
   const competitionId = route.params?.competitionId;

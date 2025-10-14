@@ -16,9 +16,11 @@ import {
   Chip,
   Avatar,
 } from 'react-native-paper';
-import { useAuth } from '../../context/AuthContext';
+import { useSupabaseAuth } from '../../context/SupabaseAuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { Reward } from '../../types';
+import { supabaseHelpers } from '../../config/supabase';
+import { useToast } from '../../context/ToastContext';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const RewardsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
@@ -26,65 +28,31 @@ const RewardsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState<'all' | 'claimed' | 'unclaimed'>('all');
   const [totalEarnings, setTotalEarnings] = useState(0);
-  const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const { user } = useSupabaseAuth();
   const { theme } = useTheme();
+  const toast = useToast();
 
   useEffect(() => {
     loadRewards();
-  }, []);
+  }, [user]);
 
   const loadRewards = async () => {
-    // Mock rewards data
-    const mockRewards: Reward[] = [
-      {
-        id: '1',
-        userId: user?.id || '',
-        competitionId: 'comp1',
-        position: 1,
-        amount: 300,
-        claimed: true,
-        claimedDate: new Date(Date.now() - 1000 * 60 * 60 * 24 * 7), // 7 days ago
-      },
-      {
-        id: '2',
-        userId: user?.id || '',
-        competitionId: 'comp2',
-        position: 2,
-        amount: 150,
-        claimed: true,
-        claimedDate: new Date(Date.now() - 1000 * 60 * 60 * 24 * 14), // 14 days ago
-      },
-      {
-        id: '3',
-        userId: user?.id || '',
-        competitionId: 'comp3',
-        position: 1,
-        amount: 450,
-        claimed: false,
-      },
-      {
-        id: '4',
-        userId: user?.id || '',
-        competitionId: 'comp4',
-        position: 3,
-        amount: 75,
-        claimed: false,
-      },
-      {
-        id: '5',
-        userId: user?.id || '',
-        competitionId: 'comp5',
-        position: 2,
-        amount: 200,
-        claimed: true,
-        claimedDate: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30), // 30 days ago
-      },
-    ];
+    if (!user) return;
 
-    setRewards(mockRewards);
-    
-    const total = mockRewards.reduce((sum, reward) => sum + reward.amount, 0);
-    setTotalEarnings(total);
+    try {
+      setLoading(true);
+      const rewardsData = await supabaseHelpers.rewards.getByUser(user.id);
+      setRewards(rewardsData || []);
+
+      const total = rewardsData?.reduce((sum, reward) => sum + reward.amount, 0) || 0;
+      setTotalEarnings(total);
+    } catch (error: any) {
+      console.error('Error loading rewards:', error);
+      toast.error('Failed to load rewards');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleRefresh = async () => {
@@ -95,19 +63,15 @@ const RewardsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
   const claimReward = async (rewardId: string) => {
     try {
-      // In a real app, you would call your backend to claim the reward
-      setRewards(prev =>
-        prev.map(reward =>
-          reward.id === rewardId
-            ? { ...reward, claimed: true, claimedDate: new Date() }
-            : reward
-        )
-      );
-      
-      // Show success message
-      alert('Reward claimed successfully! The amount will be transferred to your account within 24-48 hours.');
-    } catch (error) {
-      alert('Failed to claim reward. Please try again.');
+      setLoading(true);
+      await supabaseHelpers.rewards.claimReward(rewardId);
+      await loadRewards(); // Refresh the rewards list
+      toast.success('Reward claimed successfully! The amount will be transferred to your account within 24-48 hours.');
+    } catch (error: any) {
+      console.error('Error claiming reward:', error);
+      toast.error('Failed to claim reward. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 

@@ -16,7 +16,7 @@ import {
   ProgressBar,
 } from 'react-native-paper';
 import { LineChart, BarChart } from 'react-native-chart-kit';
-import { useAuth } from '../../context/AuthContext';
+import { useSupabaseAuth } from '../../context/SupabaseAuthContext';
 import { useCompetition } from '../../context/MockCompetitionContext';
 import { useTheme } from '../../context/ThemeContext';
 import GoogleFitCard from '../../components/GoogleFitCard';
@@ -31,7 +31,7 @@ const DashboardScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const [stepHistory, setStepHistory] = useState([0, 0, 0, 0, 0, 0, 0]);
   const [isConnected, setIsConnected] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { user } = useAuth();
+  const { user } = useSupabaseAuth();
   const { competitions, currentCompetition } = useCompetition();
   const { theme } = useTheme();
 

@@ -1,11 +1,24 @@
 const createExpoWebpackConfigAsync = require('@expo/webpack-config');
+const Dotenv = require('dotenv-webpack');
+const path = require('path');
 
 module.exports = async function (env, argv) {
   const config = await createExpoWebpackConfigAsync(env, argv);
 
-  // Completely ignore React Native Firebase packages on web
+  // Add dotenv support for .env files in development
+  if (env.mode === 'development') {
+    config.plugins.push(
+      new Dotenv({
+        path: './.env',
+        systemvars: true,
+      })
+    );
+  }
+
+  // Add path alias for @/ to src/
   config.resolve.alias = {
     ...config.resolve.alias,
+    '@': require('path').resolve(__dirname, 'src'),
     '@react-native-firebase/app': false,
     '@react-native-firebase/auth': false,
     '@react-native-firebase/firestore': false,

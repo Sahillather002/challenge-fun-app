@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { firebaseHelpers } from '../utils/firebaseHelpers';
+import { databaseHelpers } from '../utils/firebaseHelpers';
 import { User } from '../types';
 
 interface AuthState {
@@ -50,12 +51,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       try {
-        const userDoc = await firebaseHelpers.firestore.getDoc('users', firebaseUser.uid);
-        if (userDoc.exists()) {
-          const data = userDoc.data();
-          dispatch({ type: 'SET_USER', payload: data as User });
-        } else {
-          // User document doesn't exist yet - create a basic user object from Firebase Auth
+        // Try to get user from Supabase first
+        let userData = await databaseHelpers.users.getById(firebaseUser.uid);
+
+        if (!userData) {
+          // If user doesn't exist in Supabase, create from Firebase auth data
           const basicUser: User = {
             id: firebaseUser.uid,
             email: firebaseUser.email || '',
@@ -63,23 +63,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             company: '',
             department: '',
             totalSteps: 0,
-            competitionsWon: 0,
-            joinedDate: new Date(),
+            competitions_won: 0,
+            joined_date: new Date(),
           };
-          
-          // Try to create the user document
+
           try {
-            await firebaseHelpers.firestore.setDoc('users', firebaseUser.uid, basicUser);
-            dispatch({ type: 'SET_USER', payload: basicUser });
+            userData = await databaseHelpers.users.create(basicUser);
           } catch (createError) {
-            console.warn('Could not create user document, using basic user:', createError);
-            // Still set the user even if we can't create the document
-            dispatch({ type: 'SET_USER', payload: basicUser });
+            console.warn('Could not create user in Supabase, using basic user:', createError);
+            userData = basicUser;
           }
         }
+
+        dispatch({ type: 'SET_USER', payload: userData as User });
       } catch (error: any) {
         console.error('Failed to fetch user data:', error);
-        
+
         // If offline or connection error, create a basic user from auth data
         if (error.code === 'unavailable' || error.message?.includes('offline')) {
           const basicUser: User = {
@@ -89,8 +88,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             company: '',
             department: '',
             totalSteps: 0,
-            competitionsWon: 0,
-            joinedDate: new Date(),
+            competitions_won: 0,
+            joined_date: new Date(),
           };
           dispatch({ type: 'SET_USER', payload: basicUser });
         } else {
@@ -147,18 +146,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         email,
         ...otherData,
         totalSteps: 0,
-        competitionsWon: 0,
-        joinedDate: new Date(),
+        competitions_won: 0,
+        joined_date: new Date(),
       };
 
-      await firebaseHelpers.firestore.setDoc('users', uid, newUser);
+      // Create user in Supabase
+      await databaseHelpers.users.create(newUser);
       dispatch({ type: 'SET_USER', payload: newUser });
     } catch (error: any) {
       console.error('Registration error:', error);
-      
+
       // Provide user-friendly error messages
       let errorMessage = 'Registration failed';
-      
+
       if (error.code === 'auth/email-already-in-use') {
         errorMessage = 'This email is already registered. Please login instead.';
       } else if (error.code === 'auth/invalid-email') {
@@ -172,7 +172,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else if (error.message) {
         errorMessage = error.message;
       }
-      
+
       dispatch({ type: 'SET_ERROR', payload: errorMessage });
       throw new Error(errorMessage);
     }
@@ -192,11 +192,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!state.user) {
       throw new Error('No user logged in');
     }
-    
+
     try {
-      await firebaseHelpers.firestore.updateDoc('users', state.user.id, userData);
-      const updatedUser = { ...state.user, ...userData };
-      dispatch({ type: 'SET_USER', payload: updatedUser });
+      const updatedUser = await databaseHelpers.users.update(state.user.id, userData);
+      dispatch({ type: 'SET_USER', payload: updatedUser as User });
     } catch (error: any) {
       console.error('Update user error:', error);
       const errorMessage = error.message || 'Failed to update profile';

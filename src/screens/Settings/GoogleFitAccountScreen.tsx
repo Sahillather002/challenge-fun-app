@@ -10,13 +10,13 @@ import {
 import { Card, Button, List, Divider, Switch, ActivityIndicator, Title } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useTheme } from '../../context/ThemeContext';
-import { useAuth } from '../../context/AuthContext';
+import { useSupabaseAuth } from '../../context/SupabaseAuthContext';
 import GoogleFitService from '../../services/GoogleFitService';
 import { firebaseHelpers } from '../../utils/firebaseHelpers';
 
 const GoogleFitAccountScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { theme } = useTheme();
-  const { user } = useAuth();
+  const { user } = useSupabaseAuth();
   const [connected, setConnected] = useState(false);
   const [loading, setLoading] = useState(true);
   const [connecting, setConnecting] = useState(false);

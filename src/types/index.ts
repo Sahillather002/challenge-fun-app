@@ -7,8 +7,8 @@ export interface User {
   company: string;
   department: string;
   totalSteps: number;
-  competitionsWon: number;
-  joinedDate: Date;
+  competitions_won: number; // Changed from competitionsWon to match database schema
+  joined_date: Date; // Changed from joinedDate to match database schema
 }
 
 export interface Competition {

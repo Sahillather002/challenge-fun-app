@@ -17,7 +17,7 @@ import {
   Searchbar,
 } from 'react-native-paper';
 import { useCompetition } from '../../context/MockCompetitionContext';
-import { useAuth } from '../../context/AuthContext';
+import { useSupabaseAuth } from '../../context/SupabaseAuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { Competition } from '../../types';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -27,7 +27,7 @@ const CompetitionScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const [filter, setFilter] = useState<'all' | 'upcoming' | 'active' | 'completed'>('all');
   const [refreshing, setRefreshing] = useState(false);
   const { competitions, loading, joinCompetition } = useCompetition();
-  const { user } = useAuth();
+  const { user } = useSupabaseAuth();
   const { theme } = useTheme();
 
   useEffect(() => {

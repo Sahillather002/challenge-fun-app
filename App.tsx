@@ -6,8 +6,8 @@ import { Provider as PaperProvider } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Platform, View, Text, ActivityIndicator } from 'react-native';
 import { ThemeProvider, useTheme } from './src/context/ThemeContext';
-import { AuthProvider } from './src/context/AuthContext';
-import { MockCompetitionProvider } from './src/context/MockCompetitionContext';
+import { SupabaseAuthProvider } from './src/context/SupabaseAuthContext';
+import { CompetitionProvider } from './src/context/MockCompetitionContext';
 import { ToastProvider } from './src/context/ToastContext';
 
 // Import Screens
@@ -29,8 +29,8 @@ function AppContent() {
 
   return (
     <PaperProvider theme={theme} settings={{ icon: (props) => <MaterialCommunityIcons {...props} /> }}>
-      <AuthProvider>
-        <MockCompetitionProvider>
+      <SupabaseAuthProvider>
+        <CompetitionProvider>
           <ToastProvider>
             <NavigationContainer>
               <StatusBar style={isDark ? 'light' : 'dark'} />
@@ -45,8 +45,8 @@ function AppContent() {
               </Stack.Navigator>
             </NavigationContainer>
           </ToastProvider>
-        </MockCompetitionProvider>
-      </AuthProvider>
+        </CompetitionProvider>
+      </SupabaseAuthProvider>
     </PaperProvider>
   );
 }

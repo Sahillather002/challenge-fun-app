@@ -11,8 +11,7 @@ import { Card, Title, Paragraph, Button, ProgressBar, Snackbar } from 'react-nat
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import GoogleFitService from '../services/GoogleFitService';
 import { useTheme } from '../context/ThemeContext';
-import { useAuth } from '../context/AuthContext';
-import { firebaseHelpers } from '../utils/firebaseHelpers';
+import { useSupabaseAuth } from '../context/SupabaseAuthContext';
 
 interface GoogleFitCardProps {
   onStepsUpdate?: (steps: number) => void;
@@ -35,7 +34,7 @@ const GoogleFitCard: React.FC<GoogleFitCardProps> = ({
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [pulseAnimation] = useState(new Animated.Value(1));
   const { theme } = useTheme();
-  const { user } = useAuth();
+  const { user } = useSupabaseAuth();
 
   const showToast = (message: string) => {
     setSnackbarMessage(message);
@@ -180,18 +179,6 @@ const GoogleFitCard: React.FC<GoogleFitCardProps> = ({
 
       // Native or immediate success
       if (authorized) {
-        // Save connection to Firestore
-        if (user?.id) {
-          await firebaseHelpers.firestore.setDoc('users', user.id, {
-            googleFit: {
-              connected: true,
-              connectedAt: new Date().toISOString(),
-              email: user.email,
-              autoSync: true,
-            }
-          });
-        }
-        
         setConnected(true);
         showToast('Google Fit connected successfully!');
         await fetchSteps();

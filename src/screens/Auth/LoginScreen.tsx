@@ -11,23 +11,31 @@ import {
 } from 'react-native';
 import { Button, Card, Title, Paragraph } from 'react-native-paper';
 import { useTheme } from '../../context/ThemeContext';
-import { useAuth } from '../../context/AuthContext';
+import { useSupabaseAuth } from '../../context/SupabaseAuthContext';
 import { useToast } from '../../context/ToastContext';
 
 const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const { login, loading, error, user } = useAuth();
+  const { login, loading, error, user } = useSupabaseAuth();
   const { theme, isDark } = useTheme();
   const toast = useToast();
 
   // Auto-navigate to Main if user is already logged in
   useEffect(() => {
-    if (user && !loading) {
+    console.log('LoginScreen useEffect - user:', user?.id, 'loading:', loading, 'error:', error);
+    if (user && !loading && !error) {
+      console.log('✅ User authenticated and loading cleared, navigating to Main screen');
       navigation.replace('Main');
+    } else if (loading) {
+      console.log('⏳ Still loading, waiting for auth state change...');
+    } else if (error) {
+      console.log('❌ Authentication error:', error);
+    } else if (!user) {
+      console.log('🔐 User not authenticated, staying on login screen');
     }
-  }, [user, loading, navigation]);
+  }, [user, loading, error, navigation]);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -36,11 +44,12 @@ const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     }
 
     try {
+      console.log('🚀 Starting login process for:', email);
       await login(email, password);
-      toast.success('Login successful!');
-      // Navigate to Main after successful login
-      navigation.replace('Main');
+      console.log('✅ Login function completed successfully');
+      // Don't manually navigate - let the useEffect handle navigation when user state updates
     } catch (error: any) {
+      console.error('❌ Login failed in handleLogin:', error);
       toast.error(error.message || 'Login failed');
     }
   };

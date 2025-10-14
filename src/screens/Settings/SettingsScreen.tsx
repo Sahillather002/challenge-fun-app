@@ -16,7 +16,7 @@ import {
   List,
   Divider,
 } from 'react-native-paper';
-import { useAuth } from '../../context/AuthContext';
+import { useSupabaseAuth } from '../../context/SupabaseAuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useToast } from '../../context/ToastContext';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -47,7 +47,7 @@ const SettingsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     },
   });
 
-  const { user, logout } = useAuth();
+  const { user, logout } = useSupabaseAuth();
   const { theme, isDark, toggleTheme } = useTheme();
   const toast = useToast();
 

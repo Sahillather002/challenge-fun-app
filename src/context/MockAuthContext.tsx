@@ -51,8 +51,8 @@ export const MockAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         company: 'Tech Corp',
         department: 'Engineering',
         totalSteps: 150000,
-        competitionsWon: 3,
-        joinedDate: new Date('2024-01-15'),
+        competitions_won: 3,
+        joined_date: new Date('2024-01-15'),
       };
       dispatch({ type: 'SET_USER', payload: mockUser });
     }, 1000);
@@ -74,8 +74,8 @@ export const MockAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           company: 'Tech Corp',
           department: 'Engineering',
           totalSteps: 150000,
-          competitionsWon: 3,
-          joinedDate: new Date('2024-01-15'),
+          competitions_won: 0,
+          joined_date: new Date('2024-01-15'),
         };
         dispatch({ type: 'SET_USER', payload: mockUser });
       } else {
@@ -100,8 +100,8 @@ export const MockAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         company: userData.company,
         department: userData.department,
         totalSteps: 0,
-        competitionsWon: 0,
-        joinedDate: new Date(),
+        competitions_won: 0,
+        joined_date: new Date(),
       };
 
       dispatch({ type: 'SET_USER', payload: newUser });

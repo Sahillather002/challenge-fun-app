@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { Button, Card, Title, Paragraph } from 'react-native-paper';
 import { useTheme } from '../../context/ThemeContext';
-import { useAuth } from '../../context/AuthContext';
+import { useSupabaseAuth } from '../../context/SupabaseAuthContext';
 import { useToast } from '../../context/ToastContext';
 
 const RegisterScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
@@ -25,7 +25,7 @@ const RegisterScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const { register, loading, error, user } = useAuth();
+  const { register, loading, error, user } = useSupabaseAuth();
   const { theme } = useTheme();
   const toast = useToast();
 

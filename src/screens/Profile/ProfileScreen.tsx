@@ -17,7 +17,7 @@ import {
   Divider,
 } from 'react-native-paper';
 import * as ImagePicker from 'expo-image-picker';
-import { useAuth } from '../../context/AuthContext';
+import { useSupabaseAuth } from '../../context/SupabaseAuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useToast } from '../../context/ToastContext';
 import { firebaseHelpers } from '../../utils/firebaseHelpers';
@@ -41,7 +41,7 @@ const ProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     competition: true,
     achievement: true,
   });
-  const { user, updateUser, logout } = useAuth();
+  const { user, updateUser, logout } = useSupabaseAuth();
   const { theme, isDark, toggleTheme } = useTheme();
   const toast = useToast();
 
@@ -164,8 +164,8 @@ const ProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
   const stats = [
     { label: 'Total Steps', value: user?.totalSteps?.toLocaleString() || '0', icon: 'walk' },
-    { label: 'Competitions Won', value: user?.competitionsWon?.toString() || '0', icon: 'trophy' },
-    { label: 'Member Since', value: user?.joinedDate ? new Date(user.joinedDate).getFullYear().toString() : '2024', icon: 'calendar' },
+    { label: 'Competitions Won', value: user?.competitions_won?.toString() || '0', icon: 'trophy' },
+    { label: 'Member Since', value: user?.joined_date ? new Date(user.joined_date).getFullYear().toString() : '2024', icon: 'calendar' },
     { label: 'Current Rank', value: '#12', icon: 'podium' },
   ];
 

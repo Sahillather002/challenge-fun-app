@@ -17,7 +17,7 @@ import {
 } from 'react-native-paper';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useCompetition } from '../../context/MockCompetitionContext';
-import { useAuth } from '../../context/AuthContext';
+import { useSupabaseAuth } from '../../context/SupabaseAuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useToast } from '../../context/ToastContext';
 import { Competition } from '../../types';
@@ -44,7 +44,7 @@ const CreateCompetitionScreen: React.FC<{ navigation: any }> = ({ navigation }) 
   const [showPicker, setShowPicker] = useState(false);
   const [pickerMode, setPickerMode] = useState<'start' | 'end'>('start');
   const { createCompetition, loading } = useCompetition();
-  const { user } = useAuth();
+  const { user } = useSupabaseAuth();
   const { theme } = useTheme();
   const toast = useToast();
 

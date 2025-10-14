@@ -15,7 +15,7 @@ import {
   RadioButton,
 } from 'react-native-paper';
 import { useRoute } from '@react-navigation/native';
-import { useAuth } from '../../context/AuthContext';
+import { useSupabaseAuth } from '../../context/SupabaseAuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useToast } from '../../context/ToastContext';
 import { Payment } from '../../types';
@@ -35,7 +35,7 @@ const PaymentScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     bankName: '',
   });
   const [loading, setLoading] = useState(false);
-  const { user } = useAuth();
+  const { user } = useSupabaseAuth();
   const { theme } = useTheme();
   const toast = useToast();
 
