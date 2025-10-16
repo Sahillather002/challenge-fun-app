@@ -11,6 +11,24 @@ console.log('🔗 Initializing Supabase...')
 console.log('Supabase URL configured:', supabaseUrl !== 'https://your-project-id.supabase.co')
 console.log('Supabase Key configured:', supabaseAnonKey !== 'your-anon-key-here')
 
+// Helper function to convert camelCase to snake_case for database fields
+const camelToSnake = (str: string): string => {
+  return str.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
+};
+
+// Helper function to convert object keys from camelCase to snake_case
+const convertKeysToSnakeCase = (obj: any): any => {
+  if (obj === null || obj === undefined) return obj;
+  if (typeof obj !== 'object') return obj;
+  if (Array.isArray(obj)) return obj.map(convertKeysToSnakeCase);
+
+  const converted: any = {};
+  for (const [key, value] of Object.entries(obj)) {
+    converted[camelToSnake(key)] = convertKeysToSnakeCase(value);
+  }
+  return converted;
+};
+
 // Create Supabase client with auth and realtime
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
@@ -30,133 +48,108 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 
 // Helper functions for database operations
 export const supabaseHelpers = {
-  // User operations
-  users: {
+  // User Profiles operations (new schema)
+  userProfiles: {
     async getById(id: string) {
-      console.log('🔍 Executing database query for user:', id);
+      console.log('🔍 Executing database query for user profile:', id);
 
       try {
-        // First check if user exists in public.users table
-        const { data, error } = await supabase
-          .from('users')
+        // Add timeout to prevent hanging queries
+        const queryPromise = supabase
+          .from('user_profiles')
           .select('*')
           .eq('id', id)
-          .maybeSingle(); // Use maybeSingle instead of single to avoid errors when no rows found
+          .maybeSingle();
+
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Query timeout after 10 seconds')), 10000)
+        );
+
+        const { data, error } = await Promise.race([queryPromise, timeoutPromise]) as any;
 
         if (error) {
           console.error('❌ Database query error:', error);
-          console.error('❌ Error code:', error.code);
-          console.error('❌ Error details:', error.details);
-          console.error('❌ Error message:', error.message);
           throw error;
         }
 
         if (!data) {
-          console.log('🔍 User not found in public.users table:', id);
+          console.log('🔍 User profile not found in user_profiles table:', id);
           return null;
         }
 
-        console.log('✅ Found user data:', data?.id);
+        console.log('✅ Found user profile:', data?.id);
         return data;
       } catch (error: any) {
-        console.error('❌ Database query failed for user:', id, error);
-        console.error('❌ Full error object:', JSON.stringify(error, null, 2));
+        console.error('❌ Database query failed for user profile:', id, error);
+        if (error.message === 'Query timeout after 10 seconds') {
+          console.error('🚨 Query timed out - possible network or database issue');
+        }
         throw error;
       }
     },
 
-    async create(userData: any) {
-      console.log('📝 Creating user in database:', userData.id);
-      console.log('📋 User data being sent:', JSON.stringify(userData, null, 2));
+    async create(profileData: any) {
+      console.log('📝 Creating user profile in database:', profileData.id);
 
       // Validate required fields
-      if (!userData.id || !userData.email || !userData.name) {
-        console.error('❌ Missing required fields:', { id: !!userData.id, email: !!userData.email, name: !!userData.name });
-        throw new Error('Missing required fields: id, email, or name');
+      if (!profileData.id || !profileData.name) {
+        throw new Error('Missing required fields: id or name');
       }
 
-      // Add timeout to prevent hanging queries
-      const queryPromise = supabase
-        .from('users')
-        .insert(userData)
-        .select()
-        .single();
-
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Database create timeout')), 5000)
-      );
-
       try {
-        const { data, error } = await Promise.race([queryPromise, timeoutPromise]) as any;
-        console.log('✅ User created in database:', data?.id);
+        const { data, error } = await supabase
+          .from('user_profiles')
+          .insert(profileData)
+          .select()
+          .single();
 
         if (error) {
           console.error('❌ Database create error:', error);
-          console.error('❌ Error details:', JSON.stringify(error, null, 2));
           throw error;
         }
 
+        console.log('✅ User profile created in database:', data?.id);
         return data;
       } catch (error: any) {
-        console.error('❌ Database create failed for user:', userData.id, error);
-        console.error('❌ Full error object:', JSON.stringify(error, null, 2));
+        console.error('❌ Database create failed for user profile:', profileData.id, error);
         throw error;
       }
     },
 
-    async update(id: string, userData: any) {
-      console.log('📝 Updating user in database:', id);
-      console.log('📋 Update data being sent:', JSON.stringify(userData, null, 2));
+    async update(id: string, profileData: any) {
+      console.log('📝 Updating user profile in database:', id);
 
       try {
-        // First check if user exists
-        const { data: existingUser, error: fetchError } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', id)
-          .single();
-
-        if (fetchError && fetchError.code === 'PGRST116') {
-          // User doesn't exist, this is expected for new users
-          console.log('🔍 User not found, this might be a new user');
-        } else if (fetchError) {
-          console.error('❌ Error checking if user exists:', fetchError);
-          throw fetchError;
-        }
-
-        // Use upsert to handle both create and update cases
         const { data, error } = await supabase
-          .from('users')
-          .upsert({
-            id,
-            ...userData,
+          .from('user_profiles')
+          .update({
+            ...convertKeysToSnakeCase(profileData),
             updated_at: new Date().toISOString()
-          }, { onConflict: 'id' })
+          })
+          .eq('id', id)
           .select()
           .single();
 
         if (error) {
           console.error('❌ Database update error:', error);
-          console.error('❌ Error details:', JSON.stringify(error, null, 2));
           throw error;
         }
 
-        console.log('✅ User updated in database:', data?.id);
+        console.log('✅ User profile updated in database:', data?.id);
         return data;
       } catch (error: any) {
-        console.error('❌ Database update failed for user:', id, error);
-        console.error('❌ Full error object:', JSON.stringify(error, null, 2));
+        console.error('❌ Database update failed for user profile:', id, error);
         throw error;
       }
     },
 
     async getAll() {
       const { data, error } = await supabase
-        .from('users')
-        .select('*')
+        .from('user_profiles')
+        .select('*');
 
-      if (error) throw error
-      return data
+      if (error) throw error;
+      return data;
     }
   },
 
@@ -285,7 +278,7 @@ export const supabaseHelpers = {
         .select(`
           user_id,
           steps,
-          users!inner(name, email)
+          user_profiles!inner(name, email)
         `)
         .eq('competition_id', competitionId)
 
@@ -297,7 +290,7 @@ export const supabaseHelpers = {
         if (!acc[userId]) {
           acc[userId] = {
             userId,
-            userName: curr.users.name,
+            userName: curr.user_profiles.name,
             totalSteps: 0,
             steps: []
           }
@@ -407,6 +400,52 @@ export const supabaseHelpers = {
 
       if (error) throw error
       return data
+    }
+  },
+
+  // Diagnostic function to test database connectivity and RLS policies
+  async testDatabaseConnection() {
+    console.log('🔍 Testing database connectivity and RLS policies...');
+
+    try {
+      // Test 1: Try to query user_profiles table (should work if RLS allows)
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('user_profiles')
+        .select('id')
+        .limit(1);
+
+      if (profilesError) {
+        console.error('❌ User profiles table query failed:', profilesError);
+      } else {
+        console.log('✅ User profiles table query successful');
+      }
+
+      // Test 2: Try to insert a test record (for debugging RLS)
+      const testUserId = 'test-connection-' + Date.now();
+      const { data: insertData, error: insertError } = await supabase
+        .from('user_profiles')
+        .insert({
+          id: testUserId,
+          name: 'Test User',
+          role: 'user'
+        })
+        .select();
+
+      if (insertError) {
+        console.log('❌ Test insert failed (expected if not authenticated):', insertError.code, insertError.message);
+      } else {
+        console.log('✅ Test insert successful - RLS policies may need adjustment');
+        // Clean up test record
+        await supabase.from('user_profiles').delete().eq('id', testUserId);
+      }
+
+      return {
+        profilesQuery: { success: !profilesError, error: profilesError },
+        testInsert: { success: !insertError, error: insertError }
+      };
+    } catch (error: any) {
+      console.error('❌ Database connection test failed:', error);
+      return { error };
     }
   },
 

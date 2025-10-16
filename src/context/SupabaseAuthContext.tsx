@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { User } from '../types';
-import supabase, { supabaseHelpers } from '@/config/supabase';
+import { supabase, supabaseHelpers } from '@/config/supabase';
 
 interface SupabaseAuthState {
   user: User | null;
@@ -14,6 +14,8 @@ interface SupabaseAuthContextType extends SupabaseAuthState {
   logout: () => Promise<void>;
   updateUser: (userData: Partial<User>) => Promise<User>;
   syncUserData: () => Promise<User>;
+  makeUserAdmin: (userId: string) => Promise<any>;
+  syncAllAuthUsers: () => Promise<{ syncedCount: number; errorCount: number }>;
 }
 
 type SupabaseAuthAction =
@@ -34,7 +36,7 @@ const supabaseAuthReducer = (state: SupabaseAuthState, action: SupabaseAuthActio
     case 'SET_LOADING':
       return { ...state, loading: action.payload };
     case 'SET_USER':
-      return { ...state, user: action.payload, loading: false }; 
+      return { ...state, user: action.payload, loading: false };
     case 'SET_ERROR':
       return { ...state, error: action.payload, loading: false };
     default:
@@ -42,9 +44,8 @@ const supabaseAuthReducer = (state: SupabaseAuthState, action: SupabaseAuthActio
   }
 };
 
-export const SupabaseAuthProvider = ({ children }: { children?: React.ReactNode }) => {
+export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(supabaseAuthReducer, initialState);
-  let loginTimeoutRef: number | undefined;
 
   useEffect(() => {
     let isMounted = true;
@@ -58,19 +59,25 @@ export const SupabaseAuthProvider = ({ children }: { children?: React.ReactNode 
 
         if (session?.user && isMounted) {
           console.log('✅ Found existing session for user:', session.user.id);
-          // Get user data from database
+          // Get user profile from database
           try {
-            const userData = await supabaseHelpers.users.getById(session.user.id);
-            if (isMounted) {
-              console.log('✅ User data loaded from database');
-              dispatch({ type: 'SET_USER', payload: userData as User });
+            const profile = await supabaseHelpers.userProfiles.getById(session.user.id);
+            if (isMounted && profile) {
+              console.log('✅ User profile loaded from database');
+              dispatch({ type: 'SET_USER', payload: profile as User });
+              dispatch({ type: 'SET_ERROR', payload: null }); // Clear any previous errors
+            } else {
+              // Create profile for existing user
+              const newProfile = await createUserProfile(session.user);
+              if (isMounted) {
+                dispatch({ type: 'SET_USER', payload: newProfile });
+                dispatch({ type: 'SET_ERROR', payload: null }); // Clear any previous errors
+              }
             }
           } catch (dbError: any) {
-            // If user doesn't exist in database, don't set error state
-            // Just log and continue - this is expected for new users
-            console.log('User not found in database, will create on first auth state change');
+            console.error('❌ Error loading user profile:', dbError);
             if (isMounted) {
-              dispatch({ type: 'SET_USER', payload: null });
+              dispatch({ type: 'SET_ERROR', payload: 'Failed to load user profile' });
             }
           }
         } else {
@@ -90,13 +97,12 @@ export const SupabaseAuthProvider = ({ children }: { children?: React.ReactNode 
     getSession();
 
     // Safety timeout to prevent infinite loading state
-    // This ensures loading state is cleared even if auth state listener doesn't fire
     const safetyTimeoutRef = setTimeout(() => {
       console.log('⏰ Safety timeout reached, clearing loading state');
       if (isMounted) {
         dispatch({ type: 'SET_LOADING', payload: false });
       }
-    }, 10000); // Increased from 3s to 10s to allow time for auth state handler
+    }, 10000);
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -106,144 +112,72 @@ export const SupabaseAuthProvider = ({ children }: { children?: React.ReactNode 
         console.log('🔐 Handling authenticated user:', session.user.id);
 
         try {
-          // First, let's get the current auth user data to ensure we have the latest info
-          console.log('🔍 Getting current auth user data...');
-          let currentAuthUser = session.user; // Use session data as fallback
+          // Create or get user profile data (but don't rely on it for auth)
+          console.log('🔍 Getting user profile data for:', session.user.id);
 
-          try {
-            // Try to get fresh user data with timeout
-            const getUserPromise = supabase.auth.getUser();
-            const timeoutPromise = new Promise((_, reject) =>
-              setTimeout(() => reject(new Error('getUser timeout')), 5000)
-            );
+          // Try to get existing profile
+          let profile = await supabaseHelpers.userProfiles.getById(session.user.id);
 
-            const { data: authUser, error: authError } = await Promise.race([
-              getUserPromise,
-              timeoutPromise
-            ]) as any;
-
-            if (authError) {
-              console.error('❌ Error getting auth user:', authError);
-              console.log('🔄 Falling back to session user data');
-            } else {
-              currentAuthUser = authUser.user;
-              console.log('✅ Got fresh auth user data');
-            }
-          } catch (getUserError) {
-            console.error('❌ getUser failed or timed out:', getUserError);
-            console.log('🔄 Using session user data as fallback');
+          if (!profile) {
+            console.log('👤 Creating new user profile...');
+            profile = await createUserProfile(session.user);
           }
 
-          console.log('🔍 Auth user data:', currentAuthUser?.email);
-
-          // Get or create user data in public.users table
-          let userData: User | null = null;
-
-          try {
-            console.log('🔍 Attempting to fetch user data for:', currentAuthUser.id);
-
-            // Add timeout for database fetch
-            const fetchUserPromise = supabaseHelpers.users.getById(currentAuthUser.id);
-            const fetchTimeoutPromise = new Promise((_, reject) =>
-              setTimeout(() => reject(new Error('Database fetch timeout')), 3000)
-            );
-
-            userData = await Promise.race([fetchUserPromise, fetchTimeoutPromise]) as User;
-            console.log('✅ User found in database:', userData?.id);
-          } catch (dbError: any) {
-            console.log('❌ Database fetch failed or timed out:', dbError?.message);
-            console.log('❌ Error code:', dbError?.code);
-
-            // If user doesn't exist in public.users, create them
-            if (dbError?.code === 'PGRST116' || dbError?.message?.includes('not found') || dbError?.message?.includes('timeout')) {
-              console.log('👤 User not found in public.users, creating from auth.users data...');
-            } else {
-              console.log('🔄 Other error, still attempting creation...');
-            }
-          }
-
-          if (!userData && currentAuthUser) {
-            console.log('👤 Creating new user in public.users from auth.users data...');
-
-            try {
-              // Create user in public.users using auth.users data
-              const newUser: User = {
-                id: currentAuthUser.id,
-                email: currentAuthUser.email || '',
-                name: currentAuthUser.user_metadata?.name || currentAuthUser.email?.split('@')[0] || 'User',
-                company: currentAuthUser.user_metadata?.company || '',
-                department: currentAuthUser.user_metadata?.department || '',
-                totalSteps: 0,
-                competitions_won: 0,
-                joined_date: new Date(),
-              };
-
-              console.log('📝 Creating user in database:', newUser);
-
-              // Add timeout for user creation
-              const createUserPromise = supabaseHelpers.users.create(newUser);
-              const createTimeoutPromise = new Promise((_, reject) =>
-                setTimeout(() => reject(new Error('User creation timeout')), 5000)
-              );
-
-              userData = await Promise.race([createUserPromise, createTimeoutPromise]) as User;
-              console.log('✅ User created successfully:', userData!.id);
-            } catch (createError: any) {
-              console.error('❌ Failed to create user:', createError);
-              // Continue without user data - we'll create a fallback user object
-            }
-          }
-
-          if (isMounted && currentAuthUser) {
-            // Always create a user object, even if database operations fail
-            const finalUser: User = userData || {
-              id: currentAuthUser.id,
-              email: currentAuthUser.email || '',
-              name: currentAuthUser.user_metadata?.name || currentAuthUser.email?.split('@')[0] || 'User',
-              company: currentAuthUser.user_metadata?.company || '',
-              department: currentAuthUser.user_metadata?.department || '',
+          if (isMounted && profile) {
+            console.log('✅ User profile loaded, setting auth state');
+            dispatch({ type: 'SET_USER', payload: profile as User });
+            dispatch({ type: 'SET_ERROR', payload: null }); // Clear any previous errors
+          } else if (isMounted) {
+            // If no profile data, create a basic user object from auth data
+            console.log('📋 Using auth user data as fallback');
+            const fallbackUser: User = {
+              id: session.user.id,
+              name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'User',
+              email: session.user.email || '',
+              company: session.user.user_metadata?.company || '',
+              department: session.user.user_metadata?.department || '',
               totalSteps: 0,
               competitions_won: 0,
               joined_date: new Date(),
+              role: 'user',
             };
-
-            console.log('Setting user in auth context:', finalUser.id);
-            dispatch({ type: 'SET_USER', payload: finalUser });
-
-            // Clear the login timeout since auth state change happened
-            if (loginTimeoutRef) {
-              clearTimeout(loginTimeoutRef);
-              loginTimeoutRef = undefined;
-            }
+            dispatch({ type: 'SET_USER', payload: fallbackUser });
+            dispatch({ type: 'SET_ERROR', payload: null }); // Clear any previous errors
           }
         } catch (error: any) {
-          console.error('❌ Error handling authenticated user:', error);
+          console.error('❌ Error loading user profile:', error);
           if (isMounted) {
-            dispatch({ type: 'SET_ERROR', payload: 'Failed to load user data' });
+            dispatch({ type: 'SET_ERROR', payload: 'Failed to load user profile' });
           }
         }
       } else if (isMounted) {
         console.log('🚪 Handling non-authenticated state');
         dispatch({ type: 'SET_USER', payload: null });
-        // Loading will be cleared by SET_USER action in reducer
       }
     });
 
-    // Cleanup function to clear any pending timeouts
+    // Cleanup function
     return () => {
       isMounted = false;
       subscription.unsubscribe();
-
-      // Clear any pending login timeout
-      if (loginTimeoutRef) {
-        clearTimeout(loginTimeoutRef);
-        loginTimeoutRef = undefined;
-      }
-
-      // Clear safety timeout
       clearTimeout(safetyTimeoutRef);
     };
   }, []);
+
+  const createUserProfile = async (authUser: any): Promise<User> => {
+    const profileData = {
+      id: authUser.id,
+      name: authUser.user_metadata?.name || authUser.email?.split('@')[0] || 'User',
+      company: authUser.user_metadata?.company || '',
+      department: authUser.user_metadata?.department || '',
+      total_steps: 0,
+      competitions_won: 0,
+      joined_date: new Date(),
+      role: 'user',
+    };
+
+    return await supabaseHelpers.userProfiles.create(profileData);
+  };
 
   const login = async (email: string, password: string) => {
     dispatch({ type: 'SET_LOADING', payload: true });
@@ -263,9 +197,9 @@ export const SupabaseAuthProvider = ({ children }: { children?: React.ReactNode 
 
       console.log('✅ Supabase login successful, waiting for auth state change...');
 
+      // The auth state change handler will set the user data
       // Set a timeout to clear loading state if auth state change doesn't happen
-      // This prevents the UI from being stuck indefinitely
-      loginTimeoutRef = setTimeout(() => {
+      setTimeout(() => {
         console.log('⏰ Login timeout reached, clearing loading state');
         dispatch({ type: 'SET_LOADING', payload: false });
       }, 5000);
@@ -273,10 +207,6 @@ export const SupabaseAuthProvider = ({ children }: { children?: React.ReactNode 
     } catch (error: any) {
       console.error('❌ Login process failed:', error);
       dispatch({ type: 'SET_LOADING', payload: false });
-      if (loginTimeoutRef) {
-        clearTimeout(loginTimeoutRef);
-        loginTimeoutRef = undefined;
-      }
 
       let errorMessage = 'Login failed';
       if (error.message?.includes('Invalid login credentials')) {
@@ -317,21 +247,45 @@ export const SupabaseAuthProvider = ({ children }: { children?: React.ReactNode 
       if (error) throw error;
 
       if (data.user) {
-        // Create user in public.users table
-        const newUser: User = {
+        // Create profile in user_profiles table
+        const profileData = {
           id: data.user.id,
-          email,
           name: name || data.user.user_metadata?.name || email.split('@')[0],
+          email: email,
           company: company || data.user.user_metadata?.company || '',
           department: department || data.user.user_metadata?.department || '',
-          totalSteps: 0,
+          total_steps: 0,
           competitions_won: 0,
           joined_date: new Date(),
+          role: 'user',
         };
 
-        await supabaseHelpers.users.create(newUser);
-        dispatch({ type: 'SET_USER', payload: newUser });
-        console.log('✅ User registered and profile created successfully');
+        try {
+          const profile = await supabaseHelpers.userProfiles.create(profileData);
+          dispatch({ type: 'SET_USER', payload: profile as User });
+          dispatch({ type: 'SET_ERROR', payload: null }); // Clear any previous errors
+          console.log('✅ User registered and profile created successfully');
+        } catch (dbError: any) {
+          console.error('❌ Database creation failed, using fallback profile object:', dbError);
+
+          // If database creation fails, create a fallback profile object for now
+          const fallbackProfile: User = {
+            id: profileData.id,
+            name: profileData.name,
+            email: profileData.email,
+            company: profileData.company,
+            department: profileData.department,
+            totalSteps: profileData.total_steps,
+            competitions_won: profileData.competitions_won,
+            joined_date: profileData.joined_date,
+            role: 'user' as const
+          };
+
+          dispatch({ type: 'SET_USER', payload: fallbackProfile });
+          dispatch({ type: 'SET_ERROR', payload: 'Account created but profile sync failed. Please contact support if issues persist.' });
+
+          console.log('✅ User registered with fallback profile - database sync needed');
+        }
       }
     } catch (error: any) {
       console.error('❌ Registration error:', error);
@@ -356,10 +310,13 @@ export const SupabaseAuthProvider = ({ children }: { children?: React.ReactNode 
   const logout = async () => {
     try {
       const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      if (error) {
+        console.error('Logout error:', error);
+      }
       dispatch({ type: 'SET_USER', payload: null });
     } catch (error: any) {
       console.error('Logout error:', error);
+      dispatch({ type: 'SET_USER', payload: null });
       dispatch({ type: 'SET_ERROR', payload: error.message || 'Logout failed' });
     }
   };
@@ -372,19 +329,11 @@ export const SupabaseAuthProvider = ({ children }: { children?: React.ReactNode 
     try {
       console.log('🔄 Attempting to update user profile for:', state.user.id);
 
-      // Prepare data for public.users table (exclude computed fields but preserve existing email)
-      const { id, joined_date, created_at, updated_at, ...publicUserData } = userData as any;
+      // Update user_profiles table
+      const updatedProfile = await supabaseHelpers.userProfiles.update(state.user.id, userData);
+      console.log('✅ User profile updated in user_profiles');
 
-      // Preserve existing email if not explicitly provided in update
-      if (!publicUserData.email && state.user?.email) {
-        publicUserData.email = state.user.email;
-      }
-
-      // Update public.users table
-      const updatedUser = await supabaseHelpers.users.update(state.user.id, publicUserData);
-      console.log('✅ User profile updated in public.users');
-
-      // Check if we need to sync profile data back to auth.users metadata
+      // Update auth.users metadata if there are name/company/department changes
       const authMetadataToUpdate: any = {};
 
       if (userData.name && userData.name !== state.user.name) {
@@ -409,31 +358,29 @@ export const SupabaseAuthProvider = ({ children }: { children?: React.ReactNode 
 
         if (authUpdateError) {
           console.error('❌ Failed to update auth metadata:', authUpdateError);
-          // Don't throw here - public.users update succeeded, this is just metadata sync
         } else {
           console.log('✅ Auth metadata synced successfully');
         }
       }
 
-      dispatch({ type: 'SET_USER', payload: updatedUser as User });
-      return updatedUser;
+      dispatch({ type: 'SET_USER', payload: updatedProfile as User });
+      return updatedProfile;
     } catch (error: any) {
       console.error('❌ Update user error:', error);
 
       // If update fails, try to refresh user data from server
       try {
         console.log('🔄 Attempting to refresh user data after update failure');
-        const refreshedUser = await supabaseHelpers.users.getById(state.user.id);
-        if (refreshedUser) {
+        const refreshedProfile = await supabaseHelpers.userProfiles.getById(state.user.id);
+        if (refreshedProfile) {
           console.log('✅ User data refreshed successfully');
-          dispatch({ type: 'SET_USER', payload: refreshedUser as User });
-          return refreshedUser;
+          dispatch({ type: 'SET_USER', payload: refreshedProfile as User });
+          return refreshedProfile;
         }
       } catch (refreshError) {
         console.error('❌ Failed to refresh user data:', refreshError);
       }
 
-      // If all else fails, keep the current user state but log the error
       console.error('❌ Profile update failed, maintaining current user state');
       const errorMessage = error.message || 'Failed to update profile';
       dispatch({ type: 'SET_ERROR', payload: errorMessage });
@@ -447,58 +394,132 @@ export const SupabaseAuthProvider = ({ children }: { children?: React.ReactNode 
     }
 
     try {
-      console.log('🔄 Force syncing user data between auth.users and public.users');
+      console.log('🔄 Force syncing user data between auth.users and user_profiles');
 
       // Get current auth user data
       const { data: authUser, error: authError } = await supabase.auth.getUser();
       if (authError) throw authError;
 
       const currentAuthUser = authUser.user;
-      let userData = await supabaseHelpers.users.getById(state.user.id);
+      let profile = await supabaseHelpers.userProfiles.getById(state.user.id);
 
-      // Sync auth.users metadata from public.users
-      const authMetadataUpdates: any = {};
-      if (userData.name && (!currentAuthUser.user_metadata?.name || userData.name !== currentAuthUser.user_metadata.name)) {
-        authMetadataUpdates.name = userData.name;
-      }
-      if (userData.company && (!currentAuthUser.user_metadata?.company || userData.company !== currentAuthUser.user_metadata.company)) {
-        authMetadataUpdates.company = userData.company;
-      }
-      if (userData.department && (!currentAuthUser.user_metadata?.department || userData.department !== currentAuthUser.user_metadata.department)) {
-        authMetadataUpdates.department = userData.department;
-      }
+      if (!profile) {
+        console.log('👤 Profile not found, creating from auth data...');
+        profile = await createUserProfile(currentAuthUser);
+      } else {
+        // Sync auth.users metadata to user_profiles
+        const profileUpdates: any = {};
 
-      if (Object.keys(authMetadataUpdates).length > 0) {
-        await supabase.auth.updateUser({
-          data: { ...currentAuthUser.user_metadata, ...authMetadataUpdates }
-        });
-      }
+        if (currentAuthUser.user_metadata?.name !== profile.name) {
+          profileUpdates.name = currentAuthUser.user_metadata?.name;
+        }
+        if (currentAuthUser.user_metadata?.company !== profile.company) {
+          profileUpdates.company = currentAuthUser.user_metadata?.company;
+        }
+        if (currentAuthUser.user_metadata?.department !== profile.department) {
+          profileUpdates.department = currentAuthUser.user_metadata?.department;
+        }
 
-      // Sync public.users from auth.users
-      const publicUserUpdates: any = {};
-      if (currentAuthUser.email && currentAuthUser.email !== userData.email) {
-        publicUserUpdates.email = currentAuthUser.email;
-      }
-      if (currentAuthUser.user_metadata?.name !== userData.name) {
-        publicUserUpdates.name = currentAuthUser.user_metadata?.name;
-      }
-      if (currentAuthUser.user_metadata?.company !== userData.company) {
-        publicUserUpdates.company = currentAuthUser.user_metadata?.company;
-      }
-      if (currentAuthUser.user_metadata?.department !== userData.department) {
-        publicUserUpdates.department = currentAuthUser.user_metadata?.department;
+        if (Object.keys(profileUpdates).length > 0) {
+          profile = await supabaseHelpers.userProfiles.update(state.user.id, profileUpdates);
+        }
       }
 
-      if (Object.keys(publicUserUpdates).length > 0) {
-        userData = await supabaseHelpers.users.update(state.user.id, publicUserUpdates);
-      }
-
-      dispatch({ type: 'SET_USER', payload: userData as User });
+      dispatch({ type: 'SET_USER', payload: profile as User });
       console.log('✅ User data synchronized successfully');
-      return userData;
+      return profile;
     } catch (error: any) {
       console.error('❌ Sync user data error:', error);
       throw new Error('Failed to sync user data');
+    }
+  };
+
+  const makeUserAdmin = async (userId: string) => {
+    if (!state.user) {
+      throw new Error('No user logged in');
+    }
+
+    try {
+      console.log('👑 Making user admin:', userId);
+
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .update({ role: 'admin', updated_at: new Date().toISOString() })
+        .eq('id', userId)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      console.log('✅ User role updated to admin:', data.id);
+
+      // If updating current user, refresh their data
+      if (userId === state.user.id) {
+        const refreshedProfile = await supabaseHelpers.userProfiles.getById(userId);
+        if (refreshedProfile) {
+          dispatch({ type: 'SET_USER', payload: refreshedProfile as User });
+        }
+      }
+
+      return data;
+    } catch (error: any) {
+      console.error('❌ Failed to make user admin:', error);
+      throw new Error('Failed to update user role');
+    }
+  };
+
+  const syncAllAuthUsers = async () => {
+    try {
+      console.log('🔄 Syncing all auth users to user_profiles...');
+
+      // Get all auth users
+      const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
+      if (authError) throw authError;
+
+      let syncedCount = 0;
+      let errorCount = 0;
+
+      for (const authUser of authUsers.users) {
+        try {
+          // Check if profile exists in user_profiles
+          const { data: existingProfile } = await supabase
+            .from('user_profiles')
+            .select('id')
+            .eq('id', authUser.id)
+            .single();
+
+          if (!existingProfile) {
+            // Create profile in user_profiles
+            const { error: createError } = await supabase
+              .from('user_profiles')
+              .insert({
+                id: authUser.id,
+                name: authUser.user_metadata?.name || authUser.email?.split('@')[0] || 'User',
+                company: authUser.user_metadata?.company || '',
+                department: authUser.user_metadata?.department || '',
+                total_steps: 0,
+                competitions_won: 0,
+                joined_date: new Date().toISOString(),
+                role: 'user',
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+              });
+
+            if (createError) throw createError;
+            syncedCount++;
+            console.log('✅ Synced user:', authUser.email);
+          }
+        } catch (userError: any) {
+          console.error('❌ Failed to sync user:', authUser.email, userError);
+          errorCount++;
+        }
+      }
+
+      console.log(`✅ Sync complete: ${syncedCount} users synced, ${errorCount} errors`);
+      return { syncedCount, errorCount };
+    } catch (error: any) {
+      console.error('❌ Failed to sync auth users:', error);
+      throw new Error('Failed to sync users');
     }
   };
 
@@ -511,6 +532,8 @@ export const SupabaseAuthProvider = ({ children }: { children?: React.ReactNode 
         logout,
         updateUser,
         syncUserData,
+        makeUserAdmin,
+        syncAllAuthUsers,
       }}
     >
       {children}
@@ -518,7 +541,7 @@ export const SupabaseAuthProvider = ({ children }: { children?: React.ReactNode 
   );
 };
 
-export const useSupabaseAuth = () => {
+export const useSupabaseAuth = (): SupabaseAuthContextType => {
   const context = useContext(SupabaseAuthContext);
   if (!context) throw new Error('useSupabaseAuth must be used within a SupabaseAuthProvider');
   return context;

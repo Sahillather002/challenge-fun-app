@@ -78,15 +78,17 @@ export const CompetitionProvider: React.FC<{ children: React.ReactNode }> = ({ c
         name: competitionData.name || '',
         description: competitionData.description || '',
         type: competitionData.type || 'weekly',
-        entryFee: competitionData.entryFee || 50,
-        prizePool: 0,
-        startDate: competitionData.startDate || new Date(),
-        endDate: competitionData.endDate || new Date(),
+        entry_fee: competitionData.entry_fee || 50,
+        prize_pool: 0,
+        start_date: competitionData.start_date || new Date().toISOString(),
+        end_date: competitionData.end_date || new Date().toISOString(),
         participants: [],
         status: 'upcoming',
-        createdBy: competitionData.createdBy || '',
+        created_by: competitionData.created_by || '',
         rules: competitionData.rules || [],
         prizes: competitionData.prizes || { first: 60, second: 30, third: 10 },
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       };
 
 
@@ -118,11 +120,12 @@ export const CompetitionProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const updateSteps = async (competitionId: string, userId: string, steps: number) => {
     try {
       const stepData: StepData = {
-        userId,
-        competitionId,
+        user_id: userId,
+        competition_id: competitionId,
         date: new Date().toISOString().split('T')[0],
         steps,
         timestamp: new Date(),
+        created_at: new Date(),
       };
       await firebaseHelpers.firestore.addDoc('steps', stepData);
     } catch (error: any) {
@@ -132,13 +135,13 @@ export const CompetitionProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   const getLeaderboard = async (competitionId: string) => {
     try {
-      const q = firebaseHelpers.firestore.query('steps', { type: 'where', field: 'competitionId', operator: '==', value: competitionId });
+      const q = firebaseHelpers.firestore.query('steps', { type: 'where', field: 'competition_id', operator: '==', value: competitionId });
       const snapshot = await firebaseHelpers.firestore.getDocs(q);
       const stepsData = snapshot.docs.map((doc: any) => doc.data() as StepData);
 
 
       const userSteps = new Map<string, number>();
-      stepsData.forEach(s => userSteps.set(s.userId, (userSteps.get(s.userId) || 0) + s.steps));
+      stepsData.forEach(s => userSteps.set(s.user_id, (userSteps.get(s.user_id) || 0) + s.steps));
 
       const leaderboard = Array.from(userSteps.entries())
         .map(([userId, totalSteps]) => ({ userId, totalSteps }))
@@ -156,7 +159,7 @@ export const CompetitionProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   const getUserSteps = async (competitionId: string) => {
     try {
-      const q = firebaseHelpers.firestore.query('steps', { type: 'where', field: 'competitionId', operator: '==', value: competitionId });
+      const q = firebaseHelpers.firestore.query('steps', { type: 'where', field: 'competition_id', operator: '==', value: competitionId });
       const snapshot = await firebaseHelpers.firestore.getDocs(q);
       const stepsData = snapshot.docs.map((doc: any) => doc.data() as StepData);
       dispatch({ type: 'SET_USER_STEPS', payload: stepsData });

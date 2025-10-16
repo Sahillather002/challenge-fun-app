@@ -22,6 +22,7 @@ import { useTheme } from '../../context/ThemeContext';
 import { useToast } from '../../context/ToastContext';
 import { firebaseHelpers } from '../../utils/firebaseHelpers';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import AdminUtils from '../../components/AdminUtils';
 
 const ProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -427,6 +428,9 @@ const ProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
           </View>
         </Card.Content>
       </Card>
+
+      {/* Admin Tools - Only visible to admins */}
+      <AdminUtils />
 
       {/* Actions */}
       <View style={styles.actionButtons}>

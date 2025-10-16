@@ -74,7 +74,7 @@ const CompetitionScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
   const renderCompetition = ({ item }: { item: Competition }) => {
     const isJoined = item.participants.includes(user?.id || '');
-    const daysLeft = Math.ceil((new Date(item.endDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+    const daysLeft = Math.ceil((new Date(item.end_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
 
     return (
       <Card style={[styles.competitionCard, { backgroundColor: theme.colors.surface }]}>
@@ -104,14 +104,14 @@ const CompetitionScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             <View style={styles.detailItem}>
               <Icon name="currency-inr" size={16} color={theme.colors.primary} />
               <Text style={[styles.detailText, { color: theme.colors.onSurface }]}>
-                Entry: ₹{item.entryFee}
+                Entry: ₹{item.entry_fee}
               </Text>
             </View>
 
             <View style={styles.detailItem}>
               <Icon name="trophy" size={16} color={theme.colors.primary} />
               <Text style={[styles.detailText, { color: theme.colors.onSurface }]}>
-                Prize: ₹{item.entryFee * item.participants.length * 0.6}
+                Prize: ₹{item.entry_fee * item.participants.length * 0.6}
               </Text>
             </View>
           </View>
@@ -217,6 +217,7 @@ const CompetitionScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         icon="plus"
         style={[styles.fab, { backgroundColor: theme.colors.primary }]}
         onPress={() => navigation.navigate('CreateCompetition')}
+        visible={user?.role === 'admin'}
       />
     </View>
   );

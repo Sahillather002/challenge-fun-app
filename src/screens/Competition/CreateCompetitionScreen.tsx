@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import {
+  Platform
+} from 'react-native';
+import {
   View,
   Text,
   ScrollView,
@@ -64,16 +67,16 @@ const CreateCompetitionScreen: React.FC<{ navigation: any }> = ({ navigation }) 
         name: formData.name,
         description: formData.description,
         type: formData.type,
-        entryFee: parseInt(formData.entryFee),
-        startDate: formData.startDate,
-        endDate: formData.endDate,
+        entry_fee: parseInt(formData.entryFee),
+        start_date: formData.startDate.toISOString(),
+        end_date: formData.endDate.toISOString(),
         rules: formData.rules,
         prizes: {
           first: parseInt(formData.prizes.first),
           second: parseInt(formData.prizes.second),
           third: parseInt(formData.prizes.third),
         },
-        createdBy: user?.id || '',
+        created_by: user?.id || '',
       };
 
       await createCompetition(competitionData);
@@ -345,13 +348,32 @@ const CreateCompetitionScreen: React.FC<{ navigation: any }> = ({ navigation }) 
           </Card.Content>
         </Card>
 
-        {showPicker && (
+        {showPicker && Platform.OS !== 'web' && (
           <DateTimePicker
             value={formData[pickerMode === 'start' ? 'startDate' : 'endDate']}
             mode="date"
             display="default"
             onChange={handleDateChange}
           />
+        )}
+
+        {showPicker && Platform.OS === 'web' && (
+          <View style={styles.webDatePicker}>
+            <Text>Web Date Picker - Use browser date input</Text>
+            <input
+              type="date"
+              value={formData[pickerMode === 'start' ? 'startDate' : 'endDate'].toISOString().split('T')[0]}
+              onChange={(e) => {
+                const selectedDate = new Date(e.target.value);
+                setFormData(prev => ({
+                  ...prev,
+                  [pickerMode === 'start' ? 'startDate' : 'endDate']: selectedDate,
+                }));
+                setShowPicker(false);
+              }}
+              style={styles.webDateInput}
+            />
+          </View>
         )}
       </ScrollView>
     </View>
@@ -472,6 +494,28 @@ const styles = StyleSheet.create({
   },
   buttonContent: {
     paddingVertical: 12,
+  },
+  webDatePicker: {
+    position: 'absolute',
+    bottom: 100,
+    left: 16,
+    right: 16,
+    backgroundColor: 'white',
+    padding: 16,
+    borderRadius: 8,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+  },
+  webDateInput: {
+    width: '100%',
+    padding: 8,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 4,
+    fontSize: 16,
   },
 });
 
