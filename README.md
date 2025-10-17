@@ -19,7 +19,7 @@ Here's a visual preview of the Health Competition App interface:
 
 | Dashboard | Competition Screen | Leaderboard | Payment Screen |
 |-----------|-------------------|-------------|----------------|
-| ![Dashboard Screenshot](screenshots/dashboard.png) | ![Competition Screenshot](screenshots/compete.png) | ![Leaderboard Screenshot](screenshots/leaderboard.png) | ![Payment Screenshot](screenshots/payment.png) | | ![Rewards Screenshot](screenshots/rewards.png) | | ![Profile Screenshot](screenshots/profile.png) |
+| ![Dashboard Screenshot](screenshots/dashboard.png) | ![Competition Screenshot](screenshots/compete.png) | ![Leaderboard Screenshot](screenshots/leaderboard.png) | ![Payment Screenshot](screenshots/payment.png) |
 
 ### Authentication Flow
 
