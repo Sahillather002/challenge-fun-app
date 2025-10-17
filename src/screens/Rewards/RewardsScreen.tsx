@@ -175,7 +175,7 @@ const RewardsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                   { color: theme.colors.onSurfaceVariant },
                 ]}
               >
-                Competition #{item.competitionId.slice(-4)}
+                Competition #{item.competition_id.slice(-4)}
               </Text>
             </View>
           </View>
@@ -209,7 +209,7 @@ const RewardsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
           </View>
         </View>
 
-        {item.claimed && item.claimedDate && (
+        {item.claimed && item.claimed_date && (
           <View style={styles.claimedInfo}>
             <Icon name="check-circle" size={16} color="#4CAF50" />
             <Text
@@ -218,7 +218,7 @@ const RewardsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                 { color: theme.colors.onSurfaceVariant },
               ]}
             >
-              Claimed on {formatDate(item.claimedDate)}
+              Claimed on {formatDate(item.claimed_date)}
             </Text>
           </View>
         )}
@@ -441,6 +441,18 @@ const RewardsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             </Text>
           </TouchableOpacity>
         ))}
+        {/* Add Test Payment Button for Dummy Flow */}
+        <TouchableOpacity
+          style={[
+            styles.filterChip,
+            { backgroundColor: theme.colors.accent || '#FF9800' },
+          ]}
+          onPress={() => navigation.navigate('CashfreePayment', { amount: 100, description: 'Test Reward Claim' })}
+        >
+          <Text style={[styles.filterText, { color: 'white' }]}>
+            Test Payment
+          </Text>
+        </TouchableOpacity>
       </View>
 
       {/* Rewards List */}

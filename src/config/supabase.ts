@@ -231,7 +231,8 @@ export const supabaseHelpers = {
         return data
       }
       return competition
-    }
+    },
+
   },
 
   // Step data operations
@@ -272,25 +273,41 @@ export const supabaseHelpers = {
     },
 
     async getLeaderboard(competitionId: string) {
-      // Get aggregated steps for leaderboard
-      const { data, error } = await supabase
+      // Get steps data for the competition
+      const { data: stepsData, error: stepsError } = await supabase
         .from('steps')
-        .select(`
-          user_id,
-          steps,
-          user_profiles!inner(name, email)
-        `)
+        .select('user_id, steps')
         .eq('competition_id', competitionId)
 
-      if (error) throw error
+      if (stepsError) throw stepsError
+
+      if (!stepsData || stepsData.length === 0) {
+        return []
+      }
+
+      // Get unique user IDs
+      const userIds = [...new Set(stepsData.map(step => step.user_id))]
+
+      // Get user profiles for these users
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('user_profiles')
+        .select('id, name, email')
+        .in('id', userIds)
+
+      if (profilesError) throw profilesError
+
+      // Create a map of user profiles for quick lookup
+      const profilesMap = new Map(profilesData?.map(profile => [profile.id, profile]) || [])
 
       // Aggregate steps by user
-      const aggregated = data.reduce((acc: any, curr: any) => {
+      const aggregated = stepsData.reduce((acc: any, curr: any) => {
         const userId = curr.user_id
+        const userProfile = profilesMap.get(userId)
+
         if (!acc[userId]) {
           acc[userId] = {
             userId,
-            userName: curr.user_profiles.name,
+            userName: userProfile?.name || 'Unknown User',
             totalSteps: 0,
             steps: []
           }

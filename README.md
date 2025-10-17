@@ -11,6 +11,34 @@ This React Native app enables companies to organize health competitions where em
 - Win cash prizes for top 3 positions
 - Track progress and achievements
 
+## 📱 App Screenshots
+
+Here's a visual preview of the Health Competition App interface:
+
+### Main Screens
+
+| Dashboard | Competition Screen | Leaderboard | Payment Screen |
+|-----------|-------------------|-------------|----------------|
+| ![Dashboard Screenshot](screenshots/dashboard.png) | ![Competition Screenshot](screenshots/compete.png) | ![Leaderboard Screenshot](screenshots/leaderboard.png) | ![Payment Screenshot](screenshots/payment.png) | | ![Rewards Screenshot](screenshots/rewards.png) | | ![Profile Screenshot](screenshots/profile.png) |
+
+### Authentication Flow
+
+| Login Screen | Registration Screen | Google Fit Integration |
+|-------------|-------------------|----------------------|
+| ![Login Screenshot](screenshots/login.png) | ![Register Screenshot](screenshots/register.png) | ![Google Fit Screenshot](screenshots/google-fit.png) |
+
+### Key Features in Action
+
+| Step Tracking | Competition Details | Prize Distribution | Profile Management |
+|--------------|-------------------|-------------------|-------------------|
+| ![Step Tracking](screenshots/step-tracking.png) | ![Competition Details](screenshots/competition-details.png) | ![Prize Distribution](screenshots/prizes.png) | ![Profile Screenshot](screenshots/profile.png) |
+
+*To add your own screenshots:*
+1. Run the app using `npm start`
+2. Take screenshots of the key screens listed above
+3. Save them as PNG files in the `screenshots/` directory
+4. Replace the placeholder paths in this README with your actual screenshot files
+
 ## 📱 Core Features
 
 ### 1. Authentication System

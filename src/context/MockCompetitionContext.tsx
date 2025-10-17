@@ -70,7 +70,35 @@ export const CompetitionProvider: React.FC<{ children: React.ReactNode }> = ({ c
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
       const competitions = await supabaseHelpers.competitions.getAll();
-      dispatch({ type: 'SET_COMPETITIONS', payload: competitions });
+
+      // Update competition statuses based on dates
+      const now = new Date();
+      const updatedCompetitions = competitions.map((competition: Competition) => {
+        const startDate = new Date(competition.start_date);
+        const endDate = new Date(competition.end_date);
+
+        let newStatus = competition.status;
+
+        if (now < startDate && competition.status !== 'upcoming') {
+          newStatus = 'upcoming';
+        } else if (now >= startDate && now <= endDate && competition.status !== 'active') {
+          newStatus = 'active';
+        } else if (now > endDate && competition.status !== 'completed') {
+          newStatus = 'completed';
+        }
+
+        // Update in database if status changed
+        if (newStatus !== competition.status) {
+          supabaseHelpers.competitions.update(competition.id, {
+            status: newStatus,
+            updated_at: new Date().toISOString()
+          }).catch(error => console.error('Error updating competition status:', error));
+        }
+
+        return { ...competition, status: newStatus };
+      });
+
+      dispatch({ type: 'SET_COMPETITIONS', payload: updatedCompetitions });
     } catch (error: any) {
       console.error('Error loading competitions:', error);
       dispatch({ type: 'SET_ERROR', payload: 'Failed to load competitions' });

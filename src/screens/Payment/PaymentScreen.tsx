@@ -14,16 +14,18 @@ import {
   TextInput,
   RadioButton,
 } from 'react-native-paper';
-import { useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { useSupabaseAuth } from '../../context/SupabaseAuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useToast } from '../../context/ToastContext';
 import { Payment } from '../../types';
+import { supabaseHelpers } from '../../config/supabase';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
-const PaymentScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
+const PaymentScreen = () => {
   const route = useRoute();
   const { competitionId } = route.params as { competitionId: string };
+  const navigation = useNavigation();
   
   const [paymentMethod, setPaymentMethod] = useState<'upi' | 'card' | 'netbanking'>('upi');
   const [formData, setFormData] = useState({
@@ -68,23 +70,22 @@ const PaymentScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       // Simulate payment processing
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // Create payment record
-      const paymentData: Payment = {
-        id: Date.now().toString(),
-        userId: user?.id || '',
-        competitionId,
+      // Create and save payment record
+      const paymentData = {
+        user_id: user?.id || '',
+        competition_id: competitionId,
         amount: totalAmount,
         status: 'completed',
-        timestamp: new Date(),
-        paymentMethod,
+        payment_method: paymentMethod,
+        created_at: new Date().toISOString(),
       };
 
-      // In a real app, you would save this to your backend
-      console.log('Payment processed:', paymentData);
+      await supabaseHelpers.payments.create(paymentData);
+      console.log('Payment processed and saved:', paymentData);
 
       toast.success(`Payment successful! ₹${totalAmount} paid.`);
       setTimeout(() => {
-        navigation.navigate('Competition');
+        navigation.navigate('Main' as never);
       }, 1000);
     } catch (error: any) {
       toast.error('Payment failed: ' + error.message);

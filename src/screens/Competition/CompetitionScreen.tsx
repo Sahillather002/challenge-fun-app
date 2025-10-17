@@ -81,12 +81,22 @@ const CompetitionScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         <Card.Content>
           <View style={styles.cardHeader}>
             <Title style={styles.competitionName}>{item.name}</Title>
-            <Chip
-              style={[styles.statusChip, { backgroundColor: getStatusColor(item.status) }]}
-              textStyle={{ color: 'white' }}
-            >
-              {item.status.toUpperCase()}
-            </Chip>
+            <View style={styles.statusContainer}>
+              {isJoined && (
+                <Chip
+                  style={[styles.joinedChip, { backgroundColor: '#4CAF50' }]}
+                  textStyle={{ color: 'white', fontSize: 10 }}
+                >
+                  JOINED
+                </Chip>
+              )}
+              <Chip
+                style={[styles.statusChip, { backgroundColor: getStatusColor(item.status) }]}
+                textStyle={{ color: 'white' }}
+              >
+                {item.status.toUpperCase()}
+              </Chip>
+            </View>
           </View>
 
           <Paragraph style={[styles.description, { color: theme.colors.onSurfaceVariant }]}>
@@ -217,7 +227,7 @@ const CompetitionScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         icon="plus"
         style={[styles.fab, { backgroundColor: theme.colors.primary }]}
         onPress={() => navigation.navigate('CreateCompetition')}
-        visible={user?.role === 'admin'}
+        visible={user !== null}
       />
     </View>
   );
@@ -265,6 +275,14 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     marginBottom: 8,
+  },
+  statusContainer: {
+    flexDirection: 'row',
+    gap: 4,
+    alignItems: 'center',
+  },
+  joinedChip: {
+    height: 24,
   },
   competitionName: {
     flex: 1,

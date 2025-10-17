@@ -18,8 +18,15 @@ import PaymentScreen from './src/screens/Payment/PaymentScreen';
 import SettingsScreen from './src/screens/Settings/SettingsScreen';
 import GoogleFitAccountScreen from './src/screens/Settings/GoogleFitAccountScreen';
 
+// Import New Screens for Dummy Flow
+import TransactionsScreen from './src/screens/TransactionsScreen';
+import LeaderboardScreen from './src/screens/LeaderboardScreen';
+
 // Import Tab Navigator
 import MainTabNavigator from './src/navigation/MainTabNavigator';
+
+
+import CashfreePaymentScreen from './src/screens/Payment/CashfreePaymentScreen';
 
 const Stack = createStackNavigator();
 
@@ -42,6 +49,8 @@ function AppContent() {
                 <Stack.Screen name="Payment" component={PaymentScreen} />
                 <Stack.Screen name="Settings" component={SettingsScreen} />
                 <Stack.Screen name="GoogleFitAccount" component={GoogleFitAccountScreen} options={{ title: 'Google Fit Account' }} />
+                <Stack.Screen name="Transactions" component={TransactionsScreen} options={{ title: 'Transactions' }} />
+                <Stack.Screen name="Leaderboard" component={LeaderboardScreen} options={{ title: 'Leaderboard' }} />
               </Stack.Navigator>
             </NavigationContainer>
           </ToastProvider>
@@ -58,24 +67,24 @@ export default function App() {
   useEffect(() => {
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
       const hash = window.location.hash;
-      
+
       // Check if this is an OAuth callback (has access_token in URL)
       if (hash && hash.includes('access_token')) {
         const params = new URLSearchParams(hash.substring(1));
         const token = params.get('access_token');
-        
+
         if (token) {
           console.log('🔑 OAuth callback detected in popup');
           setIsOAuthCallback(true);
-          
+
           // Extract expiry time
           const expiresIn = params.get('expires_in');
           const expiresAt = expiresIn ? Date.now() + (parseInt(expiresIn) * 1000) : Date.now() + 3600000;
-          
+
           // Save token and expiry to localStorage
           localStorage.setItem('google_fit_token', token);
           localStorage.setItem('google_fit_token_expiry', expiresAt.toString());
-          
+
           // If this is a popup window, send message to parent and close
           if (window.opener && !window.opener.closed) {
             console.log('📤 Sending success message to parent window');
@@ -84,10 +93,10 @@ export default function App() {
               token: token,
               expiresAt: expiresAt
             }, window.location.origin);
-            
+
             // Clear URL and close popup
             window.history.replaceState(null, '', window.location.pathname);
-            
+
             setTimeout(() => {
               window.close();
             }, 100);
