@@ -39,6 +39,323 @@ Here's a visual preview of the Health Competition App interface:
 3. Save them as PNG files in the `screenshots/` directory
 4. Replace the placeholder paths in this README with your actual screenshot files
 
+## 🏗️ System Architecture & Flow Diagram
+
+This section contains **interactive Mermaid diagrams** that illustrate the complete system architecture and data flows. Mermaid diagrams render beautifully on GitHub and other platforms that support them.
+
+### 📋 **Visual Diagram Gallery**
+
+All diagrams are provided as **Mermaid syntax** that renders automatically:
+
+| Diagram | Type | Description |
+|---------|------|-------------|
+| **🏗️ System Architecture** | `mermaid` | Complete system components and data flow |
+| **🗄️ Database Schema** | `mermaid` | Table relationships and structure |
+| **👤 User Registration Flow** | `mermaid` | Step-by-step registration process |
+| **⚡ Real-time Updates** | `mermaid` | Live data synchronization workflow |
+| **🏆 Prize Distribution** | `mermaid` | Winnings calculation and payout process |
+| **🔧 Error Handling** | `mermaid` | Error recovery and state management |
+| **🗺️ User Journey** | `mermaid` | Complete user experience phases |
+
+### 🚀 **Mermaid Diagram Features**
+
+✅ **GitHub Native** - Renders perfectly on GitHub without external files  
+✅ **Interactive** - Zoomable and clickable when viewed on supported platforms  
+✅ **Version Control** - Diagrams are part of your README, tracked in git  
+✅ **No External Dependencies** - Works anywhere Markdown is supported  
+✅ **Easy to Edit** - Simple text syntax for quick modifications  
+
+### 📖 **Text-Based Overviews** (Universal Fallback)
+
+For platforms that don't support Mermaid rendering, here are text-based representations:
+
+#### System Architecture Overview
+```
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   Mobile App    │───▶│  Authentication  │───▶│   Firebase      │
+│   (React Native)│    │  (JWT Tokens)    │    │   Auth & DB     │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+        │                       │                       │
+        ▼                       ▼                       ▼
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│ Google Fit API  │◀───│   Real-time      │───▶│   Supabase      │
+│ (Step Tracking) │    │   Updates        │    │   Database      │
+└─────────────────┘    │   (WebSocket)    │    │   (PostgreSQL)  │
+                       └──────────────────┘    └─────────────────┘
+                                │                       │
+                                ▼                       ▼
+                       ┌──────────────────┐    ┌─────────────────┐
+                       │  Payment Gateway │    │ Push Notifications│
+                       │  (Razorpay/UPI)  │    │   (FCM/APNs)    │
+                       └──────────────────┘    └─────────────────┘
+```
+
+#### Database Relationships
+```
+USERS ──┬── COMPETITIONS (creates)
+        ├── USER_COMPETITIONS (joins)
+        ├── STEP_DATA (tracks)
+        ├── PAYMENTS (makes)
+        └── NOTIFICATIONS (receives)
+
+COMPETITIONS ──┬── USER_COMPETITIONS (has)
+               ├── STEP_DATA (measures)
+               └── PAYMENTS (collects)
+
+USER_COMPETITIONS ──┬── PAYMENTS (requires)
+                   └── STEP_DATA (generates)
+
+PAYMENTS ── NOTIFICATIONS (triggers)
+STEP_DATA ── NOTIFICATIONS (generates)
+```
+
+#### Core Data Flows
+1. **User Registration**: Registration Form → Firebase Auth → Email Verification → Supabase Profile
+2. **Google Fit Integration**: OAuth Authorization → Daily Step Sync → Real-time Updates
+3. **Competition Lifecycle**: Create Competition → User Enrollment → Daily Tracking → Prize Distribution
+4. **Payment Processing**: Payment Gateway → Transaction Recording → Winner Payout
+
+### 📁 **File Structure**
+```
+diagrams/
+└── README.txt                   # Guide for creating external visual diagrams
+```
+
+*Note: Mermaid diagrams render perfectly on GitHub. If you're viewing this in a local markdown viewer, the diagrams may appear as code blocks.*
+
+### 🏗️ **System Architecture**
+
+```mermaid
+graph TB
+    A[Mobile App] --> B[Authentication]
+    B --> C[Firebase Auth]
+    C --> D[User Registration]
+
+    A --> E[Google Fit Integration]
+    E --> F[OAuth Authorization]
+    F --> G[Step Data Sync]
+
+    G --> H[Supabase Database]
+    H --> I[Users Table]
+    H --> J[Competitions Table]
+    H --> K[Step Data Table]
+    H --> L[Payments Table]
+    H --> M[Notifications Table]
+
+    D --> I
+    G --> K
+    A --> N[Competition Management]
+    N --> J
+    J --> O[Prize Calculation]
+
+    A --> P[Payment Processing]
+    P --> Q[Payment Gateway]
+    Q --> L
+    L --> O
+
+    O --> R[Prize Distribution]
+    R --> S[Winner Notifications]
+    S --> M
+
+    H --> T[Real-time Updates]
+    T --> U[Push Notifications]
+    T --> V[Live Leaderboards]
+
+    style A fill:#e1f5fe
+    style H fill:#f3e5f5
+    style O fill:#e8f5e8
+```
+
+### 🗄️ **Database Schema Relationships**
+
+```mermaid
+erDiagram
+    USERS ||--o{ COMPETITIONS : creates
+    USERS ||--o{ USER_COMPETITIONS : joins
+    USERS ||--o{ STEP_DATA : tracks
+    USERS ||--o{ PAYMENTS : makes
+    USERS ||--o{ NOTIFICATIONS : receives
+
+    COMPETITIONS ||--o{ USER_COMPETITIONS : has
+    COMPETITIONS ||--o{ STEP_DATA : measures
+    COMPETITIONS ||--o{ PAYMENTS : collects
+
+    USER_COMPETITIONS ||--o{ PAYMENTS : requires
+    USER_COMPETITIONS ||--o{ STEP_DATA : generates
+
+    PAYMENTS ||--o{ NOTIFICATIONS : triggers
+    STEP_DATA ||--o{ NOTIFICATIONS : generates
+```
+
+### 👤 **User Registration & Authentication Flow**
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant A as App
+    participant F as Firebase Auth
+    participant S as Supabase
+    participant E as Email Service
+
+    U->>A: Click Register Button
+    A->>U: Show Registration Form
+    U->>A: Enter Details (Name, Email, Password, Company)
+    A->>F: Create Account Request
+    F-->>A: Account Created + Email Verification
+    A->>E: Send Welcome Email
+    E-->>U: Welcome Email Sent
+
+    U->>A: Verify Email Link
+    A->>F: Verify Email Token
+    F-->>A: Email Verified
+
+    A->>S: Create User Profile
+    S-->>A: Profile Created
+    A->>U: Registration Complete
+```
+
+### ⚡ **Real-time Update Mechanism**
+
+```mermaid
+flowchart TD
+    A[Step Data Update] --> B{Trigger Type}
+    B --> C[Daily Sync]
+    B --> D[Manual Refresh]
+    B --> E[Competition Start/End]
+
+    C --> F[Google Fit API Call]
+    D --> F
+    E --> F
+
+    F --> G{Data Valid?}
+    G -->|Yes| H[Supabase Update]
+    G -->|No| I[Error Handling]
+
+    H --> J[Real-time Subscription]
+    J --> K[WebSocket Broadcast]
+    K --> L[Connected Clients]
+    L --> M[Live UI Updates]
+    M --> N[Leaderboard Refresh]
+    M --> O[Notification Trigger]
+
+    I --> P[Retry Logic]
+    P --> Q{Max Retries?}
+    Q -->|No| F
+    Q -->|Yes| R[Log Error & Notify]
+```
+
+### 🏆 **Prize Distribution Process**
+
+```mermaid
+flowchart TD
+    A[Competition Ends] --> B[Calculate Final Rankings]
+    B --> C[Determine Winners]
+
+    C --> D{Top 3 Positions}
+    D --> E[1st Place: 60%]
+    D --> F[2nd Place: 30%]
+    D --> G[3rd Place: 10%]
+
+    E --> H[Calculate Prize Amount]
+    F --> I[Calculate Prize Amount]
+    G --> J[Calculate Prize Amount]
+
+    H --> K[Supabase Prize Record]
+    I --> L[Supabase Prize Record]
+    J --> M[Supabase Prize Record]
+
+    K --> N[Winner Notification]
+    L --> O[Winner Notification]
+    M --> P[Winner Notification]
+
+    N --> Q[Payment Processing]
+    O --> R[Payment Processing]
+    P --> S[Payment Processing]
+
+    Q --> T{Payment Success?}
+    R --> U{Payment Success?}
+    S --> V{Payment Success?}
+
+    T -->|Yes| W[Mark as Paid]
+    U -->|Yes| X[Mark as Paid]
+    V -->|Yes| Y[Mark as Paid]
+
+    W --> Z[Transaction Complete]
+    X --> AA[Transaction Complete]
+    Y --> BB[Transaction Complete]
+
+    T -->|No| CC[Retry Payment]
+    U -->|No| DD[Retry Payment]
+    V -->|No| EE[Retry Payment]
+```
+
+### 🔧 **Error Handling & Recovery Workflow**
+
+```mermaid
+stateDiagram-v2
+    [*] --> Monitoring
+
+    Monitoring --> API_Error: API Call Fails
+    Monitoring --> Auth_Error: Authentication Fails
+    Monitoring --> Network_Error: Network Issues
+    Monitoring --> Data_Error: Data Validation Fails
+
+    API_Error --> Retry_Logic: Auto Retry
+    Retry_Logic --> [*]: Success
+    Retry_Logic --> Error_Log: Max Retries Exceeded
+
+    Auth_Error --> Token_Refresh: Refresh Token
+    Token_Refresh --> [*]: Success
+    Token_Refresh --> Re_Auth: Refresh Failed
+    Re_Auth --> Login_Screen: Force Re-login
+
+    Network_Error --> Offline_Mode: Enable Offline
+    Offline_Mode --> Queue_Actions: Queue Operations
+    Offline_Mode --> [*]: Connection Restored
+
+    Data_Error --> Validation_Rules: Check Rules
+    Validation_Rules --> Correction_UI: Show Error to User
+    Correction_UI --> [*]: User Fixes Data
+
+    Error_Log --> Admin_Alert: Critical Errors
+    Admin_Alert --> [*]: Admin Notified
+```
+
+### 🗺️ **Complete User Journey Map**
+
+```mermaid
+journey
+    title Complete User Experience Journey
+
+    section Registration
+        Visit App: 5: User
+        Create Account: 4: User, Firebase
+        Verify Email: 3: User, Email Service
+        Complete Profile: 4: User, Supabase
+
+    section Onboarding
+        Connect Google Fit: 5: User, Google Fit API
+        First Step Sync: 4: System
+        Tutorial Complete: 3: User
+
+    section Active Usage
+        Browse Competitions: 4: User, App
+        Join Competition: 5: User, Payment Gateway
+        Daily Step Tracking: 5: Google Fit, Supabase
+        Check Rankings: 4: User, Real-time Updates
+
+    section Competition End
+        Final Rankings: 5: System
+        Prize Calculation: 5: Supabase
+        Winner Notification: 5: Push Notifications
+        Prize Claiming: 4: User, Payment Gateway
+
+    section Long-term
+        Achievement Tracking: 4: User, Analytics
+        Multiple Competitions: 5: User
+        Social Features: 3: User, Planned
+```
+
 ## 📱 Core Features
 
 ### 1. Authentication System
