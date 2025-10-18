@@ -1,0 +1,101 @@
+version: '3.8'
+
+services:
+  # Redis - Shared cache and pub/sub for all services
+  redis:
+    image: redis:7-alpine
+    container_name: health-competition-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  # Go Service
+  go-service:
+    build:
+      context: ./backends/go-service
+      dockerfile: Dockerfile
+    container_name: health-competition-go
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - REDIS_URL=redis://redis:6379
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - SUPABASE_JWT_SECRET=${SUPABASE_JWT_SECRET}
+      - LOG_LEVEL=info
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  # Rust Service
+  rust-service:
+    build:
+      context: ./backends/rust-service
+      dockerfile: Dockerfile
+    container_name: health-competition-rust
+    ports:
+      - "8081:8081"
+    environment:
+      - PORT=8081
+      - REDIS_URL=redis://redis:6379
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - SUPABASE_JWT_SECRET=${SUPABASE_JWT_SECRET}
+      - RUST_LOG=info
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  # Python FastAPI Service
+  python-service:
+    build:
+      context: ./backends/python-service
+      dockerfile: Dockerfile
+    container_name: health-competition-python
+    ports:
+      - "8082:8082"
+    environment:
+      - PORT=8082
+      - REDIS_URL=redis://redis:6379
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - SUPABASE_JWT_SECRET=${SUPABASE_JWT_SECRET}
+      - LOG_LEVEL=INFO
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  # NestJS Service
+  nestjs-service:
+    build:
+      context: ./backends/nestjs-service
+      dockerfile: Dockerfile
+    container_name: health-competition-nestjs
+    ports:
+      - "8083:8083"
+    environment:
+      - PORT=8083
+      - REDIS_URL=redis://redis:6379
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - SUPABASE_JWT_SECRET=${SUPABASE_JWT_SECRET}
+      - NODE_ENV=production
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+volumes:
+  redis-data:
+    driver: local
+
+networks:
+  default:
+    name: health-competition-network

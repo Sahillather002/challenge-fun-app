@@ -23,6 +23,7 @@
         "name": "next"
       }
     ],
+    "types": ["jest", "@testing-library/jest-native"],
     "paths": {
       "@/*": [
         "./src/*"
@@ -33,7 +34,9 @@
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
-    ".next/types/**/*.ts"
+    ".next/types/**/*.ts",
+    "**/__tests__/**/*.test.{ts,tsx}",
+    "**/*.{test,spec}.{ts,tsx}"
   ],
   "exclude": [
     "node_modules"
