@@ -1,13 +1,55 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Trophy, TrendingUp, Footprints, Flame, Users, Plus } from 'lucide-react';
+import { Trophy, TrendingUp, Footprints, Flame, Users, Plus, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/use-auth';
+import { api, DashboardStats, UserCompetition } from '@/lib/api';
+import { useToast } from '@health-competition/ui';
 
 export default function DashboardPage() {
   const { user } = useAuth();
+  const { toast } = useToast();
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [competitions, setCompetitions] = useState<UserCompetition[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (user?.id) {
+      loadDashboardData();
+    }
+  }, [user]);
+
+  const loadDashboardData = async () => {
+    try {
+      setLoading(true);
+      const [dashboardStats, userComps] = await Promise.all([
+        api.user.getDashboard(user!.id),
+        api.competitions.getUserCompetitions(user!.id, 'active'),
+      ]);
+      setStats(dashboardStats);
+      setCompetitions(userComps);
+    } catch (error: any) {
+      console.error('Failed to load dashboard:', error);
+      toast({
+        title: 'Error',
+        description: error.response?.data?.message || 'Failed to load dashboard data',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -31,31 +73,31 @@ export default function DashboardPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatsCard
           title="Total Steps"
-          value="47,382"
-          change="+12.5%"
+          value={stats?.total_steps.toLocaleString() || '0'}
+          change={`${stats?.steps_change >= 0 ? '+' : ''}${stats?.steps_change.toFixed(1)}%`}
           icon={<Footprints className="h-5 w-5 text-blue-500" />}
-          trend="up"
+          trend={stats?.steps_change >= 0 ? 'up' : 'down'}
         />
         <StatsCard
           title="Calories Burned"
-          value="2,450"
-          change="+8.2%"
+          value={stats?.total_calories.toFixed(0) || '0'}
+          change={`${stats?.calories_change >= 0 ? '+' : ''}${stats?.calories_change.toFixed(1)}%`}
           icon={<Flame className="h-5 w-5 text-orange-500" />}
-          trend="up"
+          trend={stats?.calories_change >= 0 ? 'up' : 'down'}
         />
         <StatsCard
           title="Active Competitions"
-          value="3"
+          value={stats?.active_competitions.toString() || '0'}
           change="0"
           icon={<Trophy className="h-5 w-5 text-yellow-500" />}
           trend="neutral"
         />
         <StatsCard
-          title="Your Rank"
-          value="#12"
-          change="+5"
+          title="Your Best Rank"
+          value={stats?.best_rank > 0 ? `#${stats.best_rank}` : 'N/A'}
+          change=""
           icon={<TrendingUp className="h-5 w-5 text-green-500" />}
-          trend="up"
+          trend="neutral"
         />
       </div>
 
@@ -68,17 +110,20 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="h-64 flex items-end justify-around gap-2">
-              {[65, 85, 45, 90, 70, 95, 80].map((height, i) => (
+              {(stats?.weekly_activity || []).slice(0, 7).reverse().map((activity, i) => {
+                const maxSteps = Math.max(...(stats?.weekly_activity || []).map(a => a.steps));
+                const height = maxSteps > 0 ? (activity.steps / maxSteps) * 100 : 0;
+                return (
                 <div key={i} className="flex-1 flex flex-col items-center gap-2">
                   <div
                     className="w-full bg-gradient-to-t from-blue-500 to-purple-500 rounded-t-md transition-all hover:opacity-80"
                     style={{ height: `${height}%` }}
                   />
                   <span className="text-xs text-muted-foreground">
-                    {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][i]}
+                    {new Date(activity.date).toLocaleDateString('en-US', { weekday: 'short' })}
                   </span>
                 </div>
-              ))}
+              )})}
             </div>
           </CardContent>
         </Card>
@@ -90,26 +135,18 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <ActivityItem
-                title="Morning Jog"
-                value="5,234 steps"
-                time="2 hours ago"
-              />
-              <ActivityItem
-                title="Gym Workout"
-                value="450 calories"
-                time="5 hours ago"
-              />
-              <ActivityItem
-                title="Evening Walk"
-                value="3,120 steps"
-                time="1 day ago"
-              />
-              <ActivityItem
-                title="Yoga Session"
-                value="180 calories"
-                time="2 days ago"
-              />
+              {stats?.recent_activity && stats.recent_activity.length > 0 ? (
+                stats.recent_activity.slice(0, 4).map((activity) => (
+                  <ActivityItem
+                    key={activity.id}
+                    title={activity.title}
+                    value={`${activity.steps.toLocaleString()} steps`}
+                    time={getTimeAgo(activity.created_at)}
+                  />
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-4">No recent activity</p>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -125,27 +162,22 @@ export default function DashboardPage() {
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <CompetitionCard
-              title="30-Day Step Challenge"
-              participants={156}
-              prize="$500"
-              rank={12}
-              daysLeft={18}
-            />
-            <CompetitionCard
-              title="Weekend Warriors"
-              participants={89}
-              prize="$250"
-              rank={5}
-              daysLeft={2}
-            />
-            <CompetitionCard
-              title="Calorie Crusher"
-              participants={203}
-              prize="$750"
-              rank={28}
-              daysLeft={12}
-            />
+            {competitions.length > 0 ? (
+              competitions.slice(0, 3).map((comp) => (
+                <Link key={comp.id} href={`/dashboard/competitions/${comp.id}`}>
+                  <CompetitionCard
+                    title={comp.name}
+                    prize={`$${comp.prize_pool}`}
+                    rank={comp.current_rank || 0}
+                    daysLeft={getDaysRemaining(comp.end_date)}
+                  />
+                </Link>
+              ))
+            ) : (
+              <p className="col-span-3 text-sm text-muted-foreground text-center py-8">
+                No active competitions. Join one to get started!
+              </p>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -204,13 +236,11 @@ function ActivityItem({ title, value, time }: { title: string; value: string; ti
 
 function CompetitionCard({
   title,
-  participants,
   prize,
   rank,
   daysLeft,
 }: {
   title: string;
-  participants: number;
   prize: string;
   rank: number;
   daysLeft: number;
@@ -229,17 +259,31 @@ function CompetitionCard({
           <span className="text-muted-foreground">Your Rank</span>
           <span className="font-semibold">#{rank}</span>
         </div>
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-muted-foreground">Participants</span>
-          <span className="flex items-center gap-1">
-            <Users className="h-3 w-3" />
-            {participants}
-          </span>
-        </div>
         <div className="pt-2 border-t">
           <p className="text-xs text-muted-foreground">{daysLeft} days remaining</p>
         </div>
       </CardContent>
     </Card>
   );
+}
+
+function getTimeAgo(dateString: string): string {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffInMs = now.getTime() - date.getTime();
+  const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+  const diffInDays = Math.floor(diffInHours / 24);
+
+  if (diffInHours < 1) return 'Just now';
+  if (diffInHours < 24) return `${diffInHours} hours ago`;
+  if (diffInDays === 1) return '1 day ago';
+  return `${diffInDays} days ago`;
+}
+
+function getDaysRemaining(endDate: string): number {
+  const end = new Date(endDate);
+  const now = new Date();
+  const diffInMs = end.getTime() - now.getTime();
+  const diffInDays = Math.ceil(diffInMs / (1000 * 60 * 60 * 24));
+  return Math.max(0, diffInDays);
 }

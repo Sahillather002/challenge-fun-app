@@ -38,10 +38,10 @@ export default function LandingPage() {
             </span>
           </div>
           <div className="flex items-center gap-4">
-            <Link href="/login">
+            <Link href="auth/login">
               <Button variant="ghost">Login</Button>
             </Link>
-            <Link href="/register">
+            <Link href="auth/register">
               <Button>Get Started</Button>
             </Link>
           </div>
@@ -57,12 +57,12 @@ export default function LandingPage() {
             The ultimate health and fitness competition platform.
           </p>
           <div className="flex items-center justify-center gap-4">
-            <Link href="/register">
+            <Link href="auth/register">
               <Button size="lg" className="text-lg">
                 Start Competing <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
-            <Link href="/login">
+            <Link href="auth/login">
               <Button size="lg" variant="outline" className="text-lg">
                 Login
               </Button>
@@ -109,7 +109,7 @@ export default function LandingPage() {
           <p className="text-xl mb-8 opacity-90">
             Join thousands of users competing to be healthier and win prizes
           </p>
-          <Link href="/register">
+          <Link href="auth/register">
             <Button size="lg" variant="secondary" className="text-lg">
               Create Free Account <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
