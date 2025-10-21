@@ -1,0 +1,38 @@
+{
+  "expo": {
+    "name": "HealthCompetitionApp",
+    "slug": "health-competition-app",
+    "owner": "kiroku",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "platforms": [
+      "ios",
+      "android",
+      "web"
+    ],
+    "scheme": "com.healthcompetition.app",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.healthcompetition.app"
+    },
+    "android": {
+      "package": "com.healthcompetition.app"
+    },
+    "web": {
+      "bundler": "webpack"
+    },
+    "extra": {
+      "googleFitClientId": "271265785455-2uog6f9v1ss1mvorq41hnobibvh7i5vr.apps.googleusercontent.com",
+      "eas": {
+        "projectId": "challenge-fun-app"
+      }
+    },
+    "plugins": [
+      "expo-router"
+    ]
+  }
+}

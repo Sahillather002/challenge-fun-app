@@ -68,7 +68,6 @@ func (s *FitnessService) GetUserStats(ctx context.Context, userID, competitionID
 			Distance:      0,
 			Calories:      0,
 			ActiveMinutes: 0,
-			UpdatedAt:     time.Now(),
 		}, nil
 	}
 
@@ -99,7 +98,6 @@ func (s *FitnessService) updateAggregatedStats(ctx context.Context, userID, comp
 	currentStats.Distance += newData.Distance
 	currentStats.Calories += newData.Calories
 	currentStats.ActiveMinutes += newData.ActiveMinutes
-	currentStats.UpdatedAt = time.Now()
 	currentStats.Source = newData.Source
 
 	// Save updated stats

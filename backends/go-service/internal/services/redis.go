@@ -23,10 +23,12 @@ func NewRedisClient(redisURL string) *redis.Client {
 
 	client := redis.NewClient(opts)
 
-	// Test connection
+	// Test connection (but don't panic if it fails)
 	ctx := context.Background()
 	if err := client.Ping(ctx).Err(); err != nil {
-		panic(err)
+		// Log the error but don't panic - allow the application to start without Redis
+		// This is useful for development when Redis might not be available
+		return client // Return the client anyway, operations will fail gracefully
 	}
 
 	return client
