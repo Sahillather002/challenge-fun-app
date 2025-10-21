@@ -64,8 +64,9 @@ func AuthMiddleware(jwtSecret string) func(http.Handler) http.Handler {
 				return
 			}
 
-			// Add user ID to context
+			// Add user ID to context with multiple keys for compatibility
 			ctx := context.WithValue(r.Context(), UserIDKey, userID)
+			ctx = context.WithValue(ctx, "user_id", userID)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}

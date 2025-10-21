@@ -121,3 +121,99 @@ type SuccessResponse struct {
 	Data    interface{} `json:"data,omitempty"`
 	Message string      `json:"message,omitempty"`
 }
+
+// CreateCompetitionRequest represents a request to create a new competition
+type CreateCompetitionRequest struct {
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	EntryFee    float64   `json:"entry_fee"`
+	PrizePool   float64   `json:"prize_pool"`
+	StartDate   time.Time `json:"start_date"`
+	EndDate     time.Time `json:"end_date"`
+	Type        string    `json:"type"`
+	CreatorID   string    `json:"creator_id,omitempty"`
+}
+
+// UserCompetition represents a user's participation in a competition
+type UserCompetition struct {
+	Competition
+	CurrentRank    *int      `json:"current_rank,omitempty"`
+	UserSteps      int64     `json:"user_steps"`
+	UserCalories   float64   `json:"user_calories"`
+	UserDistance   float64   `json:"user_distance"`
+	JoinedAt       time.Time `json:"joined_at"`
+}
+
+// DashboardStats represents user dashboard statistics
+type DashboardStats struct {
+	TotalSteps          int64   `json:"total_steps"`
+	TotalCalories       float64 `json:"total_calories"`
+	TotalDistance       float64 `json:"total_distance"`
+	ActiveCompetitions  int     `json:"active_competitions"`
+	BestRank            int     `json:"best_rank"`
+	StepsChange         float64 `json:"steps_change"` // percentage
+	CaloriesChange      float64 `json:"calories_change"` // percentage
+	WeeklyActivity      []DailyActivity `json:"weekly_activity"`
+	RecentActivity      []ActivityLog   `json:"recent_activity"`
+}
+
+// DailyActivity represents daily fitness activity
+type DailyActivity struct {
+	Date     time.Time `json:"date"`
+	Steps    int64     `json:"steps"`
+	Calories float64   `json:"calories"`
+	Distance float64   `json:"distance"`
+}
+
+// ActivityLog represents a single activity log entry
+type ActivityLog struct {
+	ID          string    `json:"id"`
+	UserID      string    `json:"user_id"`
+	Title       string    `json:"title"`
+	Type        string    `json:"type"` // workout, walk, run, etc.
+	Steps       int64     `json:"steps"`
+	Calories    float64   `json:"calories"`
+	Distance    float64   `json:"distance"`
+	Duration    int       `json:"duration"` // in minutes
+	CreatedAt   time.Time `json:"created_at"`
+}
+
+// UserProfile represents user profile information
+type UserProfile struct {
+	ID              string    `json:"id"`
+	Email           string    `json:"email"`
+	Name            string    `json:"name"`
+	Avatar          string    `json:"avatar,omitempty"`
+	Bio             string    `json:"bio,omitempty"`
+	Country         string    `json:"country,omitempty"`
+	TotalSteps      int64     `json:"total_steps"`
+	TotalCalories   float64   `json:"total_calories"`
+	TotalDistance   float64   `json:"total_distance"`
+	CompetitionsWon int       `json:"competitions_won"`
+	TotalPrizes     float64   `json:"total_prizes"`
+	JoinedAt        time.Time `json:"joined_at"`
+	UpdatedAt       time.Time `json:"updated_at"`
+}
+
+// UpdateProfileRequest represents a request to update user profile
+type UpdateProfileRequest struct {
+	Name    string `json:"name,omitempty"`
+	Avatar  string `json:"avatar,omitempty"`
+	Bio     string `json:"bio,omitempty"`
+	Country string `json:"country,omitempty"`
+}
+
+// Transaction represents a financial transaction
+type Transaction struct {
+	ID              string    `json:"id"`
+	UserID          string    `json:"user_id"`
+	CompetitionID   string    `json:"competition_id,omitempty"`
+	Type            string    `json:"type"` // entry_fee, prize, refund
+	Amount          float64   `json:"amount"`
+	Status          string    `json:"status"` // pending, completed, failed
+	Description     string    `json:"description"`
+	PaymentMethod   string    `json:"payment_method"`
+	TransactionRef  string    `json:"transaction_ref,omitempty"`
+	CreatedAt       time.Time `json:"created_at"`
+	CompletedAt     *time.Time `json:"completed_at,omitempty"`
+}
