@@ -162,7 +162,7 @@ export default function DashboardPage() {
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {competitions.length > 0 ? (
+            {competitions?.length > 0 ? (
               competitions.slice(0, 3).map((comp) => (
                 <Link key={comp.id} href={`/dashboard/competitions/${comp.id}`}>
                   <CompetitionCard

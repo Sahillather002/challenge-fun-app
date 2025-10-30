@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,6 +21,11 @@ export default function ProfilePage() {
     bio: '',
     country: '',
   });
+  const [imageError, setImageError] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch profile data
   useEffect(() => {
@@ -36,6 +41,7 @@ export default function ProfilePage() {
           bio: data.bio || '',
           country: data.country || '',
         });
+        setImageError(false); // Reset error state when loading new profile
       } catch (error) {
         console.error('Failed to load profile:', error);
         toast({
@@ -50,6 +56,90 @@ export default function ProfilePage() {
 
     fetchProfile();
   }, [user, toast]);
+
+  // Reset image error when profile avatar changes
+  useEffect(() => {
+    if (profile?.avatar) {
+      setImageError(false);
+    }
+  }, [profile?.avatar]);
+
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    console.error('Failed to load avatar image:', profile?.avatar);
+    console.error('Image error event:', e);
+    setImageError(true);
+  };
+
+  const resetImageError = () => {
+    setImageError(false);
+  };
+
+  const handleImageSelect = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: 'Error',
+          description: 'Image size must be less than 5MB',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        toast({
+          title: 'Error',
+          description: 'Please select a valid image file',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setSelectedImage(e.target?.result as string);
+        setImageError(false); // Reset error state for new image
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleImageUpload = async () => {
+    if (!imageFile || !user?.id) return;
+
+    setUploadingImage(true);
+    try {
+      // Upload to backend
+      const updatedProfile = await api.user.uploadAvatar(user.id, imageFile);
+
+      toast({
+        title: 'Success',
+        description: 'Profile picture updated successfully!',
+      });
+
+      // Update profile with response from backend
+      setProfile(updatedProfile);
+      setSelectedImage(null);
+      setImageFile(null);
+      setImageError(false); // Reset error state after successful upload
+    } catch (error) {
+      console.error('Failed to upload image:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to upload image. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setUploadingImage(false);
+    }
+  };
 
   const handleSave = async () => {
     if (!user?.id) return;
@@ -109,13 +199,79 @@ export default function ProfilePage() {
             <CardContent className="pt-6">
               <div className="flex flex-col items-center text-center">
                 <div className="relative mb-4">
-                  <div className="w-32 h-32 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-4xl font-bold">
-                    {profile.name?.charAt(0) || 'U'}
-                  </div>
-                  <button className="absolute bottom-0 right-0 bg-primary text-white p-2 rounded-full hover:bg-primary/90 transition-colors">
-                    <Camera className="h-4 w-4" />
+                  {selectedImage ? (
+                    <img
+                      src={selectedImage}
+                      alt="Profile Preview"
+                      className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg"
+                    />
+                  ) : profile.avatar && !imageError ? (
+                    <img
+                      src={profile.avatar}
+                      alt="Profile"
+                      className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg"
+                      onError={handleImageError}
+                      crossOrigin="anonymous"
+                    />
+                  ) : (
+                    <div className="w-32 h-32 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-4xl font-bold shadow-lg">
+                      {profile.name?.charAt(0).toUpperCase() || 'U'}
+                    </div>
+                  )}
+                  <button
+                    onClick={handleImageSelect}
+                    disabled={uploadingImage}
+                    className="absolute bottom-0 right-0 bg-primary text-white p-2 rounded-full hover:bg-primary/90 transition-colors shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                    title="Change profile picture"
+                  >
+                    {uploadingImage ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Camera className="h-4 w-4" />
+                    )}
                   </button>
                 </div>
+
+                {/* Hidden file input */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/jpg,image/webp"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+
+                {/* Image preview actions */}
+                {selectedImage && (
+                  <div className="flex gap-2 mb-4">
+                    <Button
+                      size="sm"
+                      onClick={handleImageUpload}
+                      disabled={uploadingImage}
+                      className="gap-2"
+                    >
+                      {uploadingImage ? (
+                        <>
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                          Uploading...
+                        </>
+                      ) : (
+                        'Upload'
+                      )}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setSelectedImage(null);
+                        setImageFile(null);
+                      }}
+                      disabled={uploadingImage}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                )}
                 <h2 className="text-2xl font-bold mb-1">{profile.name || 'User'}</h2>
                 <p className="text-muted-foreground mb-4">{profile.email}</p>
                 

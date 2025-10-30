@@ -7,6 +7,16 @@ const nextConfig = {
     '@health-competition/step-tracker',
   ],
   images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**.supabase.co',
+      },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+      },
+    ],
     domains: ['your-supabase-project.supabase.co'],
   },
   env: {

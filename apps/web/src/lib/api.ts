@@ -240,6 +240,22 @@ export const api = {
       );
       return response.data.data;
     },
+
+    uploadAvatar: async (userId: string, file: File) => {
+      const formData = new FormData();
+      formData.append('avatar', file);
+
+      const response = await apiClient.post<{ success: boolean; data: UserProfile }>(
+        `/users/${userId}/avatar`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+      return response.data.data;
+    },
   },
 
   // ==================== LEADERBOARD ====================
