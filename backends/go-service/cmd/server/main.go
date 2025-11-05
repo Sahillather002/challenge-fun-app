@@ -15,11 +15,13 @@ import (
 	"github.com/yourusername/health-competition-go/internal/handlers"
 	"github.com/yourusername/health-competition-go/internal/middleware"
 	"github.com/yourusername/health-competition-go/internal/services"
+	"github.com/yourusername/health-competition-go/pkg/storage"
 	"github.com/yourusername/health-competition-go/pkg/utils"
 
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
 	"github.com/rs/cors"
+	"golang.org/x/time/rate"
 )
 
 func main() {
@@ -31,6 +33,11 @@ func main() {
 
 	// Initialize logger
 	logger := utils.NewLogger(cfg.LogLevel)
+	logger.Info("Starting Go Service...")
+
+	// Initialize metrics
+	metrics := utils.NewMetrics()
+	logger.Info("Metrics initialized")
 
 	// Initialize database
 	var db *sql.DB
@@ -53,6 +60,11 @@ func main() {
 			log.Fatalf("Failed to connect to database: %v", err)
 		}
 
+		// Configure connection pool
+		db.SetMaxOpenConns(25)
+		db.SetMaxIdleConns(5)
+		db.SetConnMaxLifetime(5 * time.Minute)
+
 		// Test database connection
 		if err := db.Ping(); err != nil {
 			log.Fatalf("Failed to ping database: %v", err)
@@ -66,6 +78,13 @@ func main() {
 	leaderboardService := services.NewLeaderboardService(cacheService, redisClient)
 	fitnessService := services.NewFitnessService(cacheService, cfg.SupabaseURL)
 
+	// Initialize Supabase Storage
+	supabaseStorage, err := storage.NewSupabaseStorage()
+	if err != nil {
+		logger.Warnf("Failed to initialize Supabase Storage: %v", err)
+		logger.Warn("Avatar uploads will not work without Supabase Storage configuration")
+	}
+
 	// Initialize services that need database connection
 	var competitionService *services.CompetitionService
 	var userService *services.UserService
@@ -77,6 +96,10 @@ func main() {
 	} else {
 		logger.Info("Running without database services (API-only mode)")
 	}
+
+	// Initialize health checker
+	healthChecker := utils.NewHealthChecker(db, redisClient, "1.0.0")
+	logger.Info("Health checker initialized")
 
 	// Initialize WebSocket hub
 	wsHub := handlers.NewHub(leaderboardService, logger)
@@ -92,7 +115,7 @@ func main() {
 
 	if competitionService != nil && userService != nil {
 		competitionHandler = handlers.NewCompetitionHandler(competitionService, logger)
-		userHandler = handlers.NewUserHandler(userService, logger)
+		userHandler = handlers.NewUserHandler(userService, logger, supabaseStorage)
 	}
 
 	// Setup router
@@ -102,8 +125,16 @@ func main() {
 	r.Use(middleware.LoggingMiddleware(logger))
 	r.Use(middleware.RecoveryMiddleware(logger))
 
+	// Rate limiting (100 requests per second, burst of 200)
+	rateLimiter := middleware.NewRateLimiter(rate.Limit(100), 200)
+	r.Use(middleware.RateLimitMiddleware(rateLimiter))
+
 	// Public routes
 	r.HandleFunc("/health", healthCheckHandler).Methods("GET")
+	r.HandleFunc("/health/live", healthChecker.LivenessHandler()).Methods("GET")
+	r.HandleFunc("/health/ready", healthChecker.ReadinessHandler()).Methods("GET")
+	r.HandleFunc("/health/detailed", healthChecker.DetailedHealthHandler()).Methods("GET")
+	r.Handle("/metrics", metrics.Handler()).Methods("GET")
 
 	// API routes (require authentication)
 	api := r.PathPrefix("/api/v1").Subrouter()
@@ -131,9 +162,13 @@ func main() {
 		api.HandleFunc("/users/{userId}/dashboard", userHandler.GetDashboardStats).Methods("GET")
 		api.HandleFunc("/users/{userId}/profile", userHandler.GetUserProfile).Methods("GET")
 		api.HandleFunc("/users/{userId}/profile", userHandler.UpdateUserProfile).Methods("PUT")
+		api.HandleFunc("/users/{userId}/avatar", userHandler.UploadAvatar).Methods("POST")
 		api.HandleFunc("/users/{userId}/activity", userHandler.GetUserActivity).Methods("GET")
 		api.HandleFunc("/users/{userId}/transactions", userHandler.GetUserTransactions).Methods("GET")
 	}
+
+	// Serve static files (uploaded avatars)
+	r.PathPrefix("/uploads/").Handler(http.StripPrefix("/uploads/", http.FileServer(http.Dir("uploads"))))
 
 	// Prize routes
 	api.HandleFunc("/prizes/calculate/{competitionId}", leaderboardHandler.CalculatePrizes).Methods("POST")

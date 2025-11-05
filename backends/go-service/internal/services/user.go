@@ -161,9 +161,18 @@ func (s *UserService) GetUserProfile(ctx context.Context, userID string) (*model
 
 	if count == 0 {
 		// User doesn't exist in custom table yet - return basic profile
+		// Try to get email from auth.users table
+		email := ""
+		emailQuery := `SELECT email FROM auth.users WHERE id = $1`
+		err := s.db.QueryRowContext(ctx, emailQuery, userID).Scan(&email)
+		if err != nil && err != sql.ErrNoRows {
+			// If we can't get email from auth.users, that's okay
+			email = ""
+		}
+
 		return &models.UserProfile{
 			ID:        userID,
-			Email:     "", // We don't have this from auth.users directly
+			Email:     email,
 			Name:      "User", // Default name
 			Avatar:    "",
 			Bio:       "",
@@ -234,6 +243,24 @@ func (s *UserService) UpdateUserProfile(ctx context.Context, userID string, req 
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to update profile: %w", err)
+	}
+
+	return s.GetUserProfile(ctx, userID)
+}
+
+// UpdateUserAvatar updates only the user's avatar
+func (s *UserService) UpdateUserAvatar(ctx context.Context, userID string, avatarURL string) (*models.UserProfile, error) {
+	query := `
+		UPDATE users
+		SET 
+			avatar = $1,
+			updated_at = $2
+		WHERE id = $3
+	`
+
+	_, err := s.db.ExecContext(ctx, query, avatarURL, time.Now(), userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to update avatar: %w", err)
 	}
 
 	return s.GetUserProfile(ctx, userID)
