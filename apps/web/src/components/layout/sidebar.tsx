@@ -31,69 +31,85 @@ export function Sidebar() {
   const { user, signOut } = useAuth();
 
   return (
-    <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-64 lg:flex-col">
-      <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-white dark:bg-gray-900 px-6 pb-4 border-r border-gray-200 dark:border-gray-800">
-        {/* Logo */}
-        <div className="flex h-16 shrink-0 items-center gap-2">
-          <Trophy className="h-8 w-8 text-primary" />
-          <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            Health Competition
-          </span>
+    <div className="flex flex-col h-full px-4 space-y-4">
+      <div className="space-y-1">
+        <h3 className="px-4 py-2 text-[10px] font-black text-muted-foreground uppercase tracking-widest">Platform</h3>
+        {navigation.filter(item => !['Settings', 'Profile'].includes(item.name)).map((item) => {
+          const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+          return (
+            <Link
+              key={item.name}
+              href={item.href}
+              className={cn(
+                'group flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200',
+                isActive
+                  ? 'bg-primary/10 text-primary'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-white/5'
+              )}
+            >
+              <item.icon
+                size={20}
+                className={cn(
+                  'flex-shrink-0 transition-transform',
+                  isActive ? 'text-primary scale-110' : 'text-muted-foreground group-hover:scale-110'
+                )}
+              />
+              <span className="font-bold text-sm whitespace-nowrap">
+                {item.name}
+              </span>
+            </Link>
+          );
+        })}
+      </div>
+
+      <div className="space-y-1">
+        <h3 className="px-4 py-2 text-[10px] font-black text-muted-foreground uppercase tracking-widest">Account</h3>
+        {navigation.filter(item => ['Settings', 'Profile'].includes(item.name)).map((item) => {
+          const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+          return (
+            <Link
+              key={item.name}
+              href={item.href}
+              className={cn(
+                'group flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200',
+                isActive
+                  ? 'bg-primary/10 text-primary'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-white/5'
+              )}
+            >
+              <item.icon
+                size={20}
+                className={cn(
+                  'flex-shrink-0 transition-transform',
+                  isActive ? 'text-primary scale-110' : 'text-muted-foreground group-hover:scale-110'
+                )}
+              />
+              <span className="font-bold text-sm whitespace-nowrap">
+                {item.name}
+              </span>
+            </Link>
+          );
+        })}
+      </div>
+
+      <div className="mt-auto pt-4 border-t border-white/5">
+        <div className="px-2 py-3 flex items-center gap-3 mb-2">
+          <div className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center border border-white/10 text-xs font-bold text-muted-foreground">
+            {user?.email?.charAt(0).toUpperCase()}
+          </div>
+          <div className="overflow-hidden">
+            <p className="text-sm font-bold truncate text-foreground">{user?.email}</p>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">User</p>
+          </div>
         </div>
-
-        {/* Navigation */}
-        <nav className="flex flex-1 flex-col">
-          <ul role="list" className="flex flex-1 flex-col gap-y-7">
-            <li>
-              <ul role="list" className="-mx-2 space-y-1">
-                {navigation.map((item) => {
-                  const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
-                  return (
-                    <li key={item.name}>
-                      <Link
-                        href={item.href}
-                        className={cn(
-                          'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold transition-colors',
-                          isActive
-                            ? 'bg-primary text-white'
-                            : 'text-gray-700 hover:text-primary hover:bg-gray-50 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-800'
-                        )}
-                      >
-                        <item.icon
-                          className={cn(
-                            'h-6 w-6 shrink-0',
-                            isActive ? 'text-white' : 'text-gray-400 group-hover:text-primary'
-                          )}
-                          aria-hidden="true"
-                        />
-                        {item.name}
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            </li>
-
-            {/* User section */}
-            <li className="mt-auto">
-              <div className="flex items-center gap-x-4 px-2 py-3 text-sm font-semibold leading-6 text-gray-900 dark:text-white border-t border-gray-200 dark:border-gray-800">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-white font-bold">
-                  {user?.email?.charAt(0).toUpperCase()}
-                </div>
-                <span className="sr-only">Your profile</span>
-                <span className="flex-1 truncate">{user?.email}</span>
-              </div>
-              <Button
-                onClick={signOut}
-                variant="ghost"
-                className="w-full justify-start text-gray-700 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-500"
-              >
-                <LogOut className="mr-2 h-4 w-4" />
-                Sign out
-              </Button>
-            </li>
-          </ul>
-        </nav>
+        <Button
+          onClick={signOut}
+          variant="ghost"
+          className="w-full justify-start text-muted-foreground hover:text-red-400 hover:bg-red-500/10 px-4"
+        >
+          <LogOut className="mr-2 h-4 w-4" />
+          <span className="font-bold text-sm">Sign out</span>
+        </Button>
       </div>
     </div>
   );

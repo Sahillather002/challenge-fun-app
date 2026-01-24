@@ -1,13 +1,16 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { User, Mail, Calendar, MapPin, Award, Trophy, TrendingUp, Save, Camera, Loader2 } from 'lucide-react';
+import {
+  User, Mail, Calendar, MapPin, Award, Trophy, TrendingUp,
+  Save, Camera, Loader2, Footprints, DollarSign
+} from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { api, UserProfile } from '@/lib/api';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function ProfilePage() {
   const { user } = useAuth();
@@ -31,7 +34,7 @@ export default function ProfilePage() {
   useEffect(() => {
     const fetchProfile = async () => {
       if (!user?.id) return;
-      
+
       try {
         setLoading(true);
         const data = await api.user.getProfile(user.id);
@@ -41,7 +44,7 @@ export default function ProfilePage() {
           bio: data.bio || '',
           country: data.country || '',
         });
-        setImageError(false); // Reset error state when loading new profile
+        setImageError(false);
       } catch (error) {
         console.error('Failed to load profile:', error);
         toast({
@@ -64,15 +67,7 @@ export default function ProfilePage() {
     }
   }, [profile?.avatar]);
 
-  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-    console.error('Failed to load avatar image:', profile?.avatar);
-    console.error('Image error event:', e);
-    setImageError(true);
-  };
-
-  const resetImageError = () => {
-    setImageError(false);
-  };
+  const handleImageError = () => setImageError(true);
 
   const handleImageSelect = () => {
     fileInputRef.current?.click();
@@ -81,7 +76,6 @@ export default function ProfilePage() {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
         toast({
           title: 'Error',
@@ -90,8 +84,6 @@ export default function ProfilePage() {
         });
         return;
       }
-
-      // Validate file type
       if (!file.type.startsWith('image/')) {
         toast({
           title: 'Error',
@@ -105,7 +97,7 @@ export default function ProfilePage() {
       const reader = new FileReader();
       reader.onload = (e) => {
         setSelectedImage(e.target?.result as string);
-        setImageError(false); // Reset error state for new image
+        setImageError(false);
       };
       reader.readAsDataURL(file);
     }
@@ -116,19 +108,15 @@ export default function ProfilePage() {
 
     setUploadingImage(true);
     try {
-      // Upload to backend
       const updatedProfile = await api.user.uploadAvatar(user.id, imageFile);
-
       toast({
         title: 'Success',
         description: 'Profile picture updated successfully!',
       });
-
-      // Update profile with response from backend
       setProfile(updatedProfile);
       setSelectedImage(null);
       setImageFile(null);
-      setImageError(false); // Reset error state after successful upload
+      setImageError(false);
     } catch (error) {
       console.error('Failed to upload image:', error);
       toast({
@@ -143,12 +131,11 @@ export default function ProfilePage() {
 
   const handleSave = async () => {
     if (!user?.id) return;
-    
+
     setSaving(true);
     try {
       const updated = await api.user.updateProfile(user.id, editedProfile);
       setProfile(updated);
-      
       toast({
         title: 'Success',
         description: 'Profile updated successfully',
@@ -169,263 +156,250 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Loader2 className="h-12 w-12 animate-spin text-blue-500" />
       </div>
     );
   }
 
   if (!profile) {
     return (
-      <div className="text-center py-12">
-        <p className="text-muted-foreground">Failed to load profile</p>
+      <div className="text-center py-24">
+        <h2 className="text-2xl font-black text-white uppercase tracking-tighter mb-4">Profile synchronization failed</h2>
+        <p className="text-slate-500 font-bold mb-8">The neural link to your operative profile has been interrupted.</p>
+        <Button onClick={() => window.location.reload()} className="btn-gradient">Attempt Resync</Button>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-12 pb-24 max-w-7xl mx-auto px-4 sm:px-0">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold mb-2">My Profile</h1>
-        <p className="text-muted-foreground">
-          Manage your profile and view your achievements
-        </p>
-      </div>
+      <header>
+        <h1 className="text-4xl font-black tracking-tight uppercase mb-2 text-white">Operative Identity</h1>
+        <p className="text-slate-500 font-bold">Encrypted biometric signature and node performance history</p>
+      </header>
 
-      <div className="grid lg:grid-cols-3 gap-6">
+      <div className="grid lg:grid-cols-3 gap-12">
         {/* Profile Card */}
-        <div className="lg:col-span-1">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex flex-col items-center text-center">
-                <div className="relative mb-4">
+        <div className="lg:col-span-1 space-y-8">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="glass p-12 rounded-[3.5rem] border border-white/5 bg-slate-900/40 text-center relative overflow-hidden shadow-2xl"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-transparent to-purple-500/10" />
+
+            <div className="relative z-10">
+              <div className="relative mb-10 mx-auto w-44 h-44">
+                <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-3xl animate-pulse" />
+                <div className="relative w-full h-full rounded-full glass border-4 border-white/10 overflow-hidden shadow-2xl group">
                   {selectedImage ? (
-                    <img
-                      src={selectedImage}
-                      alt="Profile Preview"
-                      className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg"
-                    />
+                    <img src={selectedImage} alt="Preview" className="w-full h-full object-cover" />
                   ) : profile.avatar && !imageError ? (
-                    <img
-                      src={profile.avatar}
-                      alt="Profile"
-                      className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg"
-                      onError={handleImageError}
-                      crossOrigin="anonymous"
-                    />
+                    <img src={profile.avatar} alt="Profile" className="w-full h-full object-cover" onError={handleImageError} crossOrigin="anonymous" />
                   ) : (
-                    <div className="w-32 h-32 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-4xl font-bold shadow-lg">
+                    <div className="w-full h-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center text-6xl font-black text-white">
                       {profile.name?.charAt(0).toUpperCase() || 'U'}
                     </div>
                   )}
                   <button
                     onClick={handleImageSelect}
                     disabled={uploadingImage}
-                    className="absolute bottom-0 right-0 bg-primary text-white p-2 rounded-full hover:bg-primary/90 transition-colors shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-                    title="Change profile picture"
+                    className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white"
                   >
-                    {uploadingImage ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Camera className="h-4 w-4" />
-                    )}
+                    {uploadingImage ? <Loader2 className="animate-spin" /> : <Camera size={32} />}
                   </button>
                 </div>
 
-                {/* Hidden file input */}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/jpeg,image/png,image/jpg,image/webp"
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
-
-                {/* Image preview actions */}
                 {selectedImage && (
-                  <div className="flex gap-2 mb-4">
-                    <Button
-                      size="sm"
-                      onClick={handleImageUpload}
-                      disabled={uploadingImage}
-                      className="gap-2"
-                    >
-                      {uploadingImage ? (
-                        <>
-                          <Loader2 className="h-3 w-3 animate-spin" />
-                          Uploading...
-                        </>
-                      ) : (
-                        'Upload'
-                      )}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        setSelectedImage(null);
-                        setImageFile(null);
-                      }}
-                      disabled={uploadingImage}
-                    >
-                      Cancel
-                    </Button>
+                  <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 flex gap-3 z-20">
+                    <button onClick={handleImageUpload} className="p-3 rounded-xl bg-emerald-500 text-white shadow-xl hover:scale-110 transition-transform">
+                      <Save size={18} />
+                    </button>
+                    <button onClick={() => { setSelectedImage(null); setImageFile(null); }} className="p-3 rounded-xl bg-red-500 text-white shadow-xl hover:scale-110 transition-transform">
+                      <Camera size={18} />
+                    </button>
                   </div>
                 )}
-                <h2 className="text-2xl font-bold mb-1">{profile.name || 'User'}</h2>
-                <p className="text-muted-foreground mb-4">{profile.email}</p>
-                
-                <div className="w-full space-y-2 mb-4">
-                  {profile.country && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <MapPin className="h-4 w-4 text-muted-foreground" />
-                      <span>{profile.country}</span>
-                    </div>
-                  )}
-                  <div className="flex items-center gap-2 text-sm">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <span>Joined {new Date(profile.joined_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
+              </div>
+
+              <h2 className="text-3xl font-black uppercase tracking-tighter text-white mb-2 leading-none">{profile.name || 'Operative'}</h2>
+              <p className="text-blue-400 font-black text-xs uppercase tracking-[0.3em] mb-8">{profile.email}</p>
+
+              <div className="space-y-4 mb-10 w-full">
+                {profile.country && (
+                  <div className="flex items-center justify-between px-6 py-4 rounded-2xl glass border border-white/5 bg-white/5">
+                    <span className="text-[10px] font-black uppercase text-slate-500">Region</span>
+                    <span className="text-xs font-black text-white uppercase">{profile.country}</span>
+                  </div>
+                )}
+                <div className="flex items-center justify-between px-6 py-4 rounded-2xl glass border border-white/5 bg-white/5">
+                  <span className="text-[10px] font-black uppercase text-slate-500">Linked Since</span>
+                  <span className="text-xs font-black text-white uppercase">{new Date(profile.joined_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</span>
+                </div>
+              </div>
+
+              {!isEditing && (
+                <Button onClick={() => setIsEditing(true)} className="w-full h-14 rounded-2xl btn-gradient text-[10px] font-black uppercase tracking-[0.3em]">
+                  Modify Protocol
+                </Button>
+              )}
+            </div>
+
+            <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="glass p-10 rounded-[3rem] border border-white/5 bg-slate-900/40"
+          >
+            <h3 className="text-[10px] font-black tracking-[0.3em] uppercase text-slate-500 mb-8 px-2">Core Biometrics</h3>
+            <div className="space-y-4">
+              {[
+                { label: 'Total Movement', val: profile.total_steps.toLocaleString(), unit: 'Signals', icon: <Footprints size={16} className="text-blue-400" /> },
+                { label: 'Spatial Coverage', val: profile.total_distance.toFixed(2), unit: 'KM', icon: <TrendingUp size={16} className="text-purple-400" /> },
+                { label: 'Sector Victories', val: profile.competitions_won, unit: 'Wins', icon: <Award size={16} className="text-emerald-400" /> },
+                { label: 'Economic Gain', val: `$${profile.total_prizes.toFixed(2)}`, unit: 'Payload', icon: <DollarSign size={16} className="text-amber-400" /> },
+              ].map((stat, i) => (
+                <div key={i} className="flex items-center justify-between p-5 rounded-2xl border border-white/5 bg-white/5 hover:bg-white/10 transition-colors group">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 glass rounded-xl group-hover:scale-110 transition-transform">{stat.icon}</div>
+                    <span className="text-[10px] font-black uppercase text-slate-500 tracking-widest">{stat.label}</span>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-lg font-black text-white leading-none mb-1">{stat.val}</p>
+                    <p className="text-[9px] font-black text-slate-700 uppercase tracking-widest">{stat.unit}</p>
                   </div>
                 </div>
-
-                {!isEditing && (
-                  <Button onClick={() => setIsEditing(true)} className="w-full">
-                    Edit Profile
-                  </Button>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Stats Card */}
-          <Card className="mt-6">
-            <CardHeader>
-              <CardTitle className="text-lg">Quick Stats</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Total Steps</span>
-                <span className="font-semibold">{profile.total_steps.toLocaleString()}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Distance (km)</span>
-                <span className="font-semibold">{profile.total_distance.toFixed(2)}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Wins</span>
-                <span className="font-semibold text-green-600">{profile.competitions_won}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Total Prizes</span>
-                <span className="font-semibold text-green-600">${profile.total_prizes.toFixed(2)}</span>
-              </div>
-            </CardContent>
-          </Card>
+              ))}
+            </div>
+          </motion.div>
         </div>
 
         {/* Main Content */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Edit Form or Bio */}
-          {isEditing ? (
-            <Card>
-              <CardHeader>
-                <CardTitle>Edit Profile</CardTitle>
-                <CardDescription>Update your profile information</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Full Name</label>
-                  <Input
-                    value={editedProfile.name}
-                    onChange={(e) => setEditedProfile({ ...editedProfile, name: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Email</label>
-                  <Input
-                    type="email"
-                    value={profile.email}
-                    disabled
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">Email cannot be changed</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Country</label>
-                  <Input
-                    value={editedProfile.country}
-                    onChange={(e) => setEditedProfile({ ...editedProfile, country: e.target.value })}
-                    placeholder="e.g., USA, India, UK"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Bio</label>
-                  <textarea
-                    value={editedProfile.bio}
-                    onChange={(e) => setEditedProfile({ ...editedProfile, bio: e.target.value })}
-                    className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                    placeholder="Tell us about yourself..."
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <Button onClick={handleSave} disabled={saving}>
-                    {saving ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Saving...
-                      </>
-                    ) : (
-                      <>
-                        <Save className="mr-2 h-4 w-4" />
-                        Save Changes
-                      </>
-                    )}
-                  </Button>
-                  <Button variant="outline" onClick={() => setIsEditing(false)} disabled={saving}>
-                    Cancel
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <Card>
-              <CardHeader>
-                <CardTitle>About Me</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">{profile.bio || 'No bio added yet. Click "Edit Profile" to add one!'}</p>
-              </CardContent>
-            </Card>
-          )}
+        <div className="lg:col-span-2 space-y-12">
+          <AnimatePresence mode="wait">
+            {isEditing ? (
+              <motion.div
+                key="edit"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="glass p-12 rounded-[3.5rem] border border-white/5 bg-slate-900/40 relative overflow-hidden"
+              >
+                <div className="absolute inset-0 bg-blue-500/5 pointer-events-none" />
+                <div className="relative z-10">
+                  <header className="mb-12">
+                    <h2 className="text-3xl font-black uppercase tracking-tighter text-white leading-none mb-2">Modify Identity Protocol</h2>
+                    <p className="text-slate-500 font-bold">Update your core neural synchronization parameters</p>
+                  </header>
 
-          {/* Performance Stats */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Trophy className="h-5 w-5" />
-                Statistics Summary
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <p className="text-sm text-muted-foreground mb-2">Total Calories</p>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-4xl font-bold">{Math.floor(profile.total_calories).toLocaleString()}</span>
-                    <span className="text-muted-foreground">kcal</span>
-                    <span className="text-2xl">🔥</span>
+                  <div className="space-y-8">
+                    <div className="space-y-3">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 px-2">Designated Handle (Full Name)</label>
+                      <Input
+                        value={editedProfile.name}
+                        onChange={(e) => setEditedProfile({ ...editedProfile, name: e.target.value })}
+                        className="h-16 rounded-2xl glass bg-slate-950/40 border-white/10 text-white font-bold text-lg px-8 focus:ring-blue-500/50"
+                      />
+                    </div>
+
+                    <div className="grid md:grid-cols-2 gap-8">
+                      <div className="space-y-3 opacity-50 cursor-not-allowed">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 px-2">Primary Uplink (Email)</label>
+                        <Input value={profile.email} disabled className="h-16 rounded-2xl glass bg-slate-950/20 border-white/5 text-slate-500 font-bold px-8" />
+                        <p className="text-[9px] font-black uppercase tracking-widest text-red-500/50 px-2">Permanent Linkage / Locked</p>
+                      </div>
+                      <div className="space-y-3">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 px-2">Operational Sector (Country)</label>
+                        <Input
+                          value={editedProfile.country}
+                          onChange={(e) => setEditedProfile({ ...editedProfile, country: e.target.value })}
+                          placeholder="USA, UK, JP..."
+                          className="h-16 rounded-2xl glass bg-slate-950/40 border-white/10 text-white font-bold text-lg px-8 focus:ring-blue-500/50"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 px-2">Operative Manifest (Bio)</label>
+                      <textarea
+                        value={editedProfile.bio}
+                        onChange={(e) => setEditedProfile({ ...editedProfile, bio: e.target.value })}
+                        className="min-h-[160px] w-full rounded-[2rem] glass bg-slate-950/40 border border-white/10 text-white font-bold p-8 focus:ring-2 focus:ring-blue-500/50 outline-none transition-all placeholder:text-slate-800"
+                        placeholder="Define your operational focus..."
+                      />
+                    </div>
+
+                    <div className="flex gap-6 pt-4">
+                      <Button onClick={handleSave} disabled={saving} className="h-16 flex-1 rounded-2xl btn-gradient text-[10px] font-black uppercase tracking-[0.2em] shadow-2xl">
+                        {saving ? <Loader2 className="animate-spin mr-3" /> : <Save size={20} className="mr-3" />}
+                        Commit Changes
+                      </Button>
+                      <Button variant="ghost" onClick={() => setIsEditing(false)} disabled={saving} className="h-16 px-10 rounded-2xl glass border border-white/5 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-white">
+                        Abort
+                      </Button>
+                    </div>
                   </div>
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground mb-2">Total Distance</p>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-4xl font-bold">{profile.total_distance.toFixed(1)}</span>
-                    <span className="text-muted-foreground">km</span>
-                    <span className="text-2xl">📏</span>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="view"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-12"
+              >
+                <div className="glass p-12 rounded-[3.5rem] border border-white/5 bg-slate-900/40 relative overflow-hidden shadow-2xl">
+                  <div className="absolute inset-0 bg-blue-500/5 pointer-events-none" />
+                  <h3 className="text-3xl font-black uppercase tracking-tighter text-white mb-8 border-b border-white/5 pb-8 leading-none">Operative Manifest</h3>
+                  <p className="text-slate-400 font-bold text-xl leading-relaxed italic">
+                    "{profile.bio || 'Initial operative manifest. No biometric personality profile has been established for this node yet.'}"
+                  </p>
+                </div>
+
+                <div className="glass p-12 rounded-[3.5rem] border border-white/5 bg-slate-900/40 relative overflow-hidden shadow-2xl">
+                  <div className="absolute inset-0 bg-purple-500/5 pointer-events-none" />
+                  <div className="flex items-center gap-6 mb-12 border-b border-white/5 pb-8">
+                    <div className="w-16 h-16 rounded-[2rem] glass border border-white/10 flex items-center justify-center text-purple-400">
+                      <Trophy size={32} />
+                    </div>
+                    <div>
+                      <h3 className="text-3xl font-black uppercase tracking-tighter text-white leading-none mb-2">Neural Efficiency History</h3>
+                      <p className="text-slate-500 font-bold">Historical data across verification cycles</p>
+                    </div>
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-12">
+                    <div className="group">
+                      <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4 group-hover:text-blue-400 transition-colors">Cumulative Thermal Loss</p>
+                      <div className="flex items-baseline gap-4">
+                        <span className="text-6xl font-black text-white tracking-tighter">{Math.floor(profile.total_calories).toLocaleString()}</span>
+                        <span className="text-xs font-black text-slate-700 uppercase tracking-widest">KCAL Dissipated</span>
+                        <span className="text-3xl group-hover:scale-125 transition-transform">🔥</span>
+                      </div>
+                      <div className="mt-4 h-1.5 w-44 bg-slate-800 rounded-full overflow-hidden">
+                        <div className="h-full bg-blue-500 w-3/4 animate-shimmer" />
+                      </div>
+                    </div>
+                    <div className="group">
+                      <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4 group-hover:text-purple-400 transition-colors">Global Spatial Vector</p>
+                      <div className="flex items-baseline gap-4">
+                        <span className="text-6xl font-black text-white tracking-tighter">{profile.total_distance.toFixed(1)}</span>
+                        <span className="text-xs font-black text-slate-700 uppercase tracking-widest">KM Reached</span>
+                        <span className="text-3xl group-hover:scale-125 transition-transform">📏</span>
+                      </div>
+                      <div className="mt-4 h-1.5 w-44 bg-slate-800 rounded-full overflow-hidden">
+                        <div className="h-full bg-purple-500 w-2/3 animate-shimmer" />
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </div>

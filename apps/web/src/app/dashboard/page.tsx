@@ -1,13 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Trophy, TrendingUp, Footprints, Flame, Users, Plus, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/use-auth';
 import { api, DashboardStats, UserCompetition } from '@/lib/api';
 import { useToast } from '@health-competition/ui';
+import { motion } from 'framer-motion';
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -15,6 +15,8 @@ export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [competitions, setCompetitions] = useState<UserCompetition[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // ... (useEffect and loadDashboardData remain same)
 
   useEffect(() => {
     if (user?.id) {
@@ -52,221 +54,148 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-12 pb-24">
       {/* Welcome Section */}
-      <div className="flex items-center justify-between">
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-8">
         <div>
-          <h1 className="text-3xl font-bold">Welcome back!</h1>
-          <p className="text-muted-foreground">
-            Track your progress and compete with others
-          </p>
+          <h1 className="text-4xl font-black tracking-tight uppercase mb-2 text-foreground">Welcome back!</h1>
+          <p className="text-muted-foreground font-bold">{user?.email} • Track your progress and compete</p>
         </div>
-        <Link href="/dashboard/competitions/create">
-          <Button size="lg">
-            <Plus className="mr-2 h-5 w-5" />
-            Create Competition
-          </Button>
-        </Link>
-      </div>
+        <div className="flex gap-4">
+          <Link href="/dashboard/competitions/create">
+            <Button className="btn-gradient px-8 py-3 rounded-2xl text-xs font-black uppercase tracking-widest text-white shadow-2xl shadow-blue-500/20">
+              <Plus className="mr-2 h-4 w-4" /> Create Competition
+            </Button>
+          </Link>
+        </div>
+      </header>
 
       {/* Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatsCard
-          title="Total Steps"
-          value={stats?.total_steps.toLocaleString() || '0'}
-          change={`${stats?.steps_change >= 0 ? '+' : ''}${stats?.steps_change.toFixed(1)}%`}
-          icon={<Footprints className="h-5 w-5 text-blue-500" />}
-          trend={stats?.steps_change >= 0 ? 'up' : 'down'}
-        />
-        <StatsCard
-          title="Calories Burned"
-          value={stats?.total_calories.toFixed(0) || '0'}
-          change={`${stats?.calories_change >= 0 ? '+' : ''}${stats?.calories_change.toFixed(1)}%`}
-          icon={<Flame className="h-5 w-5 text-orange-500" />}
-          trend={stats?.calories_change >= 0 ? 'up' : 'down'}
-        />
-        <StatsCard
-          title="Active Competitions"
-          value={stats?.active_competitions.toString() || '0'}
-          change="0"
-          icon={<Trophy className="h-5 w-5 text-yellow-500" />}
-          trend="neutral"
-        />
-        <StatsCard
-          title="Your Best Rank"
-          value={stats?.best_rank > 0 ? `#${stats.best_rank}` : 'N/A'}
-          change=""
-          icon={<TrendingUp className="h-5 w-5 text-green-500" />}
-          trend="neutral"
-        />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        {[
+          { label: 'Total Steps', val: stats?.total_steps.toLocaleString() || '0', change: `${stats?.steps_change?.toFixed(1)}%`, up: (stats?.steps_change || 0) >= 0, icon: <Footprints className="text-blue-400" /> },
+          { label: 'Calories Burned', val: stats?.total_calories.toFixed(0) || '0', change: `${stats?.calories_change?.toFixed(1)}%`, up: (stats?.calories_change || 0) >= 0, icon: <Flame className="text-orange-400" /> },
+          { label: 'Active Comp.', val: stats?.active_competitions.toString() || '0', change: 'Live', up: true, icon: <Trophy className="text-yellow-400" /> },
+          { label: 'Best Rank', val: stats?.best_rank && stats.best_rank > 0 ? `#${stats.best_rank}` : 'N/A', change: 'Top', up: true, icon: <TrendingUp className="text-emerald-400" /> },
+        ].map((card, i) => (
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.1 }}
+            className="glass p-8 rounded-[2.5rem] border border-white/5 bg-slate-900/20 group hover:border-white/10 transition-all shadow-xl"
+          >
+            <div className="flex justify-between items-start mb-6">
+              <div className="p-4 glass rounded-2xl shadow-inner group-hover:scale-110 transition-transform">
+                {card.icon}
+              </div>
+              <div className={`flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest ${card.up ? 'text-emerald-400' : 'text-red-400'}`}>
+                {card.change !== '0%' ? (card.up ? <TrendingUp size={14} /> : <TrendingUp size={14} className="rotate-180" />) : null}
+                {card.change}
+              </div>
+            </div>
+            <div className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-1">{card.label}</div>
+            <div className="text-4xl font-black tracking-tighter text-foreground">{card.val}</div>
+          </motion.div>
+        ))}
       </div>
 
       {/* Charts and Activity */}
-      <div className="grid gap-6 lg:grid-cols-7">
+      <div className="grid grid-cols-1 lg:grid-cols-7 gap-10">
         {/* Activity Chart */}
-        <Card className="lg:col-span-4">
-          <CardHeader>
-            <CardTitle>Weekly Activity</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-64 flex items-end justify-around gap-2">
-              {(stats?.weekly_activity || []).slice(0, 7).reverse().map((activity, i) => {
-                const maxSteps = Math.max(...(stats?.weekly_activity || []).map(a => a.steps));
-                const height = maxSteps > 0 ? (activity.steps / maxSteps) * 100 : 0;
-                return (
-                <div key={i} className="flex-1 flex flex-col items-center gap-2">
-                  <div
-                    className="w-full bg-gradient-to-t from-blue-500 to-purple-500 rounded-t-md transition-all hover:opacity-80"
-                    style={{ height: `${height}%` }}
-                  />
-                  <span className="text-xs text-muted-foreground">
+        <div className="lg:col-span-4 glass p-10 rounded-[3rem] border border-white/5 bg-slate-900/20">
+          <div className="flex items-center justify-between mb-10">
+            <h3 className="text-2xl font-black uppercase tracking-tight text-foreground">Weekly Activity</h3>
+          </div>
+          <div className="h-64 flex items-end justify-around gap-2 px-4">
+            {(stats?.weekly_activity || []).slice(0, 7).reverse().map((activity, i) => {
+              const maxSteps = Math.max(...(stats?.weekly_activity || []).map(a => a.steps)) || 1;
+              const height = maxSteps > 0 ? (activity.steps / maxSteps) * 100 : 0;
+              return (
+                <div key={i} className="flex-1 flex flex-col items-center gap-3 group">
+                  <div className="w-full relative h-full flex items-end">
+                    <div
+                      className="w-full bg-gradient-to-t from-blue-600 to-purple-600 rounded-2xl transition-all duration-500 group-hover:opacity-100 opacity-80 shadow-[0_0_15px_rgba(59,130,246,0.3)]"
+                      style={{ height: `${height}%` }}
+                    />
+                  </div>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground group-hover:text-primary transition-colors">
                     {new Date(activity.date).toLocaleDateString('en-US', { weekday: 'short' })}
                   </span>
                 </div>
-              )})}
-            </div>
-          </CardContent>
-        </Card>
+              )
+            })}
+          </div>
+        </div>
 
         {/* Recent Activity */}
-        <Card className="lg:col-span-3">
-          <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {stats?.recent_activity && stats.recent_activity.length > 0 ? (
-                stats.recent_activity.slice(0, 4).map((activity) => (
-                  <ActivityItem
-                    key={activity.id}
-                    title={activity.title}
-                    value={`${activity.steps.toLocaleString()} steps`}
-                    time={getTimeAgo(activity.created_at)}
-                  />
-                ))
-              ) : (
-                <p className="text-sm text-muted-foreground text-center py-4">No recent activity</p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+        <div className="lg:col-span-3 glass p-10 rounded-[3rem] border border-white/5 bg-slate-900/20">
+          <h3 className="text-2xl font-black uppercase tracking-tight mb-10 text-foreground">Recent Activity</h3>
+          <div className="space-y-4">
+            {stats?.recent_activity && stats.recent_activity.length > 0 ? (
+              stats.recent_activity.slice(0, 4).map((activity) => (
+                <div key={activity.id} className="flex items-center justify-between p-4 glass rounded-2xl border border-white/5 hover:bg-white/5 transition-all">
+                  <div>
+                    <p className="text-sm font-bold text-foreground">{activity.title}</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{getTimeAgo(activity.created_at)}</p>
+                  </div>
+                  <span className="text-sm font-black text-primary">{activity.steps.toLocaleString()} steps</span>
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-4">No recent activity</p>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Active Competitions */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Active Competitions</CardTitle>
+      <div className="glass rounded-[3rem] border border-white/5 overflow-hidden bg-slate-900/20">
+        <div className="p-10 border-b border-white/5 flex justify-between items-center">
+          <h3 className="text-2xl font-black uppercase tracking-tight text-foreground">Active Competitions</h3>
           <Link href="/dashboard/competitions">
-            <Button variant="ghost">View All</Button>
+            <Button variant="ghost" className="text-xs text-blue-400 font-black uppercase tracking-widest hover:underline hover:bg-transparent">View All</Button>
           </Link>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {competitions?.length > 0 ? (
-              competitions.slice(0, 3).map((comp) => (
-                <Link key={comp.id} href={`/dashboard/competitions/${comp.id}`}>
-                  <CompetitionCard
-                    title={comp.name}
-                    prize={`$${comp.prize_pool}`}
-                    rank={comp.current_rank || 0}
-                    daysLeft={getDaysRemaining(comp.end_date)}
-                  />
-                </Link>
-              ))
-            ) : (
-              <p className="col-span-3 text-sm text-muted-foreground text-center py-8">
-                No active competitions. Join one to get started!
-              </p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
-
-function StatsCard({
-  title,
-  value,
-  change,
-  icon,
-  trend,
-}: {
-  title: string;
-  value: string;
-  change: string;
-  icon: React.ReactNode;
-  trend: 'up' | 'down' | 'neutral';
-}) {
-  return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        {icon}
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
-        <p
-          className={`text-xs ${
-            trend === 'up'
-              ? 'text-green-600'
-              : trend === 'down'
-              ? 'text-red-600'
-              : 'text-muted-foreground'
-          }`}
-        >
-          {change !== '0' && (trend === 'up' ? '↑' : trend === 'down' ? '↓' : '')} {change} from last week
-        </p>
-      </CardContent>
-    </Card>
-  );
-}
-
-function ActivityItem({ title, value, time }: { title: string; value: string; time: string }) {
-  return (
-    <div className="flex items-center justify-between">
-      <div>
-        <p className="text-sm font-medium">{title}</p>
-        <p className="text-xs text-muted-foreground">{time}</p>
+        </div>
+        <div className="p-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {competitions?.length > 0 ? (
+            competitions.slice(0, 3).map((comp) => (
+              <Link key={comp.id} href={`/dashboard/competitions/${comp.id}`}>
+                <div className="glass p-6 rounded-3xl border border-white/5 hover:border-blue-500/30 hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-300 group">
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 text-blue-400 group-hover:scale-110 transition-transform duration-300">
+                      <Trophy size={20} />
+                    </div>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
+                      Rank #{comp.current_rank || 0}
+                    </span>
+                  </div>
+                  <h4 className="text-lg font-bold text-foreground mb-2 group-hover:text-primary transition-colors">{comp.name}</h4>
+                  <div className="flex items-center justify-between mt-4 text-sm">
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Prize Pool</span>
+                      <span className="font-bold text-emerald-400">${comp.prize_pool}</span>
+                    </div>
+                    <div className="text-right flex flex-col items-end">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Ends In</span>
+                      <span className="font-bold text-foreground">{getDaysRemaining(comp.end_date)} days</span>
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            ))
+          ) : (
+            <p className="col-span-3 text-sm text-muted-foreground text-center py-8">
+              No active competitions. Join one to get started!
+            </p>
+          )}
+        </div>
       </div>
-      <p className="text-sm font-semibold">{value}</p>
     </div>
   );
 }
 
-function CompetitionCard({
-  title,
-  prize,
-  rank,
-  daysLeft,
-}: {
-  title: string;
-  prize: string;
-  rank: number;
-  daysLeft: number;
-}) {
-  return (
-    <Card className="card-hover cursor-pointer">
-      <CardHeader>
-        <CardTitle className="text-lg">{title}</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-2">
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-muted-foreground">Prize Pool</span>
-          <span className="font-bold text-green-600">{prize}</span>
-        </div>
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-muted-foreground">Your Rank</span>
-          <span className="font-semibold">#{rank}</span>
-        </div>
-        <div className="pt-2 border-t">
-          <p className="text-xs text-muted-foreground">{daysLeft} days remaining</p>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
+// Helper functions remain same
 function getTimeAgo(dateString: string): string {
   const date = new Date(dateString);
   const now = new Date();

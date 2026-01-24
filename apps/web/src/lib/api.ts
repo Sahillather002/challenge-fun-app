@@ -1,7 +1,7 @@
 import axios, { AxiosInstance } from 'axios';
 import { getSession } from './supabase';
 
-const API_BASE_URL = 'http://localhost:8080/api/v1';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
 
 console.log("api base", API_BASE_URL)
 // Create axios instance

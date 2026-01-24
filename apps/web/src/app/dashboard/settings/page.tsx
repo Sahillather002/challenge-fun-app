@@ -1,12 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Settings, Bell, Lock, User, Moon, Sun, Globe, Save } from 'lucide-react';
+import { Settings, Bell, Lock, User, Moon, Sun, Globe, Save, Loader2 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useToast } from '@/hooks/use-toast';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
@@ -20,12 +20,12 @@ export default function SettingsPage() {
     competitionUpdates: true,
     leaderboardChanges: false,
     weeklyReport: true,
-    
+
     // Privacy
     profileVisibility: 'public',
     showStats: true,
     showLocation: true,
-    
+
     // Account
     currentPassword: '',
     newPassword: '',
@@ -35,17 +35,17 @@ export default function SettingsPage() {
   const handleSave = async () => {
     setLoading(true);
     try {
-      // TODO: Replace with actual API call
+      // Mock API latency
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      
+
       toast({
-        title: 'Success',
-        description: 'Settings saved successfully',
+        title: 'Network Sync Successful',
+        description: 'Global preferences have been committed to the neural link.',
       });
     } catch (error) {
       toast({
-        title: 'Error',
-        description: 'Failed to save settings',
+        title: 'Sync Error',
+        description: 'Failed to synchronize settings with the network.',
         variant: 'destructive',
       });
     } finally {
@@ -56,8 +56,8 @@ export default function SettingsPage() {
   const handlePasswordChange = async () => {
     if (settings.newPassword !== settings.confirmPassword) {
       toast({
-        title: 'Error',
-        description: 'Passwords do not match',
+        title: 'Validation Error',
+        description: 'Neural keys do not match. Verification failed.',
         variant: 'destructive',
       });
       return;
@@ -65,14 +65,13 @@ export default function SettingsPage() {
 
     setLoading(true);
     try {
-      // TODO: Replace with actual API call
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      
+
       toast({
-        title: 'Success',
-        description: 'Password changed successfully',
+        title: 'Security Uplink Active',
+        description: 'New security protocols have been established.',
       });
-      
+
       setSettings({
         ...settings,
         currentPassword: '',
@@ -81,8 +80,8 @@ export default function SettingsPage() {
       });
     } catch (error) {
       toast({
-        title: 'Error',
-        description: 'Failed to change password',
+        title: 'Uplink Failure',
+        description: 'Failed to establish new security protocols.',
         variant: 'destructive',
       });
     } finally {
@@ -90,310 +89,229 @@ export default function SettingsPage() {
     }
   };
 
+  const Toggle = ({ active, onClick }: { active: boolean; onClick: () => void }) => (
+    <button
+      onClick={onClick}
+      className={`relative w-14 h-8 rounded-full transition-all duration-300 glass border ${active ? 'bg-blue-600/20 border-blue-500/40' : 'bg-slate-900/40 border-white/5'}`}
+    >
+      <div className={`absolute top-1 left-1 w-6 h-6 rounded-full transition-all duration-300 shadow-xl ${active ? 'translate-x-6 bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.5)]' : 'bg-slate-700'}`} />
+    </button>
+  );
+
   return (
-    <div className="max-w-4xl space-y-6">
+    <div className="space-y-12 pb-24 max-w-5xl mx-auto px-4 sm:px-0">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold mb-2">Settings</h1>
-        <p className="text-muted-foreground">
-          Manage your account settings and preferences
-        </p>
-      </div>
+      <header>
+        <h1 className="text-4xl font-black tracking-tight uppercase mb-2 text-white">System Protocols</h1>
+        <p className="text-slate-500 font-bold">Configure neural interface preferences and security clearance</p>
+      </header>
 
-      {/* Appearance */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Moon className="h-5 w-5" />
-            Appearance
-          </CardTitle>
-          <CardDescription>
-            Customize how the app looks for you
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-3">Theme</label>
-            <div className="flex gap-4">
+      <div className="space-y-12">
+        {/* Appearance */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="glass p-10 rounded-[3rem] border border-white/5 bg-slate-900/40"
+        >
+          <div className="flex items-center gap-6 mb-12 border-b border-white/5 pb-8">
+            <div className="w-16 h-16 rounded-[2rem] glass border border-white/10 flex items-center justify-center text-blue-400">
+              <Moon size={32} />
+            </div>
+            <div>
+              <h3 className="text-3xl font-black uppercase tracking-tighter text-white leading-none mb-2">Visual Spectrum</h3>
+              <p className="text-slate-500 font-bold">Adjust the neural interface wavelength</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              { id: 'light', label: 'Photonic (Light)', icon: <Sun size={24} /> },
+              { id: 'dark', label: 'Substratum (Dark)', icon: <Moon size={24} /> },
+              { id: 'system', label: 'Adaptive (System)', icon: <Settings size={24} /> },
+            ].map((t) => (
               <button
-                onClick={() => setTheme('light')}
-                className={`flex-1 p-4 rounded-lg border-2 transition-colors ${
-                  theme === 'light'
-                    ? 'border-primary bg-primary/5'
-                    : 'border-muted hover:border-muted-foreground/50'
-                }`}
+                key={t.id}
+                onClick={() => setTheme(t.id)}
+                className={`
+                   p-8 rounded-[2.5rem] border-2 transition-all flex flex-col items-center gap-4 relative overflow-hidden group
+                   ${theme === t.id
+                    ? 'border-blue-500/40 bg-blue-500/10 shadow-[0_0_40px_rgba(59,130,246,0.1)]'
+                    : 'border-white/5 bg-slate-900/40 hover:border-white/10'}
+                `}
               >
-                <Sun className="h-6 w-6 mx-auto mb-2" />
-                <p className="text-sm font-medium">Light</p>
+                <div className={`p-4 glass rounded-[1.5rem] transition-all group-hover:scale-110 ${theme === t.id ? 'text-blue-400' : 'text-slate-600'}`}>
+                  {t.icon}
+                </div>
+                <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${theme === t.id ? 'text-white' : 'text-slate-500'}`}>{t.label}</span>
+                {theme === t.id && <div className="absolute top-4 right-4 w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,1)]" />}
               </button>
-              <button
-                onClick={() => setTheme('dark')}
-                className={`flex-1 p-4 rounded-lg border-2 transition-colors ${
-                  theme === 'dark'
-                    ? 'border-primary bg-primary/5'
-                    : 'border-muted hover:border-muted-foreground/50'
-                }`}
-              >
-                <Moon className="h-6 w-6 mx-auto mb-2" />
-                <p className="text-sm font-medium">Dark</p>
-              </button>
-              <button
-                onClick={() => setTheme('system')}
-                className={`flex-1 p-4 rounded-lg border-2 transition-colors ${
-                  theme === 'system'
-                    ? 'border-primary bg-primary/5'
-                    : 'border-muted hover:border-muted-foreground/50'
-                }`}
-              >
-                <Settings className="h-6 w-6 mx-auto mb-2" />
-                <p className="text-sm font-medium">System</p>
-              </button>
-            </div>
+            ))}
           </div>
-        </CardContent>
-      </Card>
+        </motion.section>
 
-      {/* Notifications */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Bell className="h-5 w-5" />
-            Notifications
-          </CardTitle>
-          <CardDescription>
-            Manage how you receive notifications
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
+        {/* Notifications */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="glass p-10 rounded-[3rem] border border-white/5 bg-slate-900/40"
+        >
+          <div className="flex items-center gap-6 mb-12 border-b border-white/5 pb-8">
+            <div className="w-16 h-16 rounded-[2rem] glass border border-white/10 flex items-center justify-center text-purple-400">
+              <Bell size={32} />
+            </div>
             <div>
-              <p className="font-medium">Email Notifications</p>
-              <p className="text-sm text-muted-foreground">Receive notifications via email</p>
+              <h3 className="text-3xl font-black uppercase tracking-tighter text-white leading-none mb-2">Signal Relays</h3>
+              <p className="text-slate-500 font-bold">Configure neural broadcast parameters</p>
             </div>
-            <button
-              onClick={() =>
-                setSettings({ ...settings, emailNotifications: !settings.emailNotifications })
-              }
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                settings.emailNotifications ? 'bg-primary' : 'bg-muted'
-              }`}
-            >
-              <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  settings.emailNotifications ? 'translate-x-6' : 'translate-x-1'
-                }`}
-              />
-            </button>
           </div>
 
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium">Push Notifications</p>
-              <p className="text-sm text-muted-foreground">Receive push notifications</p>
+          <div className="grid md:grid-cols-2 gap-12">
+            {[
+              { id: 'emailNotifications', label: 'Neural Uplink (Email)', sub: 'Synchronize report logs via SMTP' },
+              { id: 'pushNotifications', label: 'Active Direct (Push)', sub: 'Real-time sensory notifications' },
+              { id: 'competitionUpdates', label: 'Sector Events', sub: 'Protocol modifications and events' },
+              { id: 'leaderboardChanges', label: 'Rank Shift', sub: 'Alerts on hierarchy status change' },
+              { id: 'weeklyReport', label: 'Epoch Summary', sub: 'Weekly biometric synthesis' },
+            ].map((item) => (
+              <div key={item.id} className="flex items-center justify-between p-8 rounded-[2rem] glass border border-white/5 bg-white/5 hover:bg-white/10 transition-colors">
+                <div>
+                  <p className="text-lg font-black uppercase text-white tracking-widest leading-none mb-2">{item.label}</p>
+                  <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest">{item.sub}</p>
+                </div>
+                <Toggle
+                  active={(settings as any)[item.id]}
+                  onClick={() => setSettings({ ...settings, [item.id]: !(settings as any)[item.id] })}
+                />
+              </div>
+            ))}
+          </div>
+        </motion.section>
+
+        {/* Privacy & Security */}
+        <div className="grid lg:grid-cols-2 gap-12">
+          <motion.section
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2 }}
+            className="glass p-10 rounded-[3rem] border border-white/5 bg-slate-900/40"
+          >
+            <div className="flex items-center gap-6 mb-12 border-b border-white/5 pb-8">
+              <div className="w-16 h-16 rounded-[2rem] glass border border-white/10 flex items-center justify-center text-emerald-400">
+                <Globe size={32} />
+              </div>
+              <div>
+                <h3 className="text-3xl font-black uppercase tracking-tighter text-white leading-none mb-2">Stealth Ops</h3>
+                <p className="text-slate-500 font-bold">Node visibility protocols</p>
+              </div>
             </div>
-            <button
-              onClick={() =>
-                setSettings({ ...settings, pushNotifications: !settings.pushNotifications })
-              }
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                settings.pushNotifications ? 'bg-primary' : 'bg-muted'
-              }`}
-            >
-              <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  settings.pushNotifications ? 'translate-x-6' : 'translate-x-1'
-                }`}
-              />
-            </button>
-          </div>
 
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium">Competition Updates</p>
-              <p className="text-sm text-muted-foreground">Get notified about competition changes</p>
+            <div className="space-y-8">
+              <div className="space-y-3">
+                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 px-2">Encryption Level (Visibility)</label>
+                <select
+                  value={settings.profileVisibility}
+                  onChange={(e) => setSettings({ ...settings, profileVisibility: e.target.value })}
+                  className="w-full h-16 rounded-2xl glass bg-slate-950/40 border border-white/10 text-white font-bold p-4 focus:ring-2 focus:ring-blue-500/50 outline-none appearance-none cursor-pointer"
+                >
+                  <option value="public" className="bg-slate-900">Broadcast (Public)</option>
+                  <option value="friends" className="bg-slate-900">Local Net (Friends)</option>
+                  <option value="private" className="bg-slate-900">Blackout (Private)</option>
+                </select>
+              </div>
+
+              {[
+                { id: 'showStats', label: 'Metric Display', sub: 'Reveal performance benchmarks' },
+                { id: 'showLocation', label: 'Geospatial Sync', sub: 'Reveal operational sector' },
+              ].map((item) => (
+                <div key={item.id} className="flex items-center justify-between p-6 rounded-2xl glass border border-white/5 bg-white/5">
+                  <div>
+                    <p className="text-sm font-black uppercase text-white tracking-widest leading-none mb-1">{item.label}</p>
+                    <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest">{item.sub}</p>
+                  </div>
+                  <Toggle
+                    active={(settings as any)[item.id]}
+                    onClick={() => setSettings({ ...settings, [item.id]: !(settings as any)[item.id] })}
+                  />
+                </div>
+              ))}
             </div>
-            <button
-              onClick={() =>
-                setSettings({ ...settings, competitionUpdates: !settings.competitionUpdates })
-              }
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                settings.competitionUpdates ? 'bg-primary' : 'bg-muted'
-              }`}
-            >
-              <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  settings.competitionUpdates ? 'translate-x-6' : 'translate-x-1'
-                }`}
-              />
-            </button>
-          </div>
+          </motion.section>
 
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium">Leaderboard Changes</p>
-              <p className="text-sm text-muted-foreground">Get notified when your rank changes</p>
+          <motion.section
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2 }}
+            className="glass p-10 rounded-[3rem] border border-white/5 bg-slate-900/40"
+          >
+            <div className="flex items-center gap-6 mb-12 border-b border-white/5 pb-8">
+              <div className="w-16 h-16 rounded-[2rem] glass border border-white/10 flex items-center justify-center text-red-400">
+                <Lock size={32} />
+              </div>
+              <div>
+                <h3 className="text-3xl font-black uppercase tracking-tighter text-white leading-none mb-2">Cryptographic</h3>
+                <p className="text-slate-500 font-bold">Neural access key rotation</p>
+              </div>
             </div>
-            <button
-              onClick={() =>
-                setSettings({ ...settings, leaderboardChanges: !settings.leaderboardChanges })
-              }
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                settings.leaderboardChanges ? 'bg-primary' : 'bg-muted'
-              }`}
-            >
-              <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  settings.leaderboardChanges ? 'translate-x-6' : 'translate-x-1'
-                }`}
-              />
-            </button>
-          </div>
 
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium">Weekly Report</p>
-              <p className="text-sm text-muted-foreground">Receive weekly progress summary</p>
+            <div className="space-y-6">
+              <div className="space-y-3">
+                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 px-2">Current Key</label>
+                <Input
+                  type="password"
+                  value={settings.currentPassword}
+                  onChange={(e) => setSettings({ ...settings, currentPassword: e.target.value })}
+                  className="h-14 rounded-xl glass bg-slate-950/40 border-white/10 text-white font-bold px-6"
+                  placeholder="Verification Required"
+                />
+              </div>
+              <div className="space-y-3">
+                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 px-2">New Neural Key</label>
+                <Input
+                  type="password"
+                  value={settings.newPassword}
+                  onChange={(e) => setSettings({ ...settings, newPassword: e.target.value })}
+                  className="h-14 rounded-xl glass bg-slate-950/40 border-white/10 text-white font-bold px-6"
+                  placeholder="Establish Protocol"
+                />
+              </div>
+              <div className="space-y-3">
+                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 px-2">Confirm Key</label>
+                <Input
+                  type="password"
+                  value={settings.confirmPassword}
+                  onChange={(e) => setSettings({ ...settings, confirmPassword: e.target.value })}
+                  className="h-14 rounded-xl glass bg-slate-950/40 border-white/10 text-white font-bold px-6"
+                  placeholder="Verify Signature"
+                />
+              </div>
+
+              <Button onClick={handlePasswordChange} disabled={loading} className="w-full h-14 rounded-xl bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 text-[10px] font-black uppercase tracking-[0.2em] shadow-xl mt-4">
+                Initialize Rotation
+              </Button>
             </div>
+          </motion.section>
+        </div>
+
+        {/* Global Control Button */}
+        <div className="sticky bottom-12 z-40 flex justify-center px-4">
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="p-3 rounded-[2.5rem] glass border border-white/10 bg-slate-900/80 backdrop-blur-3xl shadow-2xl flex items-center gap-6 pr-4"
+          >
+            <Button onClick={handleSave} disabled={loading} className="h-16 px-12 rounded-[2rem] btn-gradient text-[10px] font-black uppercase tracking-[0.3em] flex items-center gap-4 shadow-[0_0_30px_rgba(59,130,246,0.5)]">
+              {loading ? <Loader2 className="animate-spin" /> : <Save size={18} />}
+              {loading ? 'Committing...' : 'Commit to Network'}
+            </Button>
             <button
-              onClick={() =>
-                setSettings({ ...settings, weeklyReport: !settings.weeklyReport })
-              }
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                settings.weeklyReport ? 'bg-primary' : 'bg-muted'
-              }`}
+              onClick={() => window.location.reload()}
+              className="text-[9px] font-black uppercase tracking-widest text-slate-500 hover:text-white transition-colors"
             >
-              <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  settings.weeklyReport ? 'translate-x-6' : 'translate-x-1'
-                }`}
-              />
+              Reset Buffers
             </button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Privacy */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Globe className="h-5 w-5" />
-            Privacy
-          </CardTitle>
-          <CardDescription>
-            Control your privacy settings
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-2">Profile Visibility</label>
-            <select
-              value={settings.profileVisibility}
-              onChange={(e) => setSettings({ ...settings, profileVisibility: e.target.value })}
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <option value="public">Public - Anyone can view</option>
-              <option value="friends">Friends Only</option>
-              <option value="private">Private - Only you</option>
-            </select>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium">Show Statistics</p>
-              <p className="text-sm text-muted-foreground">Display your stats on your profile</p>
-            </div>
-            <button
-              onClick={() => setSettings({ ...settings, showStats: !settings.showStats })}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                settings.showStats ? 'bg-primary' : 'bg-muted'
-              }`}
-            >
-              <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  settings.showStats ? 'translate-x-6' : 'translate-x-1'
-                }`}
-              />
-            </button>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium">Show Location</p>
-              <p className="text-sm text-muted-foreground">Display your location on your profile</p>
-            </div>
-            <button
-              onClick={() => setSettings({ ...settings, showLocation: !settings.showLocation })}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                settings.showLocation ? 'bg-primary' : 'bg-muted'
-              }`}
-            >
-              <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  settings.showLocation ? 'translate-x-6' : 'translate-x-1'
-                }`}
-              />
-            </button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Security */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Lock className="h-5 w-5" />
-            Security
-          </CardTitle>
-          <CardDescription>
-            Update your password and security settings
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-2">Current Password</label>
-            <Input
-              type="password"
-              value={settings.currentPassword}
-              onChange={(e) => setSettings({ ...settings, currentPassword: e.target.value })}
-              placeholder="Enter current password"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-2">New Password</label>
-            <Input
-              type="password"
-              value={settings.newPassword}
-              onChange={(e) => setSettings({ ...settings, newPassword: e.target.value })}
-              placeholder="Enter new password"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-2">Confirm New Password</label>
-            <Input
-              type="password"
-              value={settings.confirmPassword}
-              onChange={(e) => setSettings({ ...settings, confirmPassword: e.target.value })}
-              placeholder="Confirm new password"
-            />
-          </div>
-
-          <Button onClick={handlePasswordChange} disabled={loading}>
-            Change Password
-          </Button>
-        </CardContent>
-      </Card>
-
-      {/* Save Button */}
-      <div className="flex justify-end gap-4">
-        <Button variant="outline" disabled={loading}>
-          Cancel
-        </Button>
-        <Button onClick={handleSave} disabled={loading}>
-          <Save className="mr-2 h-4 w-4" />
-          {loading ? 'Saving...' : 'Save Settings'}
-        </Button>
+          </motion.div>
+        </div>
       </div>
     </div>
   );

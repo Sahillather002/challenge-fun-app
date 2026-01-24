@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Activity, Footprints, Flame, TrendingUp, Calendar, Play, Pause, RotateCcw } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export default function ActivityPage() {
   const [isTracking, setIsTracking] = useState(false);
@@ -56,230 +56,211 @@ export default function ActivityPage() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-12 pb-24 max-w-7xl mx-auto px-4 sm:px-0">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold mb-2">Activity Tracker</h1>
-        <p className="text-muted-foreground">
-          Track your steps and activities in real-time
-        </p>
-      </div>
+      <header>
+        <h1 className="text-4xl font-black tracking-tight uppercase mb-2 text-white">Biometric Telemetry</h1>
+        <p className="text-slate-500 font-bold">Real-time neural tracking of kinetic energy and metabolic output</p>
+      </header>
 
       {/* Live Tracker */}
-      <Card className="bg-gradient-to-br from-blue-500 to-purple-600 text-white border-0">
-        <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
-            <Activity className="h-6 w-6" />
-            Live Activity Tracker
-          </CardTitle>
-          <CardDescription className="text-white/80">
-            Track your steps using device sensors
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid md:grid-cols-4 gap-6 mb-6">
-            <div className="text-center">
-              <Footprints className="h-8 w-8 mx-auto mb-2 opacity-90" />
-              <p className="text-sm opacity-80 mb-1">Steps</p>
-              <p className="text-4xl font-bold">{steps.toLocaleString()}</p>
-            </div>
-            <div className="text-center">
-              <TrendingUp className="h-8 w-8 mx-auto mb-2 opacity-90" />
-              <p className="text-sm opacity-80 mb-1">Distance (km)</p>
-              <p className="text-4xl font-bold">{distance.toFixed(2)}</p>
-            </div>
-            <div className="text-center">
-              <Flame className="h-8 w-8 mx-auto mb-2 opacity-90" />
-              <p className="text-sm opacity-80 mb-1">Calories</p>
-              <p className="text-4xl font-bold">{Math.floor(calories)}</p>
-            </div>
-            <div className="text-center">
-              <Calendar className="h-8 w-8 mx-auto mb-2 opacity-90" />
-              <p className="text-sm opacity-80 mb-1">Active (min)</p>
-              <p className="text-4xl font-bold">{Math.floor(activeMinutes)}</p>
-            </div>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="glass p-12 rounded-[3.5rem] border border-white/5 bg-slate-900/40 relative overflow-hidden group shadow-2xl"
+      >
+        <div className={`absolute inset-0 bg-gradient-to-tr ${isTracking ? 'from-blue-500/20' : 'from-slate-500/10'} via-transparent to-purple-500/10 pointer-events-none transition-colors duration-1000`} />
+
+        <div className="relative z-10 space-y-12 text-center">
+          <div className="inline-flex items-center gap-3 px-6 py-2 rounded-full glass border border-white/10 mb-4 backdrop-blur-xl">
+            <div className={`w-3 h-3 rounded-full ${isTracking ? 'bg-emerald-500 animate-pulse shadow-[0_0_15px_rgba(16,185,129,0.5)]' : 'bg-slate-700'}`} />
+            <span className={`text-[10px] font-black tracking-[0.3em] uppercase ${isTracking ? 'text-emerald-400' : 'text-slate-500'}`}>
+              {isTracking ? 'Data sync active' : 'Signal disconnected'}
+            </span>
           </div>
 
-          <div className="flex items-center gap-4 justify-center">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-12">
+            {[
+              { label: 'Kinetic Link (Steps)', val: steps.toLocaleString(), icon: <Footprints size={24} className="text-blue-400" /> },
+              { label: 'Spatial Vector (KM)', val: distance.toFixed(2), icon: <TrendingUp size={24} className="text-purple-400" /> },
+              { label: 'Thermal Loss (Cal)', val: Math.floor(calories), icon: <Flame size={24} className="text-orange-400" /> },
+              { label: 'Temporal sync (Min)', val: Math.floor(activeMinutes), icon: <Calendar size={24} className="text-emerald-400" /> },
+            ].map((stat, i) => (
+              <div key={i} className="flex flex-col items-center">
+                <div className="p-4 glass rounded-2xl mb-4 text-blue-400 shadow-inner group-hover:scale-110 transition-transform">
+                  {stat.icon}
+                </div>
+                <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-1">{stat.label}</p>
+                <motion.p
+                  key={stat.val}
+                  initial={{ scale: 1.1, opacity: 0.8 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  className="text-5xl font-black text-white tracking-tighter"
+                >
+                  {stat.val}
+                </motion.p>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-6 justify-center pt-8">
             <Button
               onClick={handleStartStop}
-              size="lg"
-              variant="secondary"
-              className="gap-2"
+              className={`h-16 px-12 rounded-[2rem] text-xs font-black uppercase tracking-[0.2em] shadow-2xl transition-all hover:scale-105 active:scale-95 ${isTracking
+                  ? 'bg-red-500/10 text-red-400 border border-red-500/20 flex gap-4'
+                  : 'btn-gradient text-white flex gap-4'
+                }`}
             >
-              {isTracking ? (
-                <>
-                  <Pause className="h-5 w-5" />
-                  Pause
-                </>
-              ) : (
-                <>
-                  <Play className="h-5 w-5" />
-                  Start Tracking
-                </>
-              )}
+              {isTracking ? <Pause size={18} /> : <Play size={18} />}
+              {isTracking ? 'Stop uplink' : 'Initialize sync'}
             </Button>
-            <Button
+            <button
               onClick={handleReset}
-              size="lg"
-              variant="outline"
-              className="gap-2 bg-white/10 border-white/20 text-white hover:bg-white/20"
+              type="button"
+              className="w-16 h-16 rounded-[2rem] glass flex items-center justify-center text-slate-500 hover:text-white transition-colors border border-white/10 hover:border-white/20"
             >
-              <RotateCcw className="h-5 w-5" />
-              Reset
-            </Button>
+              <RotateCcw size={20} />
+            </button>
           </div>
+        </div>
+      </motion.div>
 
-          {isTracking && (
-            <div className="mt-4 text-center">
-              <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">
-                <div className="h-2 w-2 bg-green-400 rounded-full animate-pulse" />
-                <span className="text-sm">Tracking active</span>
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <div className="grid lg:grid-cols-2 gap-12">
+        {/* Today's Goals */}
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="glass p-10 rounded-[3rem] border border-white/5 bg-slate-900/20"
+        >
+          <h3 className="text-[10px] font-black tracking-[0.3em] uppercase text-blue-400 mb-10 text-center">Neural Threshold Objectives</h3>
 
-      {/* Today's Progress */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Today's Progress</CardTitle>
-          <CardDescription>Your activity summary for today</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium">Steps Goal (10,000)</span>
-                <span className="text-sm font-semibold">{steps + 5234} / 10,000</span>
-              </div>
-              <div className="h-3 bg-muted rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-500"
-                  style={{ width: `${Math.min(((steps + 5234) / 10000) * 100, 100)}%` }}
-                />
-              </div>
-            </div>
-
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium">Calories Goal (500)</span>
-                <span className="text-sm font-semibold">{Math.floor(calories + 234)} / 500</span>
-              </div>
-              <div className="h-3 bg-muted rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-orange-500 to-red-500 transition-all duration-500"
-                  style={{ width: `${Math.min(((calories + 234) / 500) * 100, 100)}%` }}
-                />
-              </div>
-            </div>
-
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium">Active Minutes (60)</span>
-                <span className="text-sm font-semibold">{Math.floor(activeMinutes + 28)} / 60</span>
-              </div>
-              <div className="h-3 bg-muted rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-green-500 to-emerald-500 transition-all duration-500"
-                  style={{ width: `${Math.min(((activeMinutes + 28) / 60) * 100, 100)}%` }}
-                />
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Weekly Chart */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Weekly Overview</CardTitle>
-          <CardDescription>Your activity for the past 7 days</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="h-80">
-            <div className="flex items-end justify-around h-full gap-2">
-              {weeklyData.map((day, index) => (
-                <div key={index} className="flex-1 flex flex-col items-center gap-2">
-                  <div className="flex-1 w-full flex flex-col justify-end gap-1">
-                    {/* Steps bar */}
-                    <div className="relative group">
-                      <div
-                        className="w-full bg-gradient-to-t from-blue-500 to-purple-500 rounded-t-md transition-all hover:opacity-80 cursor-pointer"
-                        style={{ height: `${(day.steps / 16000) * 100}%`, minHeight: '20px' }}
-                      />
-                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-black text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                        {day.steps.toLocaleString()} steps
-                      </div>
-                    </div>
-                    {/* Calories bar */}
-                    <div className="relative group">
-                      <div
-                        className="w-full bg-gradient-to-t from-orange-500 to-red-500 rounded-t-md transition-all hover:opacity-80 cursor-pointer"
-                        style={{ height: `${(day.calories / 800) * 100}%`, minHeight: '10px' }}
-                      />
-                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-black text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                        {day.calories} calories
-                      </div>
-                    </div>
-                  </div>
-                  <span className="text-sm font-medium text-muted-foreground">{day.day}</span>
+          <div className="space-y-10">
+            {[
+              { label: 'Kinetic Threshold (Steps)', current: steps + 5234, target: 10000, color: 'from-blue-500 to-purple-500' },
+              { label: 'Metabolic Threshold (Cal)', current: Math.floor(calories + 234), target: 500, color: 'from-orange-500 to-red-600' },
+              { label: 'Temporal Threshold (Min)', current: Math.floor(activeMinutes + 28), target: 60, color: 'from-emerald-500 to-blue-600' },
+            ].map((goal, i) => (
+              <div key={i}>
+                <div className="flex items-end justify-between mb-4">
+                  <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest font-bold">{goal.label}</span>
+                  <span className="text-xl font-black text-white">{goal.current.toLocaleString()} <span className="text-slate-700 text-xs">/ {goal.target}</span></span>
                 </div>
-              ))}
-            </div>
-          </div>
-          <div className="flex items-center justify-center gap-6 mt-4 pt-4 border-t">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded" />
-              <span className="text-sm">Steps</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-gradient-to-r from-orange-500 to-red-500 rounded" />
-              <span className="text-sm">Calories</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Recent Activities */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Activities</CardTitle>
-          <CardDescription>Your latest tracked activities</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {recentActivities.map((activity) => (
-              <div
-                key={activity.id}
-                className="flex items-center justify-between p-4 bg-muted/50 rounded-lg"
-              >
-                <div className="flex items-center gap-4">
-                  <div className={`p-3 rounded-full ${
-                    activity.type === 'walk' ? 'bg-blue-100 text-blue-600' :
-                    activity.type === 'run' ? 'bg-green-100 text-green-600' :
-                    'bg-purple-100 text-purple-600'
-                  }`}>
-                    {activity.type === 'walk' ? '🚶' : activity.type === 'run' ? '🏃' : '🚴'}
-                  </div>
-                  <div>
-                    <p className="font-semibold">{activity.title}</p>
-                    <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                      {activity.steps > 0 && (
-                        <span>{activity.steps.toLocaleString()} steps</span>
-                      )}
-                      <span>{activity.duration}</span>
-                      <span>•</span>
-                      <span>{activity.time}</span>
-                    </div>
-                  </div>
+                <div className="h-4 bg-slate-900/60 rounded-full overflow-hidden border border-white/5 relative">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${Math.min((goal.current / goal.target) * 100, 100)}%` }}
+                    transition={{ duration: 1.5, ease: 'easeOut' }}
+                    className={`h-full bg-gradient-to-r ${goal.color} relative`}
+                  >
+                    <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.1)_50%,transparent_75%)] bg-[length:40px_40px] animate-[shimmer_2s_linear_infinite]" />
+                  </motion.div>
                 </div>
               </div>
             ))}
           </div>
-        </CardContent>
-      </Card>
+        </motion.div>
+
+        {/* Weekly Overview */}
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="glass p-10 rounded-[3rem] border border-white/5 bg-slate-900/20"
+        >
+          <h3 className="text-[10px] font-black tracking-[0.3em] uppercase text-purple-400 mb-10 text-center">Historical Node Performance</h3>
+
+          <div className="h-[280px] flex items-end justify-between gap-4 px-4">
+            {weeklyData.map((day, index) => (
+              <div key={index} className="flex-1 flex flex-col items-center group h-full justify-end">
+                <div className="flex-1 w-full flex flex-col justify-end gap-1.5 relative mb-4">
+                  {/* Steps bar */}
+                  <motion.div
+                    initial={{ height: 0 }}
+                    animate={{ height: `${(day.steps / 16000) * 100}%` }}
+                    className="w-full bg-gradient-to-t from-blue-600 to-purple-600 rounded-t-xl group-hover:brightness-125 transition-all cursor-pointer relative shadow-lg"
+                  >
+                    <div className="absolute -top-10 left-1/2 -translate-x-1/2 glass px-3 py-1 rounded-lg text-[10px] font-black text-white opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap border border-white/10 shadow-2xl pointer-events-none z-20">
+                      {day.steps.toLocaleString()}
+                    </div>
+                  </motion.div>
+                  {/* Calories bar */}
+                  <motion.div
+                    initial={{ height: 0 }}
+                    animate={{ height: `${(day.calories / 800) * 100}%` }}
+                    className="w-full bg-gradient-to-t from-orange-500 to-red-600 rounded-t-xl group-hover:brightness-125 transition-all cursor-pointer shadow-lg"
+                  />
+                </div>
+                <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest group-hover:text-white transition-colors">
+                  {day.day}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex items-center justify-center gap-8 mt-10 pt-8 border-t border-white/5">
+            <div className="flex items-center gap-3">
+              <div className="w-4 h-4 rounded-md bg-gradient-to-r from-blue-500 to-purple-500 shadow-lg" />
+              <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Kinetic signal</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="w-4 h-4 rounded-md bg-gradient-to-r from-orange-500 to-red-600 shadow-lg" />
+              <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Thermal dissipation</span>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Recent Activity Log */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="glass p-10 rounded-[3rem] border border-white/5 bg-slate-900/20"
+      >
+        <div className="flex items-center gap-4 mb-10">
+          <h2 className="text-2xl font-black uppercase tracking-tight text-white">Verification History</h2>
+          <div className="h-px bg-white/5 flex-1" />
+        </div>
+
+        <div className="space-y-4">
+          {recentActivities.map((activity, i) => (
+            <motion.div
+              key={activity.id}
+              initial={{ opacity: 0, x: -10 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.05 }}
+              className="flex items-center justify-between p-6 rounded-[2rem] bg-slate-900/40 border border-white/5 hover:border-white/10 transition-all group"
+            >
+              <div className="flex items-center gap-8">
+                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl shadow-xl group-hover:scale-110 transition-transform ${activity.type === 'walk' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' :
+                    activity.type === 'run' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
+                      'bg-purple-500/10 text-purple-400 border border-purple-500/20'
+                  }`}>
+                  {activity.type === 'walk' ? '🚶' : activity.type === 'run' ? '🏃' : '🚴'}
+                </div>
+                <div>
+                  <p className="text-xl font-black uppercase tracking-tighter text-white transition-colors group-hover:text-blue-400">{activity.title}</p>
+                  <div className="flex items-center gap-6 mt-1">
+                    <div className="flex items-center gap-2 text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                      <Footprints size={12} className="text-blue-500" />
+                      <span>{activity.steps > 0 ? `${activity.steps.toLocaleString()} Signals` : 'Kinetic Stream'}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                      <Calendar size={12} className="text-purple-500" />
+                      <span>{activity.duration} Duration</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest">{activity.time}</p>
+                <div className="mt-2 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[9px] font-black uppercase tracking-widest">
+                  Verified
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </motion.div>
     </div>
   );
 }
