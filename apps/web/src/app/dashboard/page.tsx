@@ -63,7 +63,7 @@ export default function DashboardPage() {
         </div>
         <div className="flex gap-4">
           <Link href="/dashboard/competitions/create">
-            <Button className="btn-gradient px-8 py-3 rounded-2xl text-xs font-black uppercase tracking-widest text-white shadow-2xl shadow-blue-500/20">
+            <Button className="btn-gradient px-8 py-3 rounded-2xl text-xs font-black uppercase tracking-widest text-primary-foreground shadow-2xl shadow-blue-500/20">
               <Plus className="mr-2 h-4 w-4" /> Create Competition
             </Button>
           </Link>
@@ -73,17 +73,17 @@ export default function DashboardPage() {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
         {[
-          { label: 'Total Steps', val: stats?.total_steps.toLocaleString() || '0', change: `${stats?.steps_change?.toFixed(1)}%`, up: (stats?.steps_change || 0) >= 0, icon: <Footprints className="text-blue-400" /> },
-          { label: 'Calories Burned', val: stats?.total_calories.toFixed(0) || '0', change: `${stats?.calories_change?.toFixed(1)}%`, up: (stats?.calories_change || 0) >= 0, icon: <Flame className="text-orange-400" /> },
-          { label: 'Active Comp.', val: stats?.active_competitions.toString() || '0', change: 'Live', up: true, icon: <Trophy className="text-yellow-400" /> },
-          { label: 'Best Rank', val: stats?.best_rank && stats.best_rank > 0 ? `#${stats.best_rank}` : 'N/A', change: 'Top', up: true, icon: <TrendingUp className="text-emerald-400" /> },
+          { label: 'Total Steps', val: stats?.total_steps.toLocaleString() || '0', change: `${stats?.steps_change?.toFixed(1)}%`, up: (stats?.steps_change || 0) >= 0, icon: <Footprints className="text-emerald-500" /> },
+          { label: 'Calories Burned', val: stats?.total_calories.toFixed(0) || '0', change: `${stats?.calories_change?.toFixed(1)}%`, up: (stats?.calories_change || 0) >= 0, icon: <Flame className="text-orange-500" /> },
+          { label: 'Active Comp.', val: stats?.active_competitions.toString() || '0', change: 'Live', up: true, icon: <Trophy className="text-yellow-500" /> },
+          { label: 'Best Rank', val: stats?.best_rank && stats.best_rank > 0 ? `#${stats.best_rank}` : 'N/A', change: 'Top', up: true, icon: <TrendingUp className="text-teal-500" /> },
         ].map((card, i) => (
           <motion.div
             key={i}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.1 }}
-            className="glass p-8 rounded-[2.5rem] border border-white/5 bg-slate-900/20 group hover:border-white/10 transition-all shadow-xl"
+            className="glass p-8 rounded-[2.5rem] border border-border/50 bg-muted/20 group hover:border-border/80 transition-all shadow-xl"
           >
             <div className="flex justify-between items-start mb-6">
               <div className="p-4 glass rounded-2xl shadow-inner group-hover:scale-110 transition-transform">
@@ -103,7 +103,7 @@ export default function DashboardPage() {
       {/* Charts and Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-7 gap-10">
         {/* Activity Chart */}
-        <div className="lg:col-span-4 glass p-10 rounded-[3rem] border border-white/5 bg-slate-900/20">
+        <div className="lg:col-span-4 glass p-10 rounded-[3rem] border border-border/50 bg-muted/20">
           <div className="flex items-center justify-between mb-10">
             <h3 className="text-2xl font-black uppercase tracking-tight text-foreground">Weekly Activity</h3>
           </div>
@@ -115,7 +115,7 @@ export default function DashboardPage() {
                 <div key={i} className="flex-1 flex flex-col items-center gap-3 group">
                   <div className="w-full relative h-full flex items-end">
                     <div
-                      className="w-full bg-gradient-to-t from-blue-600 to-purple-600 rounded-2xl transition-all duration-500 group-hover:opacity-100 opacity-80 shadow-[0_0_15px_rgba(59,130,246,0.3)]"
+                      className="w-full bg-gradient-to-t from-emerald-500 to-teal-500 rounded-2xl transition-all duration-500 group-hover:opacity-100 opacity-80 shadow-[0_0_15px_rgba(16,185,129,0.3)]"
                       style={{ height: `${height}%` }}
                     />
                   </div>
@@ -129,12 +129,12 @@ export default function DashboardPage() {
         </div>
 
         {/* Recent Activity */}
-        <div className="lg:col-span-3 glass p-10 rounded-[3rem] border border-white/5 bg-slate-900/20">
+        <div className="lg:col-span-3 glass p-10 rounded-[3rem] border border-border/50 bg-muted/20">
           <h3 className="text-2xl font-black uppercase tracking-tight mb-10 text-foreground">Recent Activity</h3>
           <div className="space-y-4">
             {stats?.recent_activity && stats.recent_activity.length > 0 ? (
               stats.recent_activity.slice(0, 4).map((activity) => (
-                <div key={activity.id} className="flex items-center justify-between p-4 glass rounded-2xl border border-white/5 hover:bg-white/5 transition-all">
+                <div key={activity.id} className="flex items-center justify-between p-4 glass rounded-2xl border border-border/50 hover:bg-muted/50 transition-all">
                   <div>
                     <p className="text-sm font-bold text-foreground">{activity.title}</p>
                     <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{getTimeAgo(activity.created_at)}</p>
@@ -150,20 +150,20 @@ export default function DashboardPage() {
       </div>
 
       {/* Active Competitions */}
-      <div className="glass rounded-[3rem] border border-white/5 overflow-hidden bg-slate-900/20">
-        <div className="p-10 border-b border-white/5 flex justify-between items-center">
+      <div className="glass rounded-[3rem] border border-border/50 overflow-hidden bg-muted/20">
+        <div className="p-10 border-b border-border/50 flex justify-between items-center">
           <h3 className="text-2xl font-black uppercase tracking-tight text-foreground">Active Competitions</h3>
           <Link href="/dashboard/competitions">
-            <Button variant="ghost" className="text-xs text-blue-400 font-black uppercase tracking-widest hover:underline hover:bg-transparent">View All</Button>
+            <Button variant="ghost" className="text-xs text-emerald-600 font-black uppercase tracking-widest hover:underline hover:bg-transparent">View All</Button>
           </Link>
         </div>
         <div className="p-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {competitions?.length > 0 ? (
             competitions.slice(0, 3).map((comp) => (
               <Link key={comp.id} href={`/dashboard/competitions/${comp.id}`}>
-                <div className="glass p-6 rounded-3xl border border-white/5 hover:border-blue-500/30 hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-300 group">
+                <div className="glass p-6 rounded-3xl border border-border/50 hover:border-blue-500/30 hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-300 group">
                   <div className="flex justify-between items-start mb-4">
-                    <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 text-blue-400 group-hover:scale-110 transition-transform duration-300">
+                    <div className="p-3 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 text-emerald-600 group-hover:scale-110 transition-transform duration-300">
                       <Trophy size={20} />
                     </div>
                     <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">

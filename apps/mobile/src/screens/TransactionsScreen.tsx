@@ -44,7 +44,7 @@ const TransactionsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   );
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
       <Card style={styles.card}>
         <Card.Content>
           <Title>Transaction History</Title>
@@ -73,3 +73,6 @@ const styles = StyleSheet.create({
 });
 
 export default TransactionsScreen;
+
+
+

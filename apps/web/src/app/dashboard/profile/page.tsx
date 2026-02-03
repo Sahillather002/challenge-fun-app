@@ -156,7 +156,7 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <Loader2 className="h-12 w-12 animate-spin text-blue-500" />
+        <Loader2 className="h-12 w-12 animate-spin text-emerald-500" />
       </div>
     );
   }
@@ -164,7 +164,7 @@ export default function ProfilePage() {
   if (!profile) {
     return (
       <div className="text-center py-24">
-        <h2 className="text-2xl font-black text-white uppercase tracking-tighter mb-4">Profile synchronization failed</h2>
+        <h2 className="text-2xl font-black text-foreground uppercase tracking-tighter mb-4">Profile synchronization failed</h2>
         <p className="text-slate-500 font-bold mb-8">The neural link to your operative profile has been interrupted.</p>
         <Button onClick={() => window.location.reload()} className="btn-gradient">Attempt Resync</Button>
       </div>
@@ -175,8 +175,8 @@ export default function ProfilePage() {
     <div className="space-y-12 pb-24 max-w-7xl mx-auto px-4 sm:px-0">
       {/* Header */}
       <header>
-        <h1 className="text-4xl font-black tracking-tight uppercase mb-2 text-white">Operative Identity</h1>
-        <p className="text-slate-500 font-bold">Encrypted biometric signature and node performance history</p>
+        <h1 className="text-4xl font-black tracking-tight uppercase mb-2 text-foreground">Operative Identity</h1>
+        <p className="text-muted-foreground font-bold">Encrypted biometric signature and node performance history</p>
       </header>
 
       <div className="grid lg:grid-cols-3 gap-12">
@@ -185,20 +185,20 @@ export default function ProfilePage() {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="glass p-12 rounded-[3.5rem] border border-white/5 bg-slate-900/40 text-center relative overflow-hidden shadow-2xl"
+            className="glass p-12 rounded-[3.5rem] border border-border/50 bg-muted/40 text-center relative overflow-hidden shadow-2xl"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-transparent to-purple-500/10" />
+            <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 via-transparent to-teal-500/10" />
 
             <div className="relative z-10">
               <div className="relative mb-10 mx-auto w-44 h-44">
-                <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-3xl animate-pulse" />
-                <div className="relative w-full h-full rounded-full glass border-4 border-white/10 overflow-hidden shadow-2xl group">
+                <div className="absolute inset-0 bg-emerald-500/20 rounded-full blur-3xl animate-pulse" />
+                <div className="relative w-full h-full rounded-full glass border-4 border-border/50 overflow-hidden shadow-2xl group">
                   {selectedImage ? (
                     <img src={selectedImage} alt="Preview" className="w-full h-full object-cover" />
                   ) : profile.avatar && !imageError ? (
                     <img src={profile.avatar} alt="Profile" className="w-full h-full object-cover" onError={handleImageError} crossOrigin="anonymous" />
                   ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center text-6xl font-black text-white">
+                    <div className="w-full h-full bg-gradient-to-br from-emerald-600 to-teal-600 flex items-center justify-center text-6xl font-black text-primary-foreground">
                       {profile.name?.charAt(0).toUpperCase() || 'U'}
                     </div>
                   )}
@@ -223,19 +223,19 @@ export default function ProfilePage() {
                 )}
               </div>
 
-              <h2 className="text-3xl font-black uppercase tracking-tighter text-white mb-2 leading-none">{profile.name || 'Operative'}</h2>
-              <p className="text-blue-400 font-black text-xs uppercase tracking-[0.3em] mb-8">{profile.email}</p>
+              <h2 className="text-3xl font-black uppercase tracking-tighter text-foreground mb-2 leading-none">{profile.name || 'Operative'}</h2>
+              <p className="text-emerald-600 font-black text-xs uppercase tracking-[0.3em] mb-8">{profile.email}</p>
 
               <div className="space-y-4 mb-10 w-full">
                 {profile.country && (
-                  <div className="flex items-center justify-between px-6 py-4 rounded-2xl glass border border-white/5 bg-white/5">
+                  <div className="flex items-center justify-between px-6 py-4 rounded-2xl glass border border-border/50 bg-muted/20">
                     <span className="text-[10px] font-black uppercase text-slate-500">Region</span>
-                    <span className="text-xs font-black text-white uppercase">{profile.country}</span>
+                    <span className="text-xs font-black text-foreground uppercase">{profile.country}</span>
                   </div>
                 )}
-                <div className="flex items-center justify-between px-6 py-4 rounded-2xl glass border border-white/5 bg-white/5">
+                <div className="flex items-center justify-between px-6 py-4 rounded-2xl glass border border-border/50 bg-muted/20">
                   <span className="text-[10px] font-black uppercase text-slate-500">Linked Since</span>
-                  <span className="text-xs font-black text-white uppercase">{new Date(profile.joined_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</span>
+                  <span className="text-xs font-black text-foreground uppercase">{new Date(profile.joined_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</span>
                 </div>
               </div>
 
@@ -253,23 +253,23 @@ export default function ProfilePage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="glass p-10 rounded-[3rem] border border-white/5 bg-slate-900/40"
+            className="glass p-10 rounded-[3rem] border border-border/50 bg-muted/40"
           >
             <h3 className="text-[10px] font-black tracking-[0.3em] uppercase text-slate-500 mb-8 px-2">Core Biometrics</h3>
             <div className="space-y-4">
               {[
-                { label: 'Total Movement', val: profile.total_steps.toLocaleString(), unit: 'Signals', icon: <Footprints size={16} className="text-blue-400" /> },
-                { label: 'Spatial Coverage', val: profile.total_distance.toFixed(2), unit: 'KM', icon: <TrendingUp size={16} className="text-purple-400" /> },
+                { label: 'Total Movement', val: profile.total_steps.toLocaleString(), unit: 'Signals', icon: <Footprints size={16} className="text-emerald-500" /> },
+                { label: 'Spatial Coverage', val: profile.total_distance.toFixed(2), unit: 'KM', icon: <TrendingUp size={16} className="text-teal-500" /> },
                 { label: 'Sector Victories', val: profile.competitions_won, unit: 'Wins', icon: <Award size={16} className="text-emerald-400" /> },
-                { label: 'Economic Gain', val: `$${profile.total_prizes.toFixed(2)}`, unit: 'Payload', icon: <DollarSign size={16} className="text-amber-400" /> },
+                { label: 'Economic Gain', val: `$${profile.total_prizes.toFixed(2)}`, unit: 'Payload', icon: <DollarSign size={16} className="text-emerald-600" /> },
               ].map((stat, i) => (
-                <div key={i} className="flex items-center justify-between p-5 rounded-2xl border border-white/5 bg-white/5 hover:bg-white/10 transition-colors group">
+                <div key={i} className="flex items-center justify-between p-5 rounded-2xl border border-border/50 bg-muted/20 hover:bg-muted/40 transition-colors group">
                   <div className="flex items-center gap-4">
                     <div className="p-3 glass rounded-xl group-hover:scale-110 transition-transform">{stat.icon}</div>
                     <span className="text-[10px] font-black uppercase text-slate-500 tracking-widest">{stat.label}</span>
                   </div>
                   <div className="text-right">
-                    <p className="text-lg font-black text-white leading-none mb-1">{stat.val}</p>
+                    <p className="text-lg font-black text-foreground leading-none mb-1">{stat.val}</p>
                     <p className="text-[9px] font-black text-slate-700 uppercase tracking-widest">{stat.unit}</p>
                   </div>
                 </div>
@@ -287,12 +287,12 @@ export default function ProfilePage() {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
-                className="glass p-12 rounded-[3.5rem] border border-white/5 bg-slate-900/40 relative overflow-hidden"
+                className="glass p-12 rounded-[3.5rem] border border-border/50 bg-muted/40 relative overflow-hidden"
               >
-                <div className="absolute inset-0 bg-blue-500/5 pointer-events-none" />
+                <div className="absolute inset-0 bg-emerald-500/5 pointer-events-none" />
                 <div className="relative z-10">
                   <header className="mb-12">
-                    <h2 className="text-3xl font-black uppercase tracking-tighter text-white leading-none mb-2">Modify Identity Protocol</h2>
+                    <h2 className="text-3xl font-black uppercase tracking-tighter text-foreground leading-none mb-2">Modify Identity Protocol</h2>
                     <p className="text-slate-500 font-bold">Update your core neural synchronization parameters</p>
                   </header>
 
@@ -302,14 +302,14 @@ export default function ProfilePage() {
                       <Input
                         value={editedProfile.name}
                         onChange={(e) => setEditedProfile({ ...editedProfile, name: e.target.value })}
-                        className="h-16 rounded-2xl glass bg-slate-950/40 border-white/10 text-white font-bold text-lg px-8 focus:ring-blue-500/50"
+                        className="h-16 rounded-2xl glass bg-muted/40 border border-border text-foreground font-bold text-lg px-8 focus:ring-emerald-500/50"
                       />
                     </div>
 
                     <div className="grid md:grid-cols-2 gap-8">
                       <div className="space-y-3 opacity-50 cursor-not-allowed">
                         <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 px-2">Primary Uplink (Email)</label>
-                        <Input value={profile.email} disabled className="h-16 rounded-2xl glass bg-slate-950/20 border-white/5 text-slate-500 font-bold px-8" />
+                        <Input value={profile.email} disabled className="h-16 rounded-2xl glass bg-background/20 border border-border/50 text-muted-foreground font-bold px-8" />
                         <p className="text-[9px] font-black uppercase tracking-widest text-red-500/50 px-2">Permanent Linkage / Locked</p>
                       </div>
                       <div className="space-y-3">
@@ -318,7 +318,7 @@ export default function ProfilePage() {
                           value={editedProfile.country}
                           onChange={(e) => setEditedProfile({ ...editedProfile, country: e.target.value })}
                           placeholder="USA, UK, JP..."
-                          className="h-16 rounded-2xl glass bg-slate-950/40 border-white/10 text-white font-bold text-lg px-8 focus:ring-blue-500/50"
+                          className="h-16 rounded-2xl glass bg-background/40 border border-border text-foreground font-bold text-lg px-8 focus:ring-emerald-500/50"
                         />
                       </div>
                     </div>
@@ -328,7 +328,7 @@ export default function ProfilePage() {
                       <textarea
                         value={editedProfile.bio}
                         onChange={(e) => setEditedProfile({ ...editedProfile, bio: e.target.value })}
-                        className="min-h-[160px] w-full rounded-[2rem] glass bg-slate-950/40 border border-white/10 text-white font-bold p-8 focus:ring-2 focus:ring-blue-500/50 outline-none transition-all placeholder:text-slate-800"
+                        className="min-h-[160px] w-full rounded-[2rem] glass bg-background/40 border border-border text-foreground font-bold p-8 focus:ring-2 focus:ring-emerald-500/50 outline-none transition-all placeholder:text-muted-foreground"
                         placeholder="Define your operational focus..."
                       />
                     </div>
@@ -338,7 +338,7 @@ export default function ProfilePage() {
                         {saving ? <Loader2 className="animate-spin mr-3" /> : <Save size={20} className="mr-3" />}
                         Commit Changes
                       </Button>
-                      <Button variant="ghost" onClick={() => setIsEditing(false)} disabled={saving} className="h-16 px-10 rounded-2xl glass border border-white/5 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-white">
+                      <Button variant="ghost" onClick={() => setIsEditing(false)} disabled={saving} className="h-16 px-10 rounded-2xl glass border border-border/50 text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-foreground">
                         Abort
                       </Button>
                     </div>
@@ -352,47 +352,47 @@ export default function ProfilePage() {
                 animate={{ opacity: 1, y: 0 }}
                 className="space-y-12"
               >
-                <div className="glass p-12 rounded-[3.5rem] border border-white/5 bg-slate-900/40 relative overflow-hidden shadow-2xl">
-                  <div className="absolute inset-0 bg-blue-500/5 pointer-events-none" />
-                  <h3 className="text-3xl font-black uppercase tracking-tighter text-white mb-8 border-b border-white/5 pb-8 leading-none">Operative Manifest</h3>
+                <div className="glass p-12 rounded-[3.5rem] border border-border/50 bg-muted/40 relative overflow-hidden shadow-2xl">
+                  <div className="absolute inset-0 bg-emerald-500/5 pointer-events-none" />
+                  <h3 className="text-3xl font-black uppercase tracking-tighter text-foreground mb-8 border-b border-border/50 pb-8 leading-none">Operative Manifest</h3>
                   <p className="text-slate-400 font-bold text-xl leading-relaxed italic">
                     "{profile.bio || 'Initial operative manifest. No biometric personality profile has been established for this node yet.'}"
                   </p>
                 </div>
 
-                <div className="glass p-12 rounded-[3.5rem] border border-white/5 bg-slate-900/40 relative overflow-hidden shadow-2xl">
-                  <div className="absolute inset-0 bg-purple-500/5 pointer-events-none" />
-                  <div className="flex items-center gap-6 mb-12 border-b border-white/5 pb-8">
-                    <div className="w-16 h-16 rounded-[2rem] glass border border-white/10 flex items-center justify-center text-purple-400">
+                <div className="glass p-12 rounded-[3.5rem] border border-border/50 bg-muted/40 relative overflow-hidden shadow-2xl">
+                  <div className="absolute inset-0 bg-teal-500/5 pointer-events-none" />
+                  <div className="flex items-center gap-6 mb-12 border-b border-border/50 pb-8">
+                    <div className="w-16 h-16 rounded-[2rem] glass border border-border/50 flex items-center justify-center text-teal-500">
                       <Trophy size={32} />
                     </div>
                     <div>
-                      <h3 className="text-3xl font-black uppercase tracking-tighter text-white leading-none mb-2">Neural Efficiency History</h3>
+                      <h3 className="text-3xl font-black uppercase tracking-tighter text-foreground leading-none mb-2">Neural Efficiency History</h3>
                       <p className="text-slate-500 font-bold">Historical data across verification cycles</p>
                     </div>
                   </div>
 
                   <div className="grid md:grid-cols-2 gap-12">
                     <div className="group">
-                      <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4 group-hover:text-blue-400 transition-colors">Cumulative Thermal Loss</p>
+                      <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4 group-hover:text-emerald-600 transition-colors">Cumulative Thermal Loss</p>
                       <div className="flex items-baseline gap-4">
-                        <span className="text-6xl font-black text-white tracking-tighter">{Math.floor(profile.total_calories).toLocaleString()}</span>
-                        <span className="text-xs font-black text-slate-700 uppercase tracking-widest">KCAL Dissipated</span>
+                        <span className="text-6xl font-black text-foreground tracking-tighter">{Math.floor(profile.total_calories).toLocaleString()}</span>
+                        <span className="text-xs font-black text-muted-foreground uppercase tracking-widest">KCAL Dissipated</span>
                         <span className="text-3xl group-hover:scale-125 transition-transform">🔥</span>
                       </div>
-                      <div className="mt-4 h-1.5 w-44 bg-slate-800 rounded-full overflow-hidden">
-                        <div className="h-full bg-blue-500 w-3/4 animate-shimmer" />
+                      <div className="mt-4 h-1.5 w-44 bg-muted rounded-full overflow-hidden">
+                        <div className="h-full bg-emerald-500 w-3/4 animate-shimmer" />
                       </div>
                     </div>
                     <div className="group">
-                      <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4 group-hover:text-purple-400 transition-colors">Global Spatial Vector</p>
+                      <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4 group-hover:text-teal-500 transition-colors">Global Spatial Vector</p>
                       <div className="flex items-baseline gap-4">
-                        <span className="text-6xl font-black text-white tracking-tighter">{profile.total_distance.toFixed(1)}</span>
-                        <span className="text-xs font-black text-slate-700 uppercase tracking-widest">KM Reached</span>
+                        <span className="text-6xl font-black text-foreground tracking-tighter">{profile.total_distance.toFixed(1)}</span>
+                        <span className="text-xs font-black text-muted-foreground uppercase tracking-widest">KM Reached</span>
                         <span className="text-3xl group-hover:scale-125 transition-transform">📏</span>
                       </div>
-                      <div className="mt-4 h-1.5 w-44 bg-slate-800 rounded-full overflow-hidden">
-                        <div className="h-full bg-purple-500 w-2/3 animate-shimmer" />
+                      <div className="mt-4 h-1.5 w-44 bg-muted rounded-full overflow-hidden">
+                        <div className="h-full bg-teal-500 w-2/3 animate-shimmer" />
                       </div>
                     </div>
                   </div>

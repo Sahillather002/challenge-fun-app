@@ -9,6 +9,14 @@ import { CompetitionProvider, useCompetition } from '../MockCompetitionContext';
 // Mock react-native-vector-icons
 jest.mock('react-native-vector-icons/MaterialCommunityIcons', () => 'Icon');
 
+// Mock fetch to prevent network errors
+global.fetch = jest.fn(() =>
+  Promise.resolve({
+    ok: true,
+    json: () => Promise.resolve([]),
+  })
+);
+
 describe('Context Providers', () => {
   describe('ThemeContext', () => {
     const TestComponent = () => {
@@ -20,22 +28,26 @@ describe('Context Providers', () => {
       );
     };
 
-    it('provides theme context with default values', () => {
-      const { getByTestId } = render(
-        <ThemeProvider>
-          <TestComponent />
-        </ThemeProvider>
+    it('provides theme context with default values', async () => {
+      const { getByTestId } = await act(async () => 
+        render(
+          <ThemeProvider>
+            <TestComponent />
+          </ThemeProvider>
+        )
       );
 
       expect(getByTestId('test-component')).toBeTruthy();
       expect(getByTestId('theme-colors')).toBeTruthy();
     });
 
-    it('provides light theme by default', () => {
-      const { getByTestId } = render(
-        <ThemeProvider>
-          <TestComponent />
-        </ThemeProvider>
+    it('provides light theme by default', async () => {
+      const { getByTestId } = await act(async () =>
+        render(
+          <ThemeProvider>
+            <TestComponent />
+          </ThemeProvider>
+        )
       );
 
       const themeElement = getByTestId('theme-colors');
@@ -55,13 +67,15 @@ describe('Context Providers', () => {
       );
     };
 
-    it('provides toast context methods', () => {
-      const { getByTestId } = render(
-        <ThemeProvider>
-          <ToastProvider>
-            <TestComponent />
-          </ToastProvider>
-        </ThemeProvider>
+    it('provides toast context methods', async () => {
+      const { getByTestId } = await act(async () =>
+        render(
+          <ThemeProvider>
+            <ToastProvider>
+              <TestComponent />
+            </ToastProvider>
+          </ThemeProvider>
+        )
       );
 
       expect(getByTestId('toast-success')).toBeTruthy();
@@ -70,12 +84,14 @@ describe('Context Providers', () => {
     });
 
     it('handles success toast', async () => {
-      const { getByTestId } = render(
-        <ThemeProvider>
-          <ToastProvider>
-            <TestComponent />
-          </ToastProvider>
-        </ThemeProvider>
+      const { getByTestId } = await act(async () =>
+        render(
+          <ThemeProvider>
+            <ToastProvider>
+              <TestComponent />
+            </ToastProvider>
+          </ThemeProvider>
+        )
       );
 
       const successButton = getByTestId('toast-success');
@@ -88,12 +104,14 @@ describe('Context Providers', () => {
     });
 
     it('handles error toast', async () => {
-      const { getByTestId } = render(
-        <ThemeProvider>
-          <ToastProvider>
-            <TestComponent />
-          </ToastProvider>
-        </ThemeProvider>
+      const { getByTestId } = await act(async () =>
+        render(
+          <ThemeProvider>
+            <ToastProvider>
+              <TestComponent />
+            </ToastProvider>
+          </ThemeProvider>
+        )
       );
 
       const errorButton = getByTestId('toast-error');
@@ -117,11 +135,13 @@ describe('Context Providers', () => {
       );
     };
 
-    it('provides auth context with default values', () => {
-      const { getByTestId } = render(
-        <SupabaseAuthProvider>
-          <TestComponent />
-        </SupabaseAuthProvider>
+    it('provides auth context with default values', async () => {
+      const { getByTestId } = await act(async () =>
+        render(
+          <SupabaseAuthProvider>
+            <TestComponent />
+          </SupabaseAuthProvider>
+        )
       );
 
       expect(getByTestId('auth-component')).toBeTruthy();
@@ -129,11 +149,13 @@ describe('Context Providers', () => {
       expect(getByTestId('loading-status')).toBeTruthy();
     });
 
-    it('shows logged out state by default', () => {
-      const { getByTestId } = render(
-        <SupabaseAuthProvider>
-          <TestComponent />
-        </SupabaseAuthProvider>
+    it('shows logged out state by default', async () => {
+      const { getByTestId } = await act(async () =>
+        render(
+          <SupabaseAuthProvider>
+            <TestComponent />
+          </SupabaseAuthProvider>
+        )
       );
 
       expect(getByTestId('user-info').children[0]).toBe('logged-out');
@@ -145,19 +167,21 @@ describe('Context Providers', () => {
       const { competitions, joinCompetition, loading } = useCompetition();
       return (
         <View testID="competition-component">
-          <View testID="competitions-count">{competitions.length}</View>
+          <View testID="competitions-count">{competitions.length.toString()}</View>
           <View testID="loading-status">{loading ? 'loading' : 'not-loading'}</View>
         </View>
       );
     };
 
-    it('provides competition context with default values', () => {
-      const { getByTestId } = render(
-        <SupabaseAuthProvider>
-          <CompetitionProvider>
-            <TestComponent />
-          </CompetitionProvider>
-        </SupabaseAuthProvider>
+    it('provides competition context with default values', async () => {
+      const { getByTestId } = await act(async () =>
+        render(
+          <SupabaseAuthProvider>
+            <CompetitionProvider>
+              <TestComponent />
+            </CompetitionProvider>
+          </SupabaseAuthProvider>
+        )
       );
 
       expect(getByTestId('competition-component')).toBeTruthy();
@@ -165,16 +189,18 @@ describe('Context Providers', () => {
       expect(getByTestId('loading-status')).toBeTruthy();
     });
 
-    it('shows empty competitions array by default', () => {
-      const { getByTestId } = render(
-        <SupabaseAuthProvider>
-          <CompetitionProvider>
-            <TestComponent />
-          </CompetitionProvider>
-        </SupabaseAuthProvider>
+    it('shows empty competitions array by default', async () => {
+      const { getByTestId } = await act(async () =>
+        render(
+          <SupabaseAuthProvider>
+            <CompetitionProvider>
+              <TestComponent />
+            </CompetitionProvider>
+          </SupabaseAuthProvider>
+        )
       );
 
-      expect(getByTestId('competitions-count').children[0]).toBe(0);
+      expect(getByTestId('competitions-count').children[0]).toBe('0');
     });
   });
 
@@ -203,17 +229,19 @@ describe('Context Providers', () => {
       );
     };
 
-    it('integrates all contexts properly', () => {
-      const { getByTestId } = render(
-        <ThemeProvider>
-          <ToastProvider>
-            <SupabaseAuthProvider>
-              <CompetitionProvider>
-                <IntegratedTestComponent />
-              </CompetitionProvider>
-            </SupabaseAuthProvider>
-          </ToastProvider>
-        </ThemeProvider>
+    it('integrates all contexts properly', async () => {
+      const { getByTestId } = await act(async () =>
+        render(
+          <ThemeProvider>
+            <ToastProvider>
+              <SupabaseAuthProvider>
+                <CompetitionProvider>
+                  <IntegratedTestComponent />
+                </CompetitionProvider>
+              </SupabaseAuthProvider>
+            </ToastProvider>
+          </ThemeProvider>
+        )
       );
 
       expect(getByTestId('integrated-component')).toBeTruthy();

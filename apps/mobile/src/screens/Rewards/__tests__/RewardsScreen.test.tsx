@@ -1,10 +1,10 @@
 import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import { Alert } from 'react-native';
-import RewardsScreen from '../src/screens/Rewards/RewardsScreen';
+import RewardsScreen from '../RewardsScreen';
 
 // Mock the Supabase Auth context
-jest.mock('../src/context/SupabaseAuthContext', () => ({
+jest.mock('../../context/SupabaseAuthContext', () => ({
   useSupabaseAuth: () => ({
     user: {
       id: 'user123',
@@ -15,7 +15,7 @@ jest.mock('../src/context/SupabaseAuthContext', () => ({
 }));
 
 // Mock the theme context
-jest.mock('../src/context/ThemeContext', () => ({
+jest.mock('../../context/ThemeContext', () => ({
   useTheme: () => ({
     theme: {
       colors: {
@@ -191,3 +191,5 @@ describe('RewardsScreen', () => {
     });
   });
 });
+
+

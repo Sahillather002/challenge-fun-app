@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
-import SettingsScreen from '../Settings/SettingsScreen';
-import GoogleFitAccountScreen from '../Settings/GoogleFitAccountScreen';
+import SettingsScreen from '../SettingsScreen';
+import GoogleFitAccountScreen from '../GoogleFitAccountScreen';
 
 // Mock contexts
 jest.mock('../../context/SupabaseAuthContext', () => ({
@@ -210,3 +210,5 @@ describe('Settings Screens', () => {
     });
   });
 });
+
+

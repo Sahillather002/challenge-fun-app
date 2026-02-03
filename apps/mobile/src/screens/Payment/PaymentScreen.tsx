@@ -26,7 +26,7 @@ const PaymentScreen = () => {
   const route = useRoute();
   const { competitionId } = route.params as { competitionId: string };
   const navigation = useNavigation();
-  
+
   const [paymentMethod, setPaymentMethod] = useState<'upi' | 'card' | 'netbanking'>('upi');
   const [formData, setFormData] = useState({
     upiId: '',
@@ -65,11 +65,11 @@ const PaymentScreen = () => {
     }
 
     setLoading(true);
-    
+
     try {
       // Simulate payment processing
       await new Promise(resolve => setTimeout(resolve, 2000));
-      
+
       // Create and save payment record
       const paymentData = {
         user_id: user?.id || '',
@@ -115,19 +115,19 @@ const PaymentScreen = () => {
           />
         }
       />
-      
+
       <View style={styles.upiApps}>
-        <Text style={[styles.upiAppsLabel, { color: theme.colors.onSurface }]}>
+        <Text style={[styles.upiAppsLabel, { color: theme.onSurface }]}>
           Popular UPI Apps:
         </Text>
         <View style={styles.upiAppButtons}>
           {['GPay', 'PhonePe', 'Paytm'].map((app) => (
             <TouchableOpacity
               key={app}
-              style={[styles.upiAppButton, { backgroundColor: theme.colors.surfaceVariant }]}
+              style={[styles.upiAppButton, { backgroundColor: theme.surfaceVariant }]}
               onPress={() => toast.info(`${app} integration coming soon!`)}
             >
-              <Text style={[styles.upiAppText, { color: theme.colors.onSurface }]}>
+              <Text style={[styles.upiAppText, { color: theme.onSurface }]}>
                 {app}
               </Text>
             </TouchableOpacity>
@@ -194,10 +194,10 @@ const PaymentScreen = () => {
 
   const renderNetBankingForm = () => (
     <View style={styles.paymentForm}>
-      <Text style={[styles.bankLabel, { color: theme.colors.onSurface }]}>
+      <Text style={[styles.bankLabel, { color: theme.onSurface }]}>
         Select Your Bank:
       </Text>
-      
+
       <View style={styles.banksList}>
         {[
           'State Bank of India',
@@ -212,8 +212,8 @@ const PaymentScreen = () => {
             style={[
               styles.bankOption,
               formData.bankName === bank && {
-                backgroundColor: theme.colors.primaryContainer,
-                borderColor: theme.colors.primary,
+                backgroundColor: theme.primaryContainer,
+                borderColor: theme.primary,
               },
             ]}
             onPress={() => updateFormData('bankName', bank)}
@@ -223,7 +223,7 @@ const PaymentScreen = () => {
               status={formData.bankName === bank ? 'checked' : 'unchecked'}
               onPress={() => updateFormData('bankName', bank)}
             />
-            <Text style={[styles.bankName, { color: theme.colors.onSurface }]}>
+            <Text style={[styles.bankName, { color: theme.onSurface }]}>
               {bank}
             </Text>
           </TouchableOpacity>
@@ -233,8 +233,8 @@ const PaymentScreen = () => {
   );
 
   return (
-    <ScrollView 
-      style={[styles.container, { backgroundColor: theme.colors.background }]}
+    <ScrollView
+      style={[styles.container, { backgroundColor: theme.background }]}
       contentContainerStyle={styles.contentContainer}
     >
       {/* Header */}
@@ -243,42 +243,42 @@ const PaymentScreen = () => {
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <Icon name="arrow-left" size={24} color={theme.colors.primary} />
+          <Icon name="arrow-left" size={24} color={theme.primary} />
         </TouchableOpacity>
         <Title style={styles.headerTitle}>Payment</Title>
         <View style={styles.placeholder} />
       </View>
 
       {/* Payment Summary */}
-      <Card style={[styles.summaryCard, { backgroundColor: theme.colors.surface }]}>
+      <Card style={[styles.summaryCard, { backgroundColor: theme.surface }]}>
         <Card.Content>
           <Title style={styles.summaryTitle}>Payment Summary</Title>
-          
+
           <View style={styles.summaryRow}>
-            <Text style={[styles.summaryLabel, { color: theme.colors.onSurfaceVariant }]}>
+            <Text style={[styles.summaryLabel, { color: theme.onSurfaceVariant }]}>
               Competition Entry Fee
             </Text>
-            <Text style={[styles.summaryValue, { color: theme.colors.onSurface }]}>
+            <Text style={[styles.summaryValue, { color: theme.onSurface }]}>
               ₹{entryFee}
             </Text>
           </View>
-          
+
           <View style={styles.summaryRow}>
-            <Text style={[styles.summaryLabel, { color: theme.colors.onSurfaceVariant }]}>
+            <Text style={[styles.summaryLabel, { color: theme.onSurfaceVariant }]}>
               Convenience Fee
             </Text>
-            <Text style={[styles.summaryValue, { color: theme.colors.onSurface }]}>
+            <Text style={[styles.summaryValue, { color: theme.onSurface }]}>
               ₹{convenienceFee}
             </Text>
           </View>
-          
-          <View style={[styles.divider, { backgroundColor: theme.colors.outline }]} />
-          
+
+          <View style={[styles.divider, { backgroundColor: theme.outline }]} />
+
           <View style={styles.summaryRow}>
-            <Text style={[styles.totalLabel, { color: theme.colors.onSurface }]}>
+            <Text style={[styles.totalLabel, { color: theme.onSurface }]}>
               Total Amount
             </Text>
-            <Text style={[styles.totalValue, { color: theme.colors.primary }]}>
+            <Text style={[styles.totalValue, { color: theme.primary }]}>
               ₹{totalAmount}
             </Text>
           </View>
@@ -286,23 +286,23 @@ const PaymentScreen = () => {
       </Card>
 
       {/* Payment Methods */}
-      <Card style={[styles.paymentCard, { backgroundColor: theme.colors.surface }]}>
+      <Card style={[styles.paymentCard, { backgroundColor: theme.surface }]}>
         <Card.Content>
           <Title style={styles.paymentTitle}>Select Payment Method</Title>
-          
+
           <View style={styles.paymentMethods}>
             <TouchableOpacity
               style={[
                 styles.paymentMethod,
                 paymentMethod === 'upi' && {
-                  backgroundColor: theme.colors.primaryContainer,
-                  borderColor: theme.colors.primary,
+                  backgroundColor: theme.primaryContainer,
+                  borderColor: theme.primary,
                 },
               ]}
               onPress={() => setPaymentMethod('upi')}
             >
-              <Icon name="cellphone" size={24} color={theme.colors.primary} />
-              <Text style={[styles.paymentMethodText, { color: theme.colors.onSurface }]}>
+              <Icon name="cellphone" size={24} color={theme.primary} />
+              <Text style={[styles.paymentMethodText, { color: theme.onSurface }]}>
                 UPI
               </Text>
               <RadioButton
@@ -316,14 +316,14 @@ const PaymentScreen = () => {
               style={[
                 styles.paymentMethod,
                 paymentMethod === 'card' && {
-                  backgroundColor: theme.colors.primaryContainer,
-                  borderColor: theme.colors.primary,
+                  backgroundColor: theme.primaryContainer,
+                  borderColor: theme.primary,
                 },
               ]}
               onPress={() => setPaymentMethod('card')}
             >
-              <Icon name="credit-card" size={24} color={theme.colors.primary} />
-              <Text style={[styles.paymentMethodText, { color: theme.colors.onSurface }]}>
+              <Icon name="credit-card" size={24} color={theme.primary} />
+              <Text style={[styles.paymentMethodText, { color: theme.onSurface }]}>
                 Credit/Debit Card
               </Text>
               <RadioButton
@@ -337,14 +337,14 @@ const PaymentScreen = () => {
               style={[
                 styles.paymentMethod,
                 paymentMethod === 'netbanking' && {
-                  backgroundColor: theme.colors.primaryContainer,
-                  borderColor: theme.colors.primary,
+                  backgroundColor: theme.primaryContainer,
+                  borderColor: theme.primary,
                 },
               ]}
               onPress={() => setPaymentMethod('netbanking')}
             >
-              <Icon name="bank" size={24} color={theme.colors.primary} />
-              <Text style={[styles.paymentMethodText, { color: theme.colors.onSurface }]}>
+              <Icon name="bank" size={24} color={theme.primary} />
+              <Text style={[styles.paymentMethodText, { color: theme.onSurface }]}>
                 Net Banking
               </Text>
               <RadioButton
@@ -358,7 +358,7 @@ const PaymentScreen = () => {
       </Card>
 
       {/* Payment Form */}
-      <Card style={[styles.formCard, { backgroundColor: theme.colors.surface }]}>
+      <Card style={[styles.formCard, { backgroundColor: theme.surface }]}>
         <Card.Content>
           <Title style={styles.formTitle}>
             {paymentMethod === 'upi' && 'UPI Details'}
@@ -375,7 +375,7 @@ const PaymentScreen = () => {
       {/* Security Note */}
       <View style={styles.securityNote}>
         <Icon name="shield-check" size={20} color="#4CAF50" />
-        <Text style={[styles.securityText, { color: theme.colors.onSurfaceVariant }]}>
+        <Text style={[styles.securityText, { color: theme.onSurfaceVariant }]}>
           Your payment information is secure and encrypted
         </Text>
       </View>
@@ -386,7 +386,7 @@ const PaymentScreen = () => {
         onPress={handlePayment}
         loading={loading}
         disabled={loading}
-        style={[styles.payButton, { backgroundColor: theme.colors.primary }]}
+        style={[styles.payButton, { backgroundColor: theme.primary }]}
         contentStyle={styles.payButtonContent}
       >
         {loading ? 'Processing...' : `Pay ₹${totalAmount}`}
@@ -396,175 +396,11 @@ const PaymentScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+  // Kept minimal
   contentContainer: {
     padding: 16,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  backButton: {
-    padding: 8,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  placeholder: {
-    width: 40,
-  },
-  summaryCard: {
-    marginBottom: 16,
-    elevation: 4,
-    borderRadius: 12,
-  },
-  summaryTitle: {
-    fontSize: 18,
-    marginBottom: 16,
-  },
-  summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  summaryLabel: {
-    fontSize: 14,
-  },
-  summaryValue: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  divider: {
-    height: 1,
-    marginVertical: 12,
-  },
-  totalLabel: {
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  totalValue: {
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  paymentCard: {
-    marginBottom: 16,
-    elevation: 4,
-    borderRadius: 12,
-  },
-  paymentTitle: {
-    fontSize: 18,
-    marginBottom: 16,
-  },
-  paymentMethods: {
-    gap: 12,
-  },
-  paymentMethod: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#ddd',
-  },
-  paymentMethodText: {
-    flex: 1,
-    fontSize: 16,
-    marginLeft: 12,
-  },
-  formCard: {
-    marginBottom: 16,
-    elevation: 4,
-    borderRadius: 12,
-  },
-  formTitle: {
-    fontSize: 18,
-    marginBottom: 16,
-  },
-  paymentForm: {
-    gap: 16,
-  },
-  input: {
-    marginBottom: 8,
-  },
-  cardRow: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  halfInput: {
-    flex: 1,
-  },
-  cardIcons: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 20,
-    marginTop: 8,
-  },
-  upiApps: {
-    marginTop: 16,
-  },
-  upiAppsLabel: {
-    fontSize: 14,
-    fontWeight: '500',
-    marginBottom: 8,
-  },
-  upiAppButtons: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  upiAppButton: {
-    flex: 1,
-    padding: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  upiAppText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  bankLabel: {
-    fontSize: 16,
-    fontWeight: '500',
-    marginBottom: 12,
-  },
-  banksList: {
-    gap: 8,
-  },
-  bankOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#ddd',
-  },
-  bankName: {
-    flex: 1,
-    fontSize: 14,
-    marginLeft: 12,
-  },
-  securityNote: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    marginVertical: 16,
-  },
-  securityText: {
-    fontSize: 12,
-  },
-  payButton: {
-    borderRadius: 8,
-    marginBottom: 20,
-  },
-  payButtonContent: {
-    paddingVertical: 12,
   },
 });
 
 export default PaymentScreen;
+

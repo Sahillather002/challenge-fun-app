@@ -4,7 +4,7 @@ import GoogleFitCard from '../GoogleFitCard';
 import NotificationsContainer from '../NotificationsContainer';
 
 // Mock services and contexts
-jest.mock('../services/GoogleFitService', () => ({
+jest.mock('../../services/GoogleFitService', () => ({
   GoogleFitService: {
     getInstance: () => ({
       getStepCount: jest.fn(() => Promise.resolve(8500)),
@@ -14,7 +14,7 @@ jest.mock('../services/GoogleFitService', () => ({
   }
 }));
 
-jest.mock('../context/ThemeContext', () => ({
+jest.mock('../../context/ThemeContext', () => ({
   useTheme: () => ({
     theme: {
       colors: {
@@ -30,7 +30,7 @@ jest.mock('../context/ThemeContext', () => ({
   })
 }));
 
-jest.mock('../context/SupabaseAuthContext', () => ({
+jest.mock('../../context/SupabaseAuthContext', () => ({
   useSupabaseAuth: () => ({
     user: { id: 'user1', name: 'Test User' }
   })

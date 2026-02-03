@@ -1,0 +1,113 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    :root {
+        --background: 245 241 232;
+        /* #F5F1E8 */
+        --card: 255 255 255;
+        /* #FFFFFF */
+        --card-secondary: 255 249 240;
+        /* #FFF9F0 */
+        --text-primary: 44 62 80;
+        /* #2C3E50 */
+        --text-secondary: 125 138 150;
+        /* #7D8A96 */
+        --text-tertiary: 168 180 192;
+        /* #A8B4C0 */
+        --success: 76 175 80;
+        /* #4CAF50 */
+        --warning: 255 152 0;
+        /* #FF9800 */
+        --info: 33 150 243;
+        /* #2196F3 */
+        --error: 244 67 54;
+        /* #F44336 */
+        --trophy: 255 215 0;
+        /* #FFD700 */
+        --nature-green: 93 156 126;
+        /* #5D9C7E */
+        --sky-blue: 135 206 235;
+        /* #87CEEB */
+        --sunset-pink: 255 182 193;
+        /* #FFB6C1 */
+        --mountain-purple: 155 126 189;
+        /* #9B7EBD */
+        --border: 0 0 0;
+        /* rgba(0, 0, 0, 0.05) */
+        --shadow: 0 0 0;
+        /* rgba(0, 0, 0, 0.08) */
+
+        --primary: 79 70 229;
+        /* #4F46E5 */
+        --primary-container: 224 231 255;
+        /* #E0E7FF */
+        --foreground: 44 62 80;
+        /* #2C3E50 */
+        --muted-foreground: 125 138 150;
+        /* #7D8A96 */
+        --muted: 241 245 249;
+        /* #F1F5F9 */
+        --tertiary: 168 180 192;
+        /* #A8B4C0 */
+        --surface: 255 255 255;
+        /* #FFFFFF */
+        --outline: 0 0 0;
+        /* rgba(0, 0, 0, 0.05) */
+    }
+
+    .dark {
+        --background: 10 14 39;
+        /* #0a0e27 */
+        --card: 22 27 51;
+        /* #161b33 */
+        --card-secondary: 26 31 58;
+        /* #1a1f3a */
+        --text-primary: 255 255 255;
+        /* #ffffff */
+        --text-secondary: 156 163 175;
+        /* #9ca3af */
+        --text-tertiary: 107 114 128;
+        /* #6b7280 */
+        --success: 0 255 157;
+        /* #00ff9d */
+        --warning: 255 125 0;
+        /* #ff7d00 */
+        --info: 74 144 217;
+        /* #4a90d9 */
+        --error: 255 71 87;
+        /* #ff4757 */
+        --trophy: 252 211 77;
+        /* #fcd34d */
+        --nature-green: 0 255 157;
+        /* #00ff9d */
+        --sky-blue: 74 144 217;
+        /* #4a90d9 */
+        --sunset-pink: 255 71 87;
+        /* #ff4757 */
+        --mountain-purple: 123 97 255;
+        /* #7b61ff */
+        --border: 255 255 255;
+        /* rgba(255, 255, 255, 0.1) */
+        --shadow: 0 0 0;
+        /* rgba(0, 0, 0, 0.3) */
+
+        --primary: 99 102 241;
+        /* #6366f1 */
+        --primary-container: 49 46 129;
+        /* #312e81 */
+        --foreground: 255 255 255;
+        /* #ffffff */
+        --muted-foreground: 156 163 175;
+        /* #9ca3af */
+        --muted: 30 41 59;
+        /* #1e293b */
+        --tertiary: 107 114 128;
+        /* #6b7280 */
+        --surface: 22 27 51;
+        /* #161b33 */
+        --outline: 255 255 255;
+        /* rgba(255, 255, 255, 0.1) */
+    }
+}

@@ -44,7 +44,7 @@ export function Sidebar() {
                 'group flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200',
                 isActive
                   ? 'bg-primary/10 text-primary'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-white/5'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
               )}
             >
               <item.icon
@@ -74,7 +74,7 @@ export function Sidebar() {
                 'group flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200',
                 isActive
                   ? 'bg-primary/10 text-primary'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-white/5'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
               )}
             >
               <item.icon
@@ -92,9 +92,9 @@ export function Sidebar() {
         })}
       </div>
 
-      <div className="mt-auto pt-4 border-t border-white/5">
+      <div className="mt-auto pt-4 border-t border-border/50">
         <div className="px-2 py-3 flex items-center gap-3 mb-2">
-          <div className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center border border-white/10 text-xs font-bold text-muted-foreground">
+          <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center border border-border text-xs font-bold text-muted-foreground">
             {user?.email?.charAt(0).toUpperCase()}
           </div>
           <div className="overflow-hidden">

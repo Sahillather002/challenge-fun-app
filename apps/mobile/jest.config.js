@@ -21,6 +21,7 @@ module.exports = {
   moduleNameMapper: {
     '^react-native$': 'react-native',
     '^react-native-vector-icons/MaterialCommunityIcons$': '<rootDir>/__mocks__/react-native-vector-icons.js',
+    '^@/(.*)$': '<rootDir>/src/$1',
   },
   transform: {
     '^.+\\.(js|jsx|ts|tsx)$': 'babel-jest',

@@ -7,10 +7,10 @@
     "build": "tsc"
   },
   "peerDependencies": {
-    "react": "^18.2.0"
+    "react": ">=18.2.0"
   },
   "devDependencies": {
-    "@types/react": "^18.2.0",
+    "@types/react": ">=18.2.0",
     "typescript": "^5.3.3"
   }
 }

@@ -126,225 +126,225 @@ const CreateCompetitionScreen: React.FC<{ navigation: any }> = ({ navigation }) 
   return (
     <View style={{ flex: 1 }}>
       {/* Header with back button */}
-      <View style={[styles.headerBar, { backgroundColor: theme.colors.surface }]}>
+      <View style={[styles.headerBar, { backgroundColor: theme.surface }]}>
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <Icon name="arrow-left" size={24} color={theme.colors.onSurface} />
+          <Icon name="arrow-left" size={24} color={theme.onSurface} />
         </TouchableOpacity>
-        <Title style={[styles.headerTitle, { color: theme.colors.onSurface }]}>Create Competition</Title>
+        <Title style={[styles.headerTitle, { color: theme.onSurface }]}>Create Competition</Title>
         <View style={{ width: 40 }} />
       </View>
 
-      <ScrollView 
-        style={[styles.container, { backgroundColor: theme.colors.background }]}
+      <ScrollView
+        style={[styles.container, { backgroundColor: theme.background }]}
         contentContainerStyle={styles.contentContainer}
       >
-        <Card style={[styles.card, { backgroundColor: theme.colors.surface }]}>
+        <Card style={[styles.card, { backgroundColor: theme.surface }]}>
           <Card.Content>
 
-          <TextInput
-            label="Competition Name"
-            value={formData.name}
-            onChangeText={(value) => updateFormData('name', value)}
-            mode="outlined"
-            style={styles.input}
-          />
+            <TextInput
+              label="Competition Name"
+              value={formData.name}
+              onChangeText={(value) => updateFormData('name', value)}
+              mode="outlined"
+              style={styles.input}
+            />
 
-          <TextInput
-            label="Description"
-            value={formData.description}
-            onChangeText={(value) => updateFormData('description', value)}
-            mode="outlined"
-            multiline
-            numberOfLines={3}
-            style={styles.input}
-          />
+            <TextInput
+              label="Description"
+              value={formData.description}
+              onChangeText={(value) => updateFormData('description', value)}
+              mode="outlined"
+              multiline
+              numberOfLines={3}
+              style={styles.input}
+            />
 
-          <View style={styles.typeContainer}>
-            <Text style={[styles.label, { color: theme.colors.onSurface }]}>
-              Competition Type
-            </Text>
-            <View style={styles.typeButtons}>
-              <TouchableOpacity
-                style={[
-                  styles.typeButton,
-                  formData.type === 'weekly' && {
-                    backgroundColor: theme.colors.primary,
-                  },
-                ]}
-                onPress={() => updateFormData('type', 'weekly')}
-              >
-                <Text
+            <View style={styles.typeContainer}>
+              <Text style={[styles.label, { color: theme.onSurface }]}>
+                Competition Type
+              </Text>
+              <View style={styles.typeButtons}>
+                <TouchableOpacity
                   style={[
-                    styles.typeButtonText,
-                    {
-                      color: formData.type === 'weekly'
-                        ? theme.colors.onPrimary
-                        : theme.colors.onSurface,
+                    styles.typeButton,
+                    formData.type === 'weekly' && {
+                      backgroundColor: theme.primary,
                     },
                   ]}
+                  onPress={() => updateFormData('type', 'weekly')}
                 >
-                  Weekly
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.typeButton,
-                  formData.type === 'monthly' && {
-                    backgroundColor: theme.colors.primary,
-                  },
-                ]}
-                onPress={() => updateFormData('type', 'monthly')}
-              >
-                <Text
+                  <Text
+                    style={[
+                      styles.typeButtonText,
+                      {
+                        color: formData.type === 'weekly'
+                          ? theme.onPrimary
+                          : theme.onSurface,
+                      },
+                    ]}
+                  >
+                    Weekly
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
                   style={[
-                    styles.typeButtonText,
-                    {
-                      color: formData.type === 'monthly'
-                        ? theme.colors.onPrimary
-                        : theme.colors.onSurface,
+                    styles.typeButton,
+                    formData.type === 'monthly' && {
+                      backgroundColor: theme.primary,
                     },
                   ]}
+                  onPress={() => updateFormData('type', 'monthly')}
                 >
-                  Monthly
-                </Text>
+                  <Text
+                    style={[
+                      styles.typeButtonText,
+                      {
+                        color: formData.type === 'monthly'
+                          ? theme.onPrimary
+                          : theme.onSurface,
+                      },
+                    ]}
+                  >
+                    Monthly
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            <TextInput
+              label="Entry Fee (₹)"
+              value={formData.entryFee}
+              onChangeText={(value) => updateFormData('entryFee', value)}
+              mode="outlined"
+              keyboardType="numeric"
+              style={styles.input}
+            />
+
+            <View style={styles.dateContainer}>
+              <TouchableOpacity
+                style={[styles.dateButton, { backgroundColor: theme.surfaceVariant }]}
+                onPress={() => showDatePickerModal('start')}
+              >
+                <Icon name="calendar" size={20} color={theme.primary} />
+                <View style={styles.dateTextContainer}>
+                  <Text style={[styles.dateLabel, { color: theme.onSurfaceVariant }]}>
+                    Start Date
+                  </Text>
+                  <Text style={[styles.dateValue, { color: theme.onSurface }]}>
+                    {formData.startDate.toLocaleDateString()}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.dateButton, { backgroundColor: theme.surfaceVariant }]}
+                onPress={() => showDatePickerModal('end')}
+              >
+                <Icon name="calendar-end" size={20} color={theme.primary} />
+                <View style={styles.dateTextContainer}>
+                  <Text style={[styles.dateLabel, { color: theme.onSurfaceVariant }]}>
+                    End Date
+                  </Text>
+                  <Text style={[styles.dateValue, { color: theme.onSurface }]}>
+                    {formData.endDate.toLocaleDateString()}
+                  </Text>
+                </View>
               </TouchableOpacity>
             </View>
-          </View>
 
-          <TextInput
-            label="Entry Fee (₹)"
-            value={formData.entryFee}
-            onChangeText={(value) => updateFormData('entryFee', value)}
-            mode="outlined"
-            keyboardType="numeric"
-            style={styles.input}
-          />
+            <View style={styles.rulesContainer}>
+              <Text style={[styles.label, { color: theme.onSurface }]}>
+                Competition Rules
+              </Text>
 
-          <View style={styles.dateContainer}>
-            <TouchableOpacity
-              style={[styles.dateButton, { backgroundColor: theme.colors.surfaceVariant }]}
-              onPress={() => showDatePickerModal('start')}
-            >
-              <Icon name="calendar" size={20} color={theme.colors.primary} />
-              <View style={styles.dateTextContainer}>
-                <Text style={[styles.dateLabel, { color: theme.colors.onSurfaceVariant }]}>
-                  Start Date
-                </Text>
-                <Text style={[styles.dateValue, { color: theme.colors.onSurface }]}>
-                  {formData.startDate.toLocaleDateString()}
-                </Text>
+              <View style={styles.addRuleContainer}>
+                <TextInput
+                  label="Add Rule"
+                  value={newRule}
+                  onChangeText={setNewRule}
+                  mode="outlined"
+                  style={styles.ruleInput}
+                  right={
+                    <TextInput.Icon
+                      icon="plus"
+                      onPress={addRule}
+                      disabled={!newRule.trim()}
+                    />
+                  }
+                />
               </View>
-            </TouchableOpacity>
 
-            <TouchableOpacity
-              style={[styles.dateButton, { backgroundColor: theme.colors.surfaceVariant }]}
-              onPress={() => showDatePickerModal('end')}
-            >
-              <Icon name="calendar-end" size={20} color={theme.colors.primary} />
-              <View style={styles.dateTextContainer}>
-                <Text style={[styles.dateLabel, { color: theme.colors.onSurfaceVariant }]}>
-                  End Date
-                </Text>
-                <Text style={[styles.dateValue, { color: theme.colors.onSurface }]}>
-                  {formData.endDate.toLocaleDateString()}
-                </Text>
+              <View style={styles.rulesList}>
+                {formData.rules.map((rule, index) => (
+                  <Chip
+                    key={index}
+                    onClose={() => removeRule(index)}
+                    style={[styles.ruleChip, { backgroundColor: theme.surfaceVariant }]}
+                    textStyle={{ color: theme.onSurfaceVariant }}
+                  >
+                    {rule}
+                  </Chip>
+                ))}
               </View>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.rulesContainer}>
-            <Text style={[styles.label, { color: theme.colors.onSurface }]}>
-              Competition Rules
-            </Text>
-            
-            <View style={styles.addRuleContainer}>
-              <TextInput
-                label="Add Rule"
-                value={newRule}
-                onChangeText={setNewRule}
-                mode="outlined"
-                style={styles.ruleInput}
-                right={
-                  <TextInput.Icon
-                    icon="plus"
-                    onPress={addRule}
-                    disabled={!newRule.trim()}
-                  />
-                }
-              />
             </View>
 
-            <View style={styles.rulesList}>
-              {formData.rules.map((rule, index) => (
-                <Chip
-                  key={index}
-                  onClose={() => removeRule(index)}
-                  style={[styles.ruleChip, { backgroundColor: theme.colors.surfaceVariant }]}
-                  textStyle={{ color: theme.colors.onSurfaceVariant }}
-                >
-                  {rule}
-                </Chip>
-              ))}
-            </View>
-          </View>
+            <View style={styles.prizesContainer}>
+              <Text style={[styles.label, { color: theme.onSurface }]}>
+                Prize Distribution (%)
+              </Text>
 
-          <View style={styles.prizesContainer}>
-            <Text style={[styles.label, { color: theme.colors.onSurface }]}>
-              Prize Distribution (%)
-            </Text>
-            
-            <View style={styles.prizeInputs}>
-              <TextInput
-                label="1st Prize"
-                value={formData.prizes.first}
-                onChangeText={(value) => updateFormData('prizes', {
-                  ...formData.prizes,
-                  first: value,
-                })}
-                mode="outlined"
-                keyboardType="numeric"
-                style={styles.prizeInput}
-              />
-              
-              <TextInput
-                label="2nd Prize"
-                value={formData.prizes.second}
-                onChangeText={(value) => updateFormData('prizes', {
-                  ...formData.prizes,
-                  second: value,
-                })}
-                mode="outlined"
-                keyboardType="numeric"
-                style={styles.prizeInput}
-              />
-              
-              <TextInput
-                label="3rd Prize"
-                value={formData.prizes.third}
-                onChangeText={(value) => updateFormData('prizes', {
-                  ...formData.prizes,
-                  third: value,
-                })}
-                mode="outlined"
-                keyboardType="numeric"
-                style={styles.prizeInput}
-              />
-            </View>
-          </View>
+              <View style={styles.prizeInputs}>
+                <TextInput
+                  label="1st Prize"
+                  value={formData.prizes.first}
+                  onChangeText={(value) => updateFormData('prizes', {
+                    ...formData.prizes,
+                    first: value,
+                  })}
+                  mode="outlined"
+                  keyboardType="numeric"
+                  style={styles.prizeInput}
+                />
 
-          <Button
-            mode="contained"
-            onPress={handleCreateCompetition}
-            loading={loading}
-            disabled={loading}
-            style={[styles.createButton, { backgroundColor: theme.colors.primary }]}
-            contentStyle={styles.buttonContent}
-          >
-            {loading ? 'Creating...' : 'Create Competition'}
-          </Button>
+                <TextInput
+                  label="2nd Prize"
+                  value={formData.prizes.second}
+                  onChangeText={(value) => updateFormData('prizes', {
+                    ...formData.prizes,
+                    second: value,
+                  })}
+                  mode="outlined"
+                  keyboardType="numeric"
+                  style={styles.prizeInput}
+                />
+
+                <TextInput
+                  label="3rd Prize"
+                  value={formData.prizes.third}
+                  onChangeText={(value) => updateFormData('prizes', {
+                    ...formData.prizes,
+                    third: value,
+                  })}
+                  mode="outlined"
+                  keyboardType="numeric"
+                  style={styles.prizeInput}
+                />
+              </View>
+            </View>
+
+            <Button
+              mode="contained"
+              onPress={handleCreateCompetition}
+              loading={loading}
+              disabled={loading}
+              style={[styles.createButton, { backgroundColor: theme.primary }]}
+              contentStyle={styles.buttonContent}
+            >
+              {loading ? 'Creating...' : 'Create Competition'}
+            </Button>
           </Card.Content>
         </Card>
 
@@ -504,10 +504,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 8,
     elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
+    boxShadow: '0 2px 4px rgba(0,0,0,0.25)',
   },
   webDateInput: {
     width: '100%',
@@ -520,3 +517,4 @@ const styles = StyleSheet.create({
 });
 
 export default CreateCompetitionScreen;
+

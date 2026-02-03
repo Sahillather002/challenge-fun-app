@@ -3,12 +3,28 @@
   "compilerOptions": {
     "strict": true,
     "paths": {
-      "@/*": ["./src/*"],
-      "@health-competition/shared": ["../../packages/shared/src"],
-      "@health-competition/ui": ["../../packages/ui/src"],
-      "@health-competition/step-tracker": ["../../packages/step-tracker/src"]
+      "@/*": [
+        "./src/*"
+      ],
+      "@health-competition/shared": [
+        "../../packages/shared/src"
+      ],
+      "@health-competition/ui": [
+        "../../packages/ui/src"
+      ],
+      "@health-competition/step-tracker": [
+        "../../packages/step-tracker/src"
+      ]
     }
   },
-  "include": ["src/**/*", "App.tsx", "*.ts", "*.tsx"],
-  "exclude": ["node_modules"]
+  "include": [
+    "src/**/*",
+    "App.tsx",
+    "*.ts",
+    "*.tsx",
+    "nativewind-env.d.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }

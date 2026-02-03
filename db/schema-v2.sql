@@ -298,7 +298,13 @@ INSERT INTO public.users (id, email, name, created_at, updated_at)
 SELECT
     au.id,
     au.email,
-    COALESCE(au.raw_user_meta_data->>'name', au.raw_user_meta_data->>'full_name', 'User') as name,
+    COALESCE(
+        au.raw_user_meta_data->>'name',
+        au.raw_user_meta_data->>'full_name',
+        au.raw_user_meta_data->>'display_name',
+        split_part(au.email, '@', 1), -- Use email username as fallback
+        'User'
+    ) as name,
     au.created_at,
     NOW()
 FROM auth.users au
@@ -315,7 +321,13 @@ BEGIN
     VALUES (
         NEW.id,
         NEW.email,
-        COALESCE(NEW.raw_user_meta_data->>'name', NEW.raw_user_meta_data->>'full_name', 'User'),
+        COALESCE(
+            NEW.raw_user_meta_data->>'name',
+            NEW.raw_user_meta_data->>'full_name',
+            NEW.raw_user_meta_data->>'display_name',
+            split_part(NEW.email, '@', 1), -- Use email username as fallback
+            'User'
+        ),
         NEW.created_at,
         NOW()
     )

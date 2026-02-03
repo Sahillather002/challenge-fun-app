@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, Animated, Dimensions, Platform } from 'react-native';
 import { useTheme } from './ThemeContext';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 type ToastType = 'success' | 'error' | 'info' | 'warning';
 
@@ -162,7 +162,7 @@ const ToastItem: React.FC<ToastItemProps> = ({ message, backgroundColor, icon, i
         },
       ]}
     >
-      <Icon name={icon} size={24} color={iconColor} style={styles.toastIcon} />
+      <MaterialCommunityIcons name={icon as any} size={24} color={iconColor} style={styles.toastIcon} />
       <Text style={styles.toastText} numberOfLines={2}>
         {message}
       </Text>
@@ -189,10 +189,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     maxWidth: Dimensions.get('window').width - 32,
     minWidth: 200,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
+    boxShadow: '0 4px 8px rgba(0,0,0,0.3)',
     elevation: 8,
   },
   toastIcon: {

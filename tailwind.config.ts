@@ -1,64 +1,40 @@
 import type { Config } from "tailwindcss";
-import tailwindcssAnimate from "tailwindcss-animate";
 
 const config: Config = {
-    darkMode: "class",
-    content: [
-    "./pages/**/*.{js,ts,jsx,tsx,mdx}",
-    "./components/**/*.{js,ts,jsx,tsx,mdx}",
-    "./app/**/*.{js,ts,jsx,tsx,mdx}",
-  ],
-  theme: {
-  	extend: {
-  		colors: {
-  			background: 'hsl(var(--background))',
-  			foreground: 'hsl(var(--foreground))',
-  			card: {
-  				DEFAULT: 'hsl(var(--card))',
-  				foreground: 'hsl(var(--card-foreground))'
-  			},
-  			popover: {
-  				DEFAULT: 'hsl(var(--popover))',
-  				foreground: 'hsl(var(--popover-foreground))'
-  			},
-  			primary: {
-  				DEFAULT: 'hsl(var(--primary))',
-  				foreground: 'hsl(var(--primary-foreground))'
-  			},
-  			secondary: {
-  				DEFAULT: 'hsl(var(--secondary))',
-  				foreground: 'hsl(var(--secondary-foreground))'
-  			},
-  			muted: {
-  				DEFAULT: 'hsl(var(--muted))',
-  				foreground: 'hsl(var(--muted-foreground))'
-  			},
-  			accent: {
-  				DEFAULT: 'hsl(var(--accent))',
-  				foreground: 'hsl(var(--accent-foreground))'
-  			},
-  			destructive: {
-  				DEFAULT: 'hsl(var(--destructive))',
-  				foreground: 'hsl(var(--destructive-foreground))'
-  			},
-  			border: 'hsl(var(--border))',
-  			input: 'hsl(var(--input))',
-  			ring: 'hsl(var(--ring))',
-  			chart: {
-  				'1': 'hsl(var(--chart-1))',
-  				'2': 'hsl(var(--chart-2))',
-  				'3': 'hsl(var(--chart-3))',
-  				'4': 'hsl(var(--chart-4))',
-  				'5': 'hsl(var(--chart-5))'
-  			}
-  		},
-  		borderRadius: {
-  			lg: 'var(--radius)',
-  			md: 'calc(var(--radius) - 2px)',
-  			sm: 'calc(var(--radius) - 4px)'
-  		}
-  	}
-  },
-  plugins: [tailwindcssAnimate],
+	content: [
+		"./apps/mobile_3/app/**/*.{js,jsx,ts,tsx}",
+		"./apps/mobile_3/src/**/*.{js,jsx,ts,tsx}",
+
+		// add other apps if needed
+		"./apps/mobile/app/**/*.{js,jsx,ts,tsx}",
+		"./apps/mobile/src/**/*.{js,jsx,ts,tsx}",
+	],
+
+	presets: [require("nativewind/preset")],
+
+	darkMode: "class",
+
+	theme: {
+		extend: {
+			colors: {
+				background: "#ffffff",
+				foreground: "#000000",
+
+				card: "#f2f2f2",
+				muted: "#666666",
+
+				darkBackground: "#000000",
+				darkCard: "#1a1a1a",
+				darkMuted: "#999999",
+
+				primary: "#00D9FF",
+				secondary: "#00FF88",
+				danger: "#FF006E",
+			},
+		},
+	},
+
+	plugins: [],
 };
+
 export default config;

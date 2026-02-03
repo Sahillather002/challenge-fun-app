@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -7,350 +7,144 @@ import {
   TouchableOpacity,
   RefreshControl,
 } from 'react-native';
-import {
-  Card,
-  Title,
-  Paragraph,
-  Button,
-  Chip,
-  FAB,
-  Searchbar,
-} from 'react-native-paper';
+import { Searchbar, FAB } from 'react-native-paper';
 import { useCompetition } from '../../context/MockCompetitionContext';
 import { useSupabaseAuth } from '../../context/SupabaseAuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { Competition } from '../../types';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { Feather } from '@expo/vector-icons';
 
 const CompetitionScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [filter, setFilter] = useState<'all' | 'upcoming' | 'active' | 'completed'>('all');
+  const [filter, setFilter] = useState<'all' | 'upcoming' | 'active'>('all');
   const [refreshing, setRefreshing] = useState(false);
-  const { competitions, loading, joinCompetition } = useCompetition();
+  const { competitions } = useCompetition();
   const { user } = useSupabaseAuth();
   const { theme } = useTheme();
 
-  useEffect(() => {
-    // Refresh competitions when screen loads
-  }, []);
-
-  const filteredCompetitions = competitions.filter(competition => {
-    const matchesSearch = competition.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         competition.description.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesFilter = filter === 'all' || competition.status === filter;
-    
-    return matchesSearch && matchesFilter;
-  });
-
-  const handleJoinCompetition = async (competitionId: string) => {
-    try {
-      await joinCompetition(competitionId);
-      // Navigate to payment screen
-      navigation.navigate('Payment', { competitionId });
-    } catch (error: any) {
-      console.error('Error joining competition:', error);
-    }
-  };
+  const filtered = competitions.filter(c =>
+    (c.name?.toLowerCase().includes(searchQuery.toLowerCase())) &&
+    (filter === 'all' || c.status === filter)
+  );
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    // Refresh logic would go here
     setTimeout(() => setRefreshing(false), 1000);
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active':
-        return '#4CAF50';
-      case 'upcoming':
-        return '#FF9800';
-      case 'completed':
-        return '#9E9E9E';
-      default:
-        return '#757575';
-    }
-  };
-
-  const renderCompetition = ({ item }: { item: Competition }) => {
+  const renderMission = ({ item }: { item: Competition }) => {
     const isJoined = item.participants.includes(user?.id || '');
-    const daysLeft = Math.ceil((new Date(item.end_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-
     return (
-      <Card style={[styles.competitionCard, { backgroundColor: theme.colors.surface }]}>
-        <Card.Content>
-          <View style={styles.cardHeader}>
-            <Title style={styles.competitionName}>{item.name}</Title>
-            <View style={styles.statusContainer}>
-              {isJoined && (
-                <Chip
-                  style={[styles.joinedChip, { backgroundColor: '#4CAF50' }]}
-                  textStyle={{ color: 'white', fontSize: 10 }}
-                >
-                  JOINED
-                </Chip>
-              )}
-              <Chip
-                style={[styles.statusChip, { backgroundColor: getStatusColor(item.status) }]}
-                textStyle={{ color: 'white' }}
+      <View className="p-4 rounded-xl border mb-3 bg-glass border-glassBorder">
+        <View className="flex-row justify-between items-center mb-3">
+          <View className="px-2 py-1 rounded-md bg-muted">
+            <Text className="text-[9px] font-black tracking-widest text-primary">COMP-{item.id.slice(0, 4).toUpperCase()}</Text>
+          </View>
+          {isJoined && (
+            <View className="flex-row items-center gap-1 px-2 py-1 rounded-lg bg-primary-container">
+              <Feather name="check-circle" size={12} color={theme.primary} />
+              <Text className="text-[8px] font-black text-primary">ACTIVE</Text>
+            </View>
+          )}
+        </View>
+
+        <Text className="text-base font-black tracking-tighter text-foreground">{item.name}</Text>
+        <Text className="text-xs mt-1.5 leading-4 font-semibold text-muted-foreground" numberOfLines={2}>{item.description}</Text>
+
+        <View className="flex-row gap-4 mt-4 mb-4">
+          <View className="flex-row items-center gap-1.5">
+            <Feather name="users" size={14} color={theme.mutedForeground} />
+            <Text className="text-[11px] font-extrabold text-foreground">{item.participants.length} Participants</Text>
+          </View>
+          <View className="flex-row items-center gap-1.5">
+            <Feather name="dollar-sign" size={14} color={theme.tertiary} />
+            <Text className="text-[11px] font-extrabold text-foreground">₹{item.prize_pool}</Text>
+          </View>
+        </View>
+
+        <View className="flex-row gap-2">
+          {isJoined ? (
+            <>
+              <TouchableOpacity
+                className="flex-1 h-11 rounded-xl flex-row justify-center items-center gap-2 bg-primary"
+                onPress={() => navigation.navigate('Workout', { competitionId: item.id })}
               >
-                {item.status.toUpperCase()}
-              </Chip>
-            </View>
-          </View>
-
-          <Paragraph style={[styles.description, { color: theme.colors.onSurfaceVariant }]}>
-            {item.description}
-          </Paragraph>
-
-          <View style={styles.competitionDetails}>
-            <View style={styles.detailItem}>
-              <Icon name="calendar" size={16} color={theme.colors.primary} />
-              <Text style={[styles.detailText, { color: theme.colors.onSurface }]}>
-                {item.type === 'weekly' ? 'Weekly' : 'Monthly'}
-              </Text>
-            </View>
-
-            <View style={styles.detailItem}>
-              <Icon name="currency-inr" size={16} color={theme.colors.primary} />
-              <Text style={[styles.detailText, { color: theme.colors.onSurface }]}>
-                Entry: ₹{item.entry_fee}
-              </Text>
-            </View>
-
-            <View style={styles.detailItem}>
-              <Icon name="trophy" size={16} color={theme.colors.primary} />
-              <Text style={[styles.detailText, { color: theme.colors.onSurface }]}>
-                Prize: ₹{item.entry_fee * item.participants.length * 0.6}
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.participantsInfo}>
-            <Icon name="account-group" size={16} color={theme.colors.primary} />
-            <Text style={[styles.participantsText, { color: theme.colors.onSurface }]}>
-              {item.participants.length} participants
-            </Text>
-            {item.status === 'active' && (
-              <Text style={[styles.daysLeft, { color: theme.colors.primary }]}>
-                {daysLeft} days left
-              </Text>
-            )}
-          </View>
-
-          <View style={styles.cardActions}>
-            {isJoined ? (
-              <Button
-                mode="outlined"
+                <Feather name="activity" size={16} color="#fff" />
+                <Text className="text-[11px] font-black text-white tracking-widest">TRACK WORKOUT</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                className="w-11 h-11 rounded-xl justify-center items-center bg-muted"
                 onPress={() => navigation.navigate('Leaderboard', { competitionId: item.id })}
-                style={styles.actionButton}
               >
-                View Leaderboard
-              </Button>
-            ) : (
-              <Button
-                mode="contained"
-                onPress={() => handleJoinCompetition(item.id)}
-                disabled={item.status !== 'upcoming' && item.status !== 'active'}
-                style={[styles.actionButton, { backgroundColor: theme.colors.primary }]}
-              >
-                Join Competition
-              </Button>
-            )}
-          </View>
-        </Card.Content>
-      </Card>
+                <Feather name="bar-chart-2" size={16} color={theme.foreground} />
+              </TouchableOpacity>
+            </>
+          ) : (
+            <TouchableOpacity
+              className="w-full h-11 rounded-xl flex-row justify-center items-center gap-2 bg-primary"
+              onPress={() => navigation.navigate('Payment', { competitionId: item.id })}
+            >
+              <Text className="text-xs font-black text-white tracking-widest">JOIN COMPETITION</Text>
+              <Feather name="arrow-right" size={16} color="#fff" />
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
     );
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <View style={styles.header}>
+    <View className="flex-1 bg-background">
+      <View className="px-4 pt-[60px] pb-4">
+        <Text className="text-2xl font-black mb-4 tracking-tighter text-foreground">Competitions</Text>
         <Searchbar
           placeholder="Search competitions..."
           onChangeText={setSearchQuery}
           value={searchQuery}
-          style={[styles.searchBar, { backgroundColor: theme.colors.surface }]}
+          style={{ backgroundColor: theme.surface, borderColor: theme.outline, borderRadius: 12, height: 48, marginBottom: 16, borderWidth: 1, elevation: 0 }}
+          iconColor={theme.primary}
+          placeholderTextColor={theme.mutedForeground}
+          inputStyle={{ fontSize: 14, color: theme.foreground, fontWeight: '700' }}
         />
-
-        <View style={styles.filterContainer}>
-          {['all', 'upcoming', 'active', 'completed'].map((status) => (
+        <View className="flex-row gap-2">
+          {['all', 'active', 'upcoming'].map(f => (
             <TouchableOpacity
-              key={status}
-              style={[
-                styles.filterChip,
-                filter === status && {
-                  backgroundColor: theme.colors.primary,
-                },
-              ]}
-              onPress={() => setFilter(status as any)}
+              key={f}
+              onPress={() => setFilter(f as any)}
+              className={`px-3 py-2 rounded-xl border ${filter === f ? 'bg-primary-container border-primary' : 'bg-surface border-outline'}`}
             >
-              <Text
-                style={[
-                  styles.filterText,
-                  {
-                    color: filter === status
-                      ? theme.colors.onPrimary
-                      : theme.colors.onSurface,
-                  },
-                ]}
-              >
-                {status.charAt(0).toUpperCase() + status.slice(1)}
-              </Text>
+              <Text className={`text-[10px] font-black tracking-widest ${filter === f ? 'text-primary' : 'text-muted-foreground'}`}>{f.toUpperCase()}</Text>
             </TouchableOpacity>
           ))}
         </View>
       </View>
 
       <FlatList
-        data={filteredCompetitions}
-        renderItem={renderCompetition}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContainer}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
-        }
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Icon name="trophy-outline" size={64} color={theme.colors.onSurfaceVariant} />
-            <Text style={[styles.emptyText, { color: theme.colors.onSurfaceVariant }]}>
-              No competitions found
-            </Text>
-            <Text style={[styles.emptySubtext, { color: theme.colors.onSurfaceVariant }]}>
-              {searchQuery ? 'Try a different search term' : 'Create a new competition to get started'}
-            </Text>
-          </View>
-        }
+        data={filtered}
+        renderItem={renderMission}
+        keyExtractor={item => item.id}
+        contentContainerStyle={{ padding: 16, paddingTop: 0, paddingBottom: 140 }}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
+        showsVerticalScrollIndicator={false}
       />
 
       <FAB
         icon="plus"
-        style={[styles.fab, { backgroundColor: theme.colors.primary }]}
+        style={{ position: 'absolute', right: 16, bottom: 100, borderRadius: 12, backgroundColor: theme.primary }}
+        color="#fff"
         onPress={() => navigation.navigate('CreateCompetition')}
-        visible={user !== null}
       />
     </View>
   );
 };
 
+// ... styles removed as they are now inline ...
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  header: {
-    padding: 16,
-    paddingBottom: 8,
-  },
-  searchBar: {
-    marginBottom: 12,
-    elevation: 2,
-  },
-  filterContainer: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 8,
-  },
-  filterChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#ddd',
-  },
-  filterText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  listContainer: {
-    padding: 16,
-    paddingTop: 0,
-  },
-  competitionCard: {
-    marginBottom: 16,
-    elevation: 4,
-    borderRadius: 12,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 8,
-  },
-  statusContainer: {
-    flexDirection: 'row',
-    gap: 4,
-    alignItems: 'center',
-  },
-  joinedChip: {
-    height: 24,
-  },
-  competitionName: {
-    flex: 1,
-    fontSize: 18,
-    marginRight: 8,
-  },
-  statusChip: {
-    height: 24,
-  },
-  description: {
-    marginBottom: 12,
-    fontSize: 14,
-  },
-  competitionDetails: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-  },
-  detailItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  detailText: {
-    fontSize: 12,
-  },
-  participantsInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 16,
-  },
-  participantsText: {
-    fontSize: 12,
-    marginLeft: 4,
-  },
-  daysLeft: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  cardActions: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-  },
-  actionButton: {
-    borderRadius: 8,
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 64,
-  },
-  emptyText: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginTop: 16,
-  },
-  emptySubtext: {
-    fontSize: 14,
-    textAlign: 'center',
-    marginTop: 8,
-  },
-  fab: {
-    position: 'absolute',
-    margin: 16,
-    right: 0,
-    bottom: 0,
+  // Kept for refresh control or non-tailwind props if needed, but mostly empty
+  list: {
+    paddingBottom: 140,
   },
 });
 
 export default CompetitionScreen;
+

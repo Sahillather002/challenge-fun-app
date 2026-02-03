@@ -1,0 +1,193 @@
+import 'react-native-gesture-handler'; // required by react-navigation
+import React, { useEffect } from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import { StatusBar } from 'expo-status-bar';
+import { Provider as PaperProvider } from 'react-native-paper';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Platform, View, Text, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { ThemeProvider, useTheme } from './src/context/ThemeContext';
+import { SupabaseAuthProvider } from './src/context/SupabaseAuthContext';
+import { CompetitionProvider } from './src/context/MockCompetitionContext';
+import { ToastProvider } from './src/context/ToastContext';
+
+// Import Screens
+import LoginScreen from './src/screens/Auth/LoginScreen';
+import RegisterScreen from './src/screens/Auth/RegisterScreen';
+import CreateCompetitionScreen from './src/screens/Competition/CreateCompetitionScreen';
+import PaymentScreen from './src/screens/Payment/PaymentScreen';
+import SettingsScreen from './src/screens/Settings/SettingsScreen';
+import GoogleFitAccountScreen from './src/screens/Settings/GoogleFitAccountScreen';
+
+// Import New Screens for Dummy Flow
+import TransactionsScreen from './src/screens/TransactionsScreen';
+import LeaderboardScreen from './src/screens/LeaderboardScreen';
+
+// Import Tab Navigator
+import MainTabNavigator from './src/navigation/MainTabNavigator';
+
+
+import CashfreePaymentScreen from './src/screens/Payment/CashfreePaymentScreen';
+
+const Stack = createStackNavigator();
+
+// Inner component that uses theme context
+function AppContent() {
+  console.log('🏗️ AppContent rendering...');
+  const { theme, isDark } = useTheme();
+  console.log("🎨 Current theme loaded:", theme.colors.primary);
+  return (
+    <PaperProvider theme={theme} settings={{ icon: (props) => <MaterialCommunityIcons {...props} /> }}>
+      <View style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 9999, backgroundColor: 'red', padding: 10 }}>
+        <Text style={{ color: 'white', fontWeight: 'bold' }}>📍 REACT APP ENGINE ACTIVE</Text>
+      </View>
+      <SupabaseAuthProvider>
+        <CompetitionProvider>
+          <ToastProvider>
+            <NavigationContainer>
+              <StatusBar style={isDark ? 'light' : 'dark'} />
+              <Stack.Navigator initialRouteName="Login" screenOptions={{ headerShown: false }}>
+                <Stack.Screen name="Login" component={LoginScreen} />
+                <Stack.Screen name="Register" component={RegisterScreen} />
+                <Stack.Screen name="Main" component={MainTabNavigator} />
+                <Stack.Screen name="CreateCompetition" component={CreateCompetitionScreen} />
+                <Stack.Screen name="Payment" component={PaymentScreen} />
+                <Stack.Screen name="Settings" component={SettingsScreen} />
+                <Stack.Screen name="GoogleFitAccount" component={GoogleFitAccountScreen} options={{ title: 'Google Fit Account' }} />
+                <Stack.Screen name="Transactions" component={TransactionsScreen} options={{ title: 'Transactions' }} />
+                <Stack.Screen name="Leaderboard" component={LeaderboardScreen} options={{ title: 'Leaderboard' }} />
+              </Stack.Navigator>
+            </NavigationContainer>
+          </ToastProvider>
+        </CompetitionProvider>
+      </SupabaseAuthProvider>
+    </PaperProvider>
+  );
+}
+
+export default function App() {
+  console.log('🚀 App function executing...');
+  if (Platform.OS === 'web' && typeof window !== 'undefined') {
+    window.alert('⚛️ REACT NATIVE APP DETECTED');
+  }
+  const [isOAuthCallback, setIsOAuthCallback] = React.useState(false);
+  const [error, setError] = React.useState<Error | null>(null);
+
+  console.log("📍 isOAuthCallback state:", isOAuthCallback)
+
+  // Error boundary effect
+  useEffect(() => {
+    const errorHandler = (event: ErrorEvent) => {
+      console.error('Global error:', event.error);
+      setError(event.error);
+    };
+
+    const unhandledRejection = (event: PromiseRejectionEvent) => {
+      console.error('Unhandled promise rejection:', event.reason);
+      setError(event.reason instanceof Error ? event.reason : new Error(String(event.reason)));
+    };
+
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      window.addEventListener('error', errorHandler);
+      window.addEventListener('unhandledrejection', unhandledRejection);
+
+      return () => {
+        window.removeEventListener('error', errorHandler);
+        window.removeEventListener('unhandledrejection', unhandledRejection);
+      };
+    }
+  }, []);
+
+  // Handle OAuth callback in popup window BEFORE rendering the app
+  useEffect(() => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      const hash = window.location.hash;
+
+      // Check if this is an OAuth callback (has access_token in URL)
+      if (hash && hash.includes('access_token')) {
+        const params = new URLSearchParams(hash.substring(1));
+        const token = params.get('access_token');
+
+        if (token) {
+          console.log('🔑 OAuth callback detected in popup');
+          setIsOAuthCallback(true);
+
+          // Extract expiry time
+          const expiresIn = params.get('expires_in');
+          const expiresAt = expiresIn ? Date.now() + (parseInt(expiresIn) * 1000) : Date.now() + 3600000;
+
+          // Save token and expiry to localStorage
+          localStorage.setItem('google_fit_token', token);
+          localStorage.setItem('google_fit_token_expiry', expiresAt.toString());
+
+          // If this is a popup window, send message to parent and close
+          if (window.opener && !window.opener.closed) {
+            console.log('📤 Sending success message to parent window');
+            window.opener.postMessage({
+              type: 'GOOGLE_FIT_AUTH_SUCCESS',
+              token: token,
+              expiresAt: expiresAt
+            }, window.location.origin);
+
+            // Clear URL and close popup
+            window.history.replaceState(null, '', window.location.pathname);
+
+            setTimeout(() => {
+              window.close();
+            }, 100);
+          } else {
+            // Not a popup - just clear the hash and reload
+            window.history.replaceState(null, '', window.location.pathname + window.location.search);
+            window.location.reload();
+          }
+        }
+      }
+    }
+  }, []);
+
+  // Show error screen if there's an error
+  if (error) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff', padding: 20 }}>
+        <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#F44336', marginBottom: 16 }}>
+          App Error
+        </Text>
+        <Text style={{ fontSize: 14, color: '#666', textAlign: 'center', marginBottom: 20 }}>
+          {error.message || String(error)}
+        </Text>
+        <Text style={{ fontSize: 12, color: '#999', textAlign: 'center', marginBottom: 20 }}>
+          Check the console for more details
+        </Text>
+        <TouchableOpacity
+          onPress={() => {
+            setError(null);
+            if (Platform.OS === 'web' && typeof window !== 'undefined') {
+              window.location.reload();
+            }
+          }}
+          style={{ backgroundColor: '#6200ee', paddingHorizontal: 20, paddingVertical: 10, borderRadius: 8 }}
+        >
+          <Text style={{ color: '#fff', fontWeight: '600' }}>Reload App</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  // Show loading screen if this is an OAuth callback popup
+  if (isOAuthCallback) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}>
+        <ActivityIndicator size="large" color="#6200ee" />
+        <Text style={{ marginTop: 16, fontSize: 16, color: '#666' }}>
+          Connecting Google Fit...
+        </Text>
+      </View>
+    );
+  }
+
+  return (
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
+  );
+}

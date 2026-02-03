@@ -1,0 +1,10 @@
+
+{
+  "name": "OmniGen AI Platform",
+  "description": "Enterprise AI inference platform with real-time video, image, and text generation capabilities.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation"
+  ]
+}

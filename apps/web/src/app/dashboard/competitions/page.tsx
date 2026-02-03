@@ -98,7 +98,7 @@ export default function CompetitionsPage() {
         </div>
         <div className="flex gap-4">
           <Link href="/dashboard/competitions/create">
-            <Button className="btn-gradient px-8 py-3 rounded-2xl text-xs font-black uppercase tracking-widest text-white shadow-2xl shadow-blue-500/20">
+            <Button className="btn-gradient px-8 py-3 rounded-2xl text-xs font-black uppercase tracking-widest text-primary-foreground shadow-2xl shadow-blue-500/20">
               <Plus className="mr-2 h-4 w-4" /> Create competition
             </Button>
           </Link>
@@ -108,16 +108,16 @@ export default function CompetitionsPage() {
       {/* Search and Filters */}
       <div className="flex flex-col lg:flex-row gap-6 items-center">
         <div className="flex-1 relative w-full group">
-          <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500 group-focus-within:text-blue-400 transition-colors" />
+          <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-emerald-500 transition-colors" />
           <Input
             type="search"
             placeholder="Search by intelligence engine, challenge type..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-14 bg-slate-900/40 border-slate-800 rounded-2xl h-14 text-white focus:border-blue-500/50 transition-all placeholder:text-slate-700"
+            className="pl-14 bg-muted/40 border-border rounded-2xl h-14 text-foreground focus:border-blue-500/50 transition-all placeholder:text-muted-foreground"
           />
         </div>
-        <div className="flex p-1.5 glass rounded-2xl border border-white/5 bg-slate-900/40 shrink-0">
+        <div className="flex p-1.5 glass rounded-2xl border border-border/50 bg-muted/40 shrink-0">
           {(['all', 'active', 'upcoming'] as const).map((status) => (
             <button
               key={status}
@@ -125,8 +125,8 @@ export default function CompetitionsPage() {
               className={`
                 px-8 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all
                 ${filterStatus === status
-                  ? 'bg-blue-600/10 text-blue-400 shadow-inner'
-                  : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'}
+                  ? 'bg-blue-600/10 text-blue-500 shadow-inner'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'}
               `}
             >
               {status}
@@ -138,17 +138,17 @@ export default function CompetitionsPage() {
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
         {[
-          { label: 'Total Volume', val: mockCompetitions.length.toString(), icon: <Trophy className="text-blue-400" /> },
-          { label: 'Active Epochs', val: mockCompetitions.filter((c) => c.status === 'active').length.toString(), icon: <Clock className="text-purple-400" /> },
+          { label: 'Total Volume', val: mockCompetitions.length.toString(), icon: <Trophy className="text-emerald-500" /> },
+          { label: 'Active Epochs', val: mockCompetitions.filter((c) => c.status === 'active').length.toString(), icon: <Clock className="text-teal-500" /> },
           { label: 'My Deployments', val: '3', icon: <Users className="text-emerald-400" /> },
-          { label: 'Distributed Pool', val: `$${mockCompetitions.reduce((sum, c) => sum + c.prizePool, 0)}`, icon: <DollarSign className="text-amber-400" /> },
+          { label: 'Distributed Pool', val: `$${mockCompetitions.reduce((sum, c) => sum + c.prizePool, 0)}`, icon: <DollarSign className="text-emerald-600" /> },
         ].map((stat, i) => (
           <motion.div
             key={i}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.1 }}
-            className="glass p-8 rounded-[2.5rem] border border-white/5 bg-slate-900/20 group hover:border-white/10 transition-all shadow-xl"
+            className="glass p-8 rounded-[2.5rem] border border-border/50 bg-muted/20 group hover:border-border transition-all shadow-xl"
           >
             <div className="flex justify-between items-start mb-6">
               <div className="p-4 glass rounded-2xl shadow-inner group-hover:scale-110 transition-transform">
@@ -169,15 +169,15 @@ export default function CompetitionsPage() {
       </div>
 
       {filteredCompetitions.length === 0 && (
-        <div className="glass p-20 rounded-[3rem] border border-white/5 bg-slate-900/20 text-center">
+        <div className="glass p-20 rounded-[3rem] border border-border/50 bg-muted/20 text-center">
           <Trophy className="h-16 w-16 mx-auto text-slate-700 mb-6 opacity-50" />
-          <h3 className="text-2xl font-black uppercase tracking-tight text-white mb-2">No neural matches found</h3>
+          <h3 className="text-2xl font-black uppercase tracking-tight text-foreground mb-2">No neural matches found</h3>
           <p className="text-slate-500 font-bold mb-8">
             Adjust your search parameters or query filters to expand discovery.
           </p>
           <Button
             onClick={() => { setSearchQuery(''); setFilterStatus('all'); }}
-            className="px-8 py-3 rounded-2xl glass text-xs font-black uppercase tracking-widest text-slate-400 hover:text-white"
+            className="px-8 py-3 rounded-2xl glass text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-foreground"
           >
             Reset Protocol Filters
           </Button>
@@ -189,9 +189,9 @@ export default function CompetitionsPage() {
 
 function CompetitionCard({ competition, index }: { competition: any, index: number }) {
   const statusColors = {
-    active: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
-    upcoming: 'text-blue-400 bg-blue-500/10 border-blue-500/20',
-    completed: 'text-slate-500 bg-slate-500/10 border-slate-500/20',
+    active: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20',
+    upcoming: 'text-teal-500 bg-teal-500/10 border-teal-500/20',
+    completed: 'text-muted-foreground bg-muted/10 border-border',
   };
 
   const typeIcons = {
@@ -208,10 +208,10 @@ function CompetitionCard({ competition, index }: { competition: any, index: numb
       transition={{ delay: index * 0.05 }}
     >
       <Link href={`/dashboard/competitions/${competition.id}`}>
-        <div className="glass p-8 rounded-[2.5rem] border border-white/5 bg-slate-900/20 hover:border-blue-500/30 hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-300 group h-full flex flex-col">
+        <div className="glass p-8 rounded-[2.5rem] border border-border/50 bg-muted/20 hover:border-blue-500/30 hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-300 group h-full flex flex-col">
           <div className="flex items-start justify-between mb-8">
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl glass border border-white/10 flex items-center justify-center text-2xl shadow-xl group-hover:scale-110 transition-transform">
+              <div className="w-14 h-14 rounded-2xl glass border border-border/50 flex items-center justify-center text-2xl shadow-xl group-hover:scale-110 transition-transform">
                 {typeIcons[competition.type as keyof typeof typeIcons]}
               </div>
               <div>
@@ -221,14 +221,14 @@ function CompetitionCard({ competition, index }: { competition: any, index: numb
               </div>
             </div>
             {competition.currentRank && (
-              <div className="text-[10px] font-black uppercase tracking-widest text-blue-400 bg-blue-500/10 px-4 py-1.5 rounded-full border border-blue-500/20 shadow-lg">
+              <div className="text-[10px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-500/10 px-4 py-1.5 rounded-full border border-emerald-500/20 shadow-lg">
                 Rank #{competition.currentRank}
               </div>
             )}
           </div>
 
           <div className="flex-1">
-            <h3 className="text-2xl font-black tracking-tight uppercase text-white mb-4 group-hover:text-blue-400 transition-colors">
+            <h3 className="text-2xl font-black tracking-tight uppercase text-foreground group-hover:text-primary transition-colors">
               {competition.title}
             </h3>
             <p className="text-slate-500 font-medium text-sm line-clamp-2 mb-8 leading-relaxed">
@@ -240,7 +240,7 @@ function CompetitionCard({ competition, index }: { competition: any, index: numb
             <div className="grid grid-cols-2 gap-4">
               <div className="glass p-4 rounded-2xl border border-white/5 bg-slate-900/30">
                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-600 mb-1">Entry Protocol</p>
-                <p className="text-lg font-black text-white">${competition.entryFee}</p>
+                <p className="text-lg font-black text-foreground">${competition.entryFee}</p>
               </div>
               <div className="glass p-4 rounded-2xl border border-white/5 bg-slate-900/30">
                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-600 mb-1">Total Payload</p>
@@ -248,20 +248,20 @@ function CompetitionCard({ competition, index }: { competition: any, index: numb
               </div>
             </div>
 
-            <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-slate-500 border-t border-white/5 pt-6">
+            <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground border-t border-border/50 pt-6">
               <div className="flex items-center gap-2">
-                <Users size={14} className="text-blue-500" />
+                <Users size={14} className="text-emerald-500" />
                 <span>{competition.participants} Nodes</span>
               </div>
               <div className="flex items-center gap-2">
-                <Calendar size={14} className="text-purple-500" />
+                <Calendar size={14} className="text-teal-500" />
                 <span>
                   {new Date(competition.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                 </span>
               </div>
             </div>
 
-            <Button className="w-full h-14 btn-gradient rounded-2xl text-xs font-black uppercase tracking-[0.2em] text-white shadow-2xl shadow-blue-500/20 opacity-0 group-hover:opacity-100 -translate-y-2 group-hover:translate-y-0 transition-all duration-300">
+            <Button className="w-full h-14 btn-gradient rounded-2xl text-xs font-black uppercase tracking-[0.2em] text-primary-foreground shadow-2xl shadow-blue-500/20 opacity-0 group-hover:opacity-100 -translate-y-2 group-hover:translate-y-0 transition-all duration-300">
               Access Neural Data
             </Button>
           </div>

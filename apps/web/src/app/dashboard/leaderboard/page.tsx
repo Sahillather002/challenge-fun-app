@@ -32,7 +32,7 @@ export default function LeaderboardPage() {
           <h1 className="text-4xl font-black tracking-tight uppercase mb-2 text-white">Neural Hub Ranking</h1>
           <p className="text-slate-500 font-bold">Real-time global biometric synchronization across all nodes</p>
         </div>
-        <div className="flex p-1.5 glass rounded-2xl border border-white/5 bg-slate-900/40">
+        <div className="flex p-1.5 glass rounded-2xl border border-border/50 bg-muted/40">
           {(['today', 'week', 'month', 'all'] as const).map((filter) => (
             <button
               key={filter}
@@ -40,8 +40,8 @@ export default function LeaderboardPage() {
               className={`
                 px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all
                 ${timeFilter === filter
-                  ? 'bg-blue-600/10 text-blue-400 shadow-inner'
-                  : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'}
+                  ? 'bg-blue-600/10 text-blue-500 shadow-inner'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'}
               `}
             >
               {filter}
@@ -56,7 +56,7 @@ export default function LeaderboardPage() {
           {
             label: 'Current Node rank',
             val: `#${currentUser?.rank}`,
-            icon: <Trophy className="text-blue-400" />,
+            icon: <Trophy className="text-emerald-500" />,
             sub: currentUser && currentUser.change !== 0 ? (
               <div className={`flex items-center gap-1 ${currentUser.change > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                 {currentUser.change > 0 ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
@@ -64,24 +64,24 @@ export default function LeaderboardPage() {
               </div>
             ) : <span className="text-slate-600">Stable frequency</span>
           },
-          { label: 'Signal Payload', val: currentUser?.score.toLocaleString(), icon: <Zap className="text-amber-400" />, sub: 'Total steps synced' },
-          { label: 'Active Continuity', val: `${currentUser?.streak} Epochs`, icon: <TrendingUp className="text-purple-400" />, sub: 'Verification streak' },
-          { label: 'Network Nodes', val: fullLeaderboard.length.toLocaleString(), icon: <Users className="text-slate-400" />, sub: 'Active global operatives' },
+          { label: 'Signal Payload', val: currentUser?.score.toLocaleString(), icon: <Zap className="text-emerald-500" />, sub: 'Total steps synced' },
+          { label: 'Active Continuity', val: `${currentUser?.streak} Epochs`, icon: <TrendingUp className="text-teal-500" />, sub: 'Verification streak' },
+          { label: 'Network Nodes', val: fullLeaderboard.length.toLocaleString(), icon: <Users className="text-muted-foreground" />, sub: 'Active global operatives' },
         ].map((stat, i) => (
           <motion.div
             key={i}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.1 }}
-            className="glass p-8 rounded-[2.5rem] border border-white/5 bg-slate-900/20 shadow-xl"
+            className="glass p-8 rounded-[2.5rem] border border-border/50 bg-muted/20 shadow-xl"
           >
             <div className="flex justify-between items-start mb-6">
-              <div className="p-4 glass rounded-2xl shadow-inner text-blue-400">
+              <div className="p-4 glass rounded-2xl shadow-inner text-emerald-500">
                 {stat.icon}
               </div>
             </div>
             <div className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-1">{stat.label}</div>
-            <div className="text-4xl font-black tracking-tighter text-white mb-2">{stat.val}</div>
+            <div className="text-4xl font-black tracking-tighter text-foreground mb-2">{stat.val}</div>
             <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500">{stat.sub}</div>
           </motion.div>
         ))}
@@ -98,14 +98,14 @@ export default function LeaderboardPage() {
         >
           <div className="relative mb-6 mx-auto w-32 h-32">
             <div className="absolute inset-0 bg-slate-400 opacity-20 rounded-full blur-2xl group-hover:opacity-40 transition-opacity" />
-            <div className="relative w-full h-full rounded-full glass border-2 border-slate-400 flex items-center justify-center text-4xl font-black text-white shadow-2xl">
+            <div className="relative w-full h-full rounded-full glass border-2 border-slate-300 dark:border-slate-400 flex items-center justify-center text-4xl font-black text-foreground dark:text-white shadow-2xl">
               {fullLeaderboard[1].avatar}
             </div>
             <div className="absolute -bottom-2 -right-2 w-12 h-12 rounded-2xl bg-slate-400 flex items-center justify-center shadow-xl">
               <Medal size={24} className="text-white" />
             </div>
           </div>
-          <h3 className="text-xl font-black uppercase tracking-tight text-white mb-1">{fullLeaderboard[1].name}</h3>
+          <h3 className="text-xl font-black uppercase tracking-tight text-foreground mb-1">{fullLeaderboard[1].name}</h3>
           <p className="text-slate-500 font-bold text-sm tracking-widest mb-4 uppercase">Neural Sub-Director</p>
           <div className="glass p-6 rounded-3xl border border-white/5 bg-slate-900/60">
             <p className="text-2xl font-black text-slate-400 tracking-tighter">#2</p>
@@ -120,19 +120,19 @@ export default function LeaderboardPage() {
           className="text-center group"
         >
           <div className="relative mb-8 mx-auto w-44 h-44">
-            <div className="absolute inset-0 bg-amber-500 opacity-20 rounded-full blur-3xl group-hover:opacity-40 transition-opacity animate-pulse" />
-            <div className="relative w-full h-full rounded-full glass border-4 border-amber-500 flex items-center justify-center text-6xl font-black text-white shadow-[0_0_60px_rgba(245,158,11,0.2)]">
+            <div className="absolute inset-0 bg-emerald-500 opacity-20 rounded-full blur-3xl group-hover:opacity-40 transition-opacity animate-pulse" />
+            <div className="relative w-full h-full rounded-full glass border-4 border-emerald-500 flex items-center justify-center text-6xl font-black text-foreground dark:text-white shadow-[0_0_60px_rgba(16,185,129,0.2)]">
               {fullLeaderboard[0].avatar}
             </div>
-            <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-16 h-16 rounded-2xl bg-[#f59e0b] flex items-center justify-center shadow-[0_0_30px_rgba(245,158,11,0.4)]">
+            <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-16 h-16 rounded-2xl bg-emerald-500 flex items-center justify-center shadow-[0_0_30px_rgba(16,185,129,0.4)]">
               <Trophy size={32} className="text-white fill-white" />
             </div>
           </div>
-          <h3 className="text-3xl font-black uppercase tracking-tighter text-white mb-2">{fullLeaderboard[0].name}</h3>
-          <p className="text-amber-500 font-black text-sm tracking-[0.3em] mb-6 uppercase">Prime Operative</p>
-          <div className="glass p-8 rounded-[2.5rem] border border-amber-500/20 bg-slate-900/60 shadow-2xl">
-            <p className="text-4xl font-black text-amber-500 tracking-tighter">#1</p>
-            <p className="text-xs font-black text-slate-500 uppercase tracking-widest">{fullLeaderboard[0].score.toLocaleString()} Signals</p>
+          <h3 className="text-3xl font-black uppercase tracking-tighter text-foreground mb-2">{fullLeaderboard[0].name}</h3>
+          <p className="text-emerald-500 font-black text-sm tracking-[0.3em] mb-6 uppercase">Prime Operative</p>
+          <div className="glass p-8 rounded-[2.5rem] border border-emerald-500/20 bg-muted/40 shadow-2xl">
+            <p className="text-4xl font-black text-emerald-500 tracking-tighter">#1</p>
+            <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">{fullLeaderboard[0].score.toLocaleString()} Signals</p>
           </div>
         </motion.div>
 
@@ -144,19 +144,19 @@ export default function LeaderboardPage() {
           className="text-center group"
         >
           <div className="relative mb-6 mx-auto w-32 h-32">
-            <div className="absolute inset-0 bg-orange-600 opacity-20 rounded-full blur-2xl group-hover:opacity-40 transition-opacity" />
-            <div className="relative w-full h-full rounded-full glass border-2 border-orange-600 flex items-center justify-center text-4xl font-black text-white shadow-2xl">
+            <div className="absolute inset-0 bg-teal-500 opacity-20 rounded-full blur-2xl group-hover:opacity-40 transition-opacity" />
+            <div className="relative w-full h-full rounded-full glass border-2 border-teal-500 flex items-center justify-center text-4xl font-black text-foreground dark:text-white shadow-2xl">
               {fullLeaderboard[2].avatar}
             </div>
-            <div className="absolute -bottom-2 -left-2 w-12 h-12 rounded-2xl bg-orange-600 flex items-center justify-center shadow-xl">
+            <div className="absolute -bottom-2 -left-2 w-12 h-12 rounded-2xl bg-teal-500 flex items-center justify-center shadow-xl">
               <Medal size={24} className="text-white" />
             </div>
           </div>
-          <h3 className="text-xl font-black uppercase tracking-tight text-white mb-1">{fullLeaderboard[2].name}</h3>
-          <p className="text-slate-500 font-bold text-sm tracking-widest mb-4 uppercase">Sector Lead</p>
-          <div className="glass p-6 rounded-3xl border border-white/5 bg-slate-900/60">
-            <p className="text-2xl font-black text-orange-600 tracking-tighter">#3</p>
-            <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest">{fullLeaderboard[2].score.toLocaleString()} Signals</p>
+          <h3 className="text-xl font-black uppercase tracking-tight text-foreground mb-1">{fullLeaderboard[2].name}</h3>
+          <p className="text-muted-foreground font-bold text-sm tracking-widest mb-4 uppercase">Sector Lead</p>
+          <div className="glass p-6 rounded-3xl border border-border/50 bg-muted/40">
+            <p className="text-2xl font-black text-teal-600 tracking-tighter">#3</p>
+            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{fullLeaderboard[2].score.toLocaleString()} Signals</p>
           </div>
         </motion.div>
       </div>
@@ -165,7 +165,7 @@ export default function LeaderboardPage() {
       <div className="space-y-4">
         <div className="flex items-center gap-4 px-8 mb-4">
           <h2 className="text-lg font-black uppercase tracking-widest text-slate-600">The Neural Grid</h2>
-          <div className="h-px bg-white/5 flex-1" />
+          <div className="h-px bg-border/50 flex-1" />
         </div>
 
         {fullLeaderboard.slice(3).map((entry, i) => (
@@ -176,8 +176,8 @@ export default function LeaderboardPage() {
             viewport={{ once: true }}
             transition={{ delay: i * 0.05 }}
             className={`flex items-center justify-between p-6 rounded-[2rem] transition-all relative group h-24 ${entry.isCurrentUser
-                ? 'bg-blue-500/10 border border-blue-500/30 shadow-[0_0_30px_rgba(59,130,246,0.1)]'
-                : 'bg-slate-900/40 border border-white/5 hover:border-white/10'
+              ? 'bg-blue-500/10 border border-blue-500/30 shadow-[0_0_30px_rgba(59,130,246,0.1)]'
+              : 'bg-muted/40 border border-border/50 hover:border-border'
               }`}
           >
             <div className="flex items-center gap-8 flex-1">
@@ -185,7 +185,7 @@ export default function LeaderboardPage() {
                 <span className="text-2xl font-black text-slate-700 tracking-tighter group-hover:text-white transition-colors">#{entry.rank}</span>
               </div>
               <div className="relative">
-                <div className="w-14 h-14 rounded-2xl glass border border-white/10 flex items-center justify-center text-2xl font-black text-white shadow-xl group-hover:scale-110 transition-transform">
+                <div className="w-14 h-14 rounded-2xl glass border border-border/50 flex items-center justify-center text-2xl font-black text-foreground dark:text-white shadow-xl group-hover:scale-110 transition-transform">
                   {entry.avatar}
                 </div>
                 {entry.streak > 20 && (
@@ -195,7 +195,7 @@ export default function LeaderboardPage() {
                 )}
               </div>
               <div className="flex-1">
-                <p className={`text-xl font-black uppercase tracking-tighter ${entry.isCurrentUser ? 'text-blue-400' : 'text-white'}`}>
+                <p className={`text-xl font-black uppercase tracking-tighter ${entry.isCurrentUser ? 'text-blue-500' : 'text-foreground'}`}>
                   {entry.name}
                   {entry.isCurrentUser && (
                     <span className="ml-4 text-[10px] bg-blue-500/20 text-blue-400 border border-blue-500/30 px-3 py-1 rounded-full">
@@ -211,7 +211,7 @@ export default function LeaderboardPage() {
 
             <div className="flex items-center gap-12">
               <div className="text-right">
-                <p className="text-3xl font-black tracking-tighter text-white">{entry.score.toLocaleString()}</p>
+                <p className="text-3xl font-black tracking-tighter text-foreground">{entry.score.toLocaleString()}</p>
                 <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Signals</p>
               </div>
               <div className="w-20 flex justify-center">

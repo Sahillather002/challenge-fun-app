@@ -37,7 +37,7 @@ const LeaderboardScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   );
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
       <Card>
         <Card.Content>
           <Title>Leaderboard</Title>
@@ -55,3 +55,6 @@ const styles = StyleSheet.create({
 });
 
 export default LeaderboardScreen;
+
+
+

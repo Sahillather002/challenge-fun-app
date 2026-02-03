@@ -90,7 +90,7 @@ const PaymentScreen = () => {
     } catch (error: any) {
       toast.error('Payment failed: ' + error.message);
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
   };
 

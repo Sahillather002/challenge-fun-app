@@ -23,16 +23,11 @@
       "package": "com.healthcompetition.app"
     },
     "web": {
-      "bundler": "webpack"
+      "bundler": "metro"
     },
     "extra": {
-      "googleFitClientId": "271265785455-2uog6f9v1ss1mvorq41hnobibvh7i5vr.apps.googleusercontent.com",
-      "eas": {
-        "projectId": "challenge-fun-app"
-      }
+      "googleFitClientId": "271265785455-2uog6f9v1ss1mvorq41hnobibvh7i5vr.apps.googleusercontent.com"
     },
-    "plugins": [
-      "expo-router"
-    ]
+    "plugins": []
   }
 }

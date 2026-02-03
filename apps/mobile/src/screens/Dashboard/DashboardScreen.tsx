@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -6,477 +6,122 @@ import {
   ScrollView,
   TouchableOpacity,
   Dimensions,
+  Image,
 } from 'react-native';
-import {
-  Card,
-  Title,
-  Paragraph,
-  Button,
-  Avatar,
-  ProgressBar,
-} from 'react-native-paper';
-import { LineChart, BarChart } from 'react-native-chart-kit';
+import { Avatar } from 'react-native-paper';
 import { useSupabaseAuth } from '../../context/SupabaseAuthContext';
-import { useCompetition } from '../../context/MockCompetitionContext';
 import { useTheme } from '../../context/ThemeContext';
-import GoogleFitCard from '../../components/GoogleFitCard';
-import GoogleFitService from '../../services/GoogleFitService';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-
-const { width } = Dimensions.get('window');
 
 const DashboardScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
-  const [currentSteps, setCurrentSteps] = useState(0);
-  const [weeklySteps, setWeeklySteps] = useState(0);
-  const [stepHistory, setStepHistory] = useState([0, 0, 0, 0, 0, 0, 0]);
-  const [isConnected, setIsConnected] = useState(false);
-  const [loading, setLoading] = useState(false);
   const { user } = useSupabaseAuth();
-  const { competitions, currentCompetition } = useCompetition();
-  const { theme } = useTheme();
-
-  const googleFitService = GoogleFitService.getInstance();
-
-  useEffect(() => {
-    // Check if Google Fit is connected and fetch real data
-    checkConnectionAndFetchData();
-  }, []);
-
-  const checkConnectionAndFetchData = async () => {
-    try {
-      const connected = await googleFitService.isAuthorizedCheck();
-      setIsConnected(connected);
-      if (connected) {
-        await fetchWeeklyData();
-      }
-    } catch (error) {
-      console.error('Error checking connection:', error);
-    }
-  };
-
-  const fetchWeeklyData = async () => {
-    setLoading(true);
-    try {
-      // Get last 7 days of step data
-      const endDate = new Date();
-      const startDate = new Date();
-      startDate.setDate(endDate.getDate() - 6); // Last 7 days including today
-
-      const weeklyData = await googleFitService.getStepsForDateRange(startDate, endDate);
-      
-      // Ensure we always have 7 days of data (fill missing days with 0)
-      const stepsArray = new Array(7).fill(0);
-      weeklyData.forEach((day, index) => {
-        if (index < 7) {
-          stepsArray[index] = day.steps;
-        }
-      });
-      
-      setStepHistory(stepsArray);
-      
-      // Calculate total weekly steps
-      const total = stepsArray.reduce((a, b) => a + b, 0);
-      setWeeklySteps(total);
-    } catch (error) {
-      console.error('Error fetching weekly data:', error);
-      // If error, keep zeros or previous data
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleStepsUpdate = (steps: number) => {
-    setCurrentSteps(steps);
-    // Also refresh weekly data when steps update
-    if (isConnected) {
-      fetchWeeklyData();
-    }
-  };
-
-  const activeCompetitions = competitions.filter(c => c.status === 'active');
-  const dailyGoal = 10000;
-  const progress = Math.min(currentSteps / dailyGoal, 1);
-
-  const chartData = {
-    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-    datasets: [
-      {
-        data: stepHistory,
-        color: (opacity = 1) => `rgba(33, 150, 243, ${opacity})`,
-        strokeWidth: 2,
-      },
-    ],
-  };
-
-  const chartConfig = {
-    backgroundColor: theme.colors.surface,
-    backgroundGradientFrom: theme.colors.surface,
-    backgroundGradientTo: theme.colors.surface,
-    decimalPlaces: 0,
-    color: (opacity = 1) => `rgba(33, 150, 243, ${opacity})`,
-    labelColor: (opacity = 1) => `rgba(66, 66, 66, ${opacity})`,
-    style: {
-      borderRadius: 16,
-    },
-    propsForDots: {
-      r: '4',
-      strokeWidth: '2',
-      stroke: theme.colors.primary,
-    },
-  };
+  const { theme, assets } = useTheme();
 
   return (
-    <ScrollView 
-      style={[styles.container, { backgroundColor: theme.colors.background }]}
-      contentContainerStyle={styles.contentContainer}
-    >
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.userInfo}>
-          <Avatar.Text 
-            size={50} 
-            label={user?.name?.charAt(0).toUpperCase() || 'U'} 
-            style={{ backgroundColor: theme.colors.primary }}
-          />
-          <View style={styles.userDetails}>
-            <Title style={styles.userName}>{user?.name}</Title>
-            <Paragraph style={[styles.userCompany, { color: theme.colors.onSurfaceVariant }]}>
-              {user?.company} • {user?.department}
-            </Paragraph>
+    <View className="flex-1 bg-background">
+      <ScrollView contentContainerStyle={{ paddingBottom: 24 }} showsVerticalScrollIndicator={false}>
+
+        {/* Header with Illustration Background */}
+        <View className="rounded-b-3xl pt-[60px] px-5 pb-5 mb-4 bg-card">
+          <View className="flex-row justify-between items-center mb-4">
+            <View>
+              <Text className="text-sm font-medium text-text-secondary">Hello,</Text>
+              <Text className="text-2xl font-extrabold mt-0.5 text-text-primary">{user?.userName || 'James Aditya'}</Text>
+            </View>
+            <Avatar.Image size={48} source={{ uri: assets.avatar }} className="border-2 border-white" />
+          </View>
+
+          {/* Illustrated Background */}
+          <View className="h-40 rounded-2xl overflow-hidden justify-center items-center mt-2 relative bg-sky-blue/30">
+            <Image
+              source={require('../../../assets/images/mountain_view.png')}
+              style={StyleSheet.absoluteFillObject}
+              resizeMode="cover"
+            />
+            <View style={styles.imageOverlay} />
+            <Text className="text-2xl font-extrabold mt-2 text-center text-white" style={{ textShadowColor: 'rgba(0, 0, 0, 0.75)', textShadowOffset: { width: -1, height: 1 }, textShadowRadius: 10 }}>Your Daily Journey</Text>
           </View>
         </View>
-        <View style={styles.headerButtons}>
-          <TouchableOpacity
-            style={[styles.headerButton, { backgroundColor: theme.colors.surfaceVariant }]}
-            onPress={() => navigation.navigate('Settings')}
-          >
-            <Icon name="cog" size={24} color={theme.colors.primary} />
-          </TouchableOpacity>
+
+        {/* Ongoing Challenge Card */}
+        <View className="mx-5 rounded-3xl overflow-hidden mb-6 bg-card shadow-sm elevation-4">
+          {/* Challenge Illustration */}
+          <View className="h-[200px] w-full bg-gray-200">
+            <Image
+              source={require('../../../assets/images/people_yoga.png')}
+              className="w-full h-full"
+              resizeMode="cover"
+            />
+            {/* Gradient-like overlay for text readability if needed, or just clean image */}
+          </View>
+
+          <View className="p-5">
+            <Text className="text-base font-bold mb-2 text-text-primary">Ongoing Challenge</Text>
+            <View className="flex-row justify-between items-center mb-2">
+              <Text className="text-xl font-extrabold text-text-primary">Become Healthy</Text>
+              <View className="px-3 py-1.5 rounded-xl bg-success/20">
+                <Text className="text-xs font-bold text-success">0%</Text>
+              </View>
+            </View>
+            <Text className="text-xs font-medium text-text-secondary">4 Challenges • 24 Days Left</Text>
+          </View>
         </View>
-      </View>
 
-      {/* Google Fit Card */}
-      <GoogleFitCard onStepsUpdate={handleStepsUpdate} navigation={navigation} />
+        {/* Challenge Progress List */}
+        <Text className="text-lg font-extrabold mx-5 mb-3 text-text-primary">Challenge Progress</Text>
 
-      {/* Today's Progress Card */}
-      <Card style={[styles.progressCard, { backgroundColor: theme.colors.surface }]}>
-        <Card.Content>
-          <View style={styles.progressHeader}>
-            <Title style={styles.progressTitle}>Today's Progress</Title>
-            <Text style={[styles.progressPercentage, { color: theme.colors.primary }]}>
-              {Math.round(progress * 100)}%
-            </Text>
+        <TouchableOpacity className="flex-row items-center mx-5 mb-3 p-4 rounded-2xl bg-card shadow-sm elevation-2">
+          <View className="w-12 h-12 rounded-xl justify-center items-center bg-warning/20">
+            <Text style={{ fontSize: 24 }}>🚶</Text>
           </View>
-          
-          <View style={styles.stepsDisplay}>
-            <Text style={[styles.stepsNumber, { color: theme.colors.primary }]}>
-              {currentSteps.toLocaleString()}
-            </Text>
-            <Text style={[styles.stepsGoal, { color: theme.colors.onSurfaceVariant }]}>
-              / {dailyGoal.toLocaleString()} steps
-            </Text>
+          <View className="flex-1 ml-3">
+            <Text className="text-sm font-bold text-text-primary">5,290 Steps</Text>
+            <Text className="text-xs font-medium mt-0.5 text-text-secondary">Step Challenge</Text>
           </View>
-
-          <ProgressBar
-            progress={progress}
-            color={theme.colors.primary}
-            style={styles.progressBar}
-          />
-
-          <View style={styles.statsRow}>
-            <View style={styles.statItem}>
-              <Icon name="fire" size={20} color="#FF6B6B" />
-              <Text style={[styles.statText, { color: theme.colors.onSurface }]}>
-                {Math.round(currentSteps * 0.04)} cal
-              </Text>
-            </View>
-            <View style={styles.statItem}>
-              <Icon name="map-marker-distance" size={20} color="#4ECDC4" />
-              <Text style={[styles.statText, { color: theme.colors.onSurface }]}>
-                {Math.round(currentSteps * 0.0008)} km
-              </Text>
-            </View>
-            <View style={styles.statItem}>
-              <Icon name="clock" size={20} color="#45B7D1" />
-              <Text style={[styles.statText, { color: theme.colors.onSurface }]}>
-                {Math.round(currentSteps / 100)} min
-              </Text>
-            </View>
+          <View className="flex-row items-center gap-2">
+            <Text className="text-sm font-bold text-warning">500pts</Text>
+            <Text className="text-text-tertiary">›</Text>
           </View>
-        </Card.Content>
-      </Card>
+        </TouchableOpacity>
 
-      {/* Weekly Steps Chart */}
-      <Card style={[styles.chartCard, { backgroundColor: theme.colors.surface }]}>
-        <Card.Content>
-          <Title style={styles.chartTitle}>Weekly Steps</Title>
-          <Text style={[styles.weeklyTotal, { color: theme.colors.primary }]}>
-            Total: {weeklySteps.toLocaleString()} steps
-          </Text>
-          
-          <LineChart
-            data={chartData}
-            width={width - 48}
-            height={200}
-            chartConfig={chartConfig}
-            bezier
-            style={styles.chart}
-          />
-        </Card.Content>
-      </Card>
-
-      {/* Active Competitions */}
-      {activeCompetitions.length > 0 && (
-        <Card style={[styles.competitionsCard, { backgroundColor: theme.colors.surface }]}>
-          <Card.Content>
-            <View style={styles.competitionsHeader}>
-              <Title style={styles.competitionsTitle}>Active Competitions</Title>
-              <TouchableOpacity onPress={() => navigation.navigate('Competition')}>
-                <Text style={[styles.viewAllText, { color: theme.colors.primary }]}>
-                  View All
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            {activeCompetitions.slice(0, 3).map((competition) => (
-              <TouchableOpacity
-                key={competition.id}
-                style={[styles.competitionItem, { backgroundColor: theme.colors.surfaceVariant }]}
-                onPress={() => navigation.navigate('Leaderboard', { competitionId: competition.id })}
-              >
-                <View style={styles.competitionInfo}>
-                  <Text style={[styles.competitionName, { color: theme.colors.onSurface }]}>
-                    {competition.name}
-                  </Text>
-                  <Text style={[styles.competitionParticipants, { color: theme.colors.onSurfaceVariant }]}>
-                    {competition.participants.length} participants
-                  </Text>
-                </View>
-                <Icon name="chevron-right" size={20} color={theme.colors.primary} />
-              </TouchableOpacity>
-            ))}
-          </Card.Content>
-        </Card>
-      )}
-
-      {/* Quick Actions */}
-      <Card style={[styles.actionsCard, { backgroundColor: theme.colors.surface }]}>
-        <Card.Content>
-          <Title style={styles.actionsTitle}>Quick Actions</Title>
-          
-          <View style={styles.actionsGrid}>
-            <TouchableOpacity
-              style={[styles.actionButton, { backgroundColor: theme.colors.surfaceVariant }]}
-              onPress={() => navigation.navigate('Competition')}
-            >
-              <Icon name="trophy" size={24} color={theme.colors.primary} />
-              <Text style={[styles.actionText, { color: theme.colors.onSurface }]}>
-                Competitions
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.actionButton, { backgroundColor: theme.colors.surfaceVariant }]}
-              onPress={() => navigation.navigate('Leaderboard')}
-            >
-              <Icon name="podium" size={24} color={theme.colors.primary} />
-              <Text style={[styles.actionText, { color: theme.colors.onSurface }]}>
-                Leaderboard
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.actionButton, { backgroundColor: theme.colors.surfaceVariant }]}
-              onPress={() => navigation.navigate('Rewards')}
-            >
-              <Icon name="gift" size={24} color={theme.colors.primary} />
-              <Text style={[styles.actionText, { color: theme.colors.onSurface }]}>
-                Rewards
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.actionButton, { backgroundColor: theme.colors.surfaceVariant }]}
-              onPress={() => navigation.navigate('Profile')}
-            >
-              <Icon name="account" size={24} color={theme.colors.primary} />
-              <Text style={[styles.actionText, { color: theme.colors.onSurface }]}>
-                Profile
-              </Text>
-            </TouchableOpacity>
+        <TouchableOpacity className="flex-row items-center mx-5 mb-3 p-4 rounded-2xl bg-card shadow-sm elevation-2">
+          <View className="w-12 h-12 rounded-xl justify-center items-center bg-info/20">
+            <Text style={{ fontSize: 24 }}>💧</Text>
           </View>
-        </Card.Content>
-      </Card>
-    </ScrollView>
+          <View className="flex-1 ml-3">
+            <Text className="text-sm font-bold text-text-primary">4 Glass of Waters</Text>
+            <Text className="text-xs font-medium mt-0.5 text-text-secondary">Hydration</Text>
+          </View>
+          <View className="flex-row items-center gap-2">
+            <Text className="text-sm font-bold text-info">200pts</Text>
+            <Text className="text-text-tertiary">›</Text>
+          </View>
+        </TouchableOpacity>
+
+        <TouchableOpacity className="flex-row items-center mx-5 mb-3 p-4 rounded-2xl bg-card shadow-sm elevation-2">
+          <View className="w-12 h-12 rounded-xl justify-center items-center bg-sunset-pink/60">
+            <Text style={{ fontSize: 24 }}>🧘</Text>
+          </View>
+          <View className="flex-1 ml-3">
+            <Text className="text-sm font-bold text-text-primary">5 Minutes</Text>
+            <Text className="text-xs font-medium mt-0.5 text-text-secondary">Breathing Exercise</Text>
+          </View>
+          <View className="flex-row items-center gap-2">
+            <Text className="text-sm font-bold text-sunset-pink">200pts</Text>
+            <Text className="text-text-tertiary">›</Text>
+          </View>
+        </TouchableOpacity>
+
+        <View style={{ height: 120 }} />
+      </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  contentContainer: {
-    padding: 16,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  userInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  userDetails: {
-    marginLeft: 12,
-  },
-  userName: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  userCompany: {
-    fontSize: 14,
-  },
-  headerButtons: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  headerButton: {
-    padding: 8,
-    borderRadius: 20,
-  },
-  notificationButton: {
-    padding: 8,
-    borderRadius: 20,
-  },
-  progressCard: {
-    marginBottom: 16,
-    elevation: 4,
-    borderRadius: 12,
-  },
-  progressHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  progressTitle: {
-    fontSize: 18,
-  },
-  progressPercentage: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  stepsDisplay: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    marginBottom: 16,
-  },
-  stepsNumber: {
-    fontSize: 32,
-    fontWeight: 'bold',
-  },
-  stepsGoal: {
-    fontSize: 16,
-  },
-  progressBar: {
-    height: 8,
-    borderRadius: 4,
-    marginBottom: 16,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-  },
-  statItem: {
-    alignItems: 'center',
-    gap: 4,
-  },
-  statText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  chartCard: {
-    marginBottom: 16,
-    elevation: 4,
-    borderRadius: 12,
-  },
-  chartTitle: {
-    fontSize: 18,
-    marginBottom: 8,
-  },
-  weeklyTotal: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 16,
-  },
-  chart: {
-    marginVertical: 8,
-    borderRadius: 16,
-  },
-  competitionsCard: {
-    marginBottom: 16,
-    elevation: 4,
-    borderRadius: 12,
-  },
-  competitionsHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  competitionsTitle: {
-    fontSize: 18,
-  },
-  viewAllText: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  competitionItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 8,
-  },
-  competitionInfo: {
-    flex: 1,
-  },
-  competitionName: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  competitionParticipants: {
-    fontSize: 12,
-    marginTop: 2,
-  },
-  actionsCard: {
-    marginBottom: 16,
-    elevation: 4,
-    borderRadius: 12,
-  },
-  actionsTitle: {
-    fontSize: 18,
-    marginBottom: 16,
-  },
-  actionsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-  },
-  actionButton: {
-    flex: 1,
-    minWidth: '45%',
-    alignItems: 'center',
-    padding: 16,
-    borderRadius: 8,
-  },
-  actionText: {
-    fontSize: 12,
-    fontWeight: '600',
-    marginTop: 8,
+  // Kept for illustration overlay positioning which is complex in tailwind without arbitrary values
+  imageOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.3)',
   },
 });
 

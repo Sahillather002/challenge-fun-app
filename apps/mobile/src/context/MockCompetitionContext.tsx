@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { Competition, StepData, LeaderboardEntry } from '../types';
 import { useSupabaseAuth } from './SupabaseAuthContext';
-import { supabaseHelpers } from '@/config/supabase';
+import { supabaseHelpers } from '../config/supabase';
 
 interface CompetitionState {
   competitions: Competition[];

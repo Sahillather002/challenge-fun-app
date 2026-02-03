@@ -86,17 +86,17 @@ const CashfreePaymentScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <Card style={[styles.card, { backgroundColor: theme.colors.surface }]}>
+    <ScrollView className="flex-1 bg-background">
+      <Card style={{ margin: 16, elevation: 4, borderRadius: 12, backgroundColor: theme.surface }}>
         <Card.Content>
-          <View style={styles.header}>
-            <Icon name="credit-card" size={24} color={theme.colors.primary} />
-            <Title style={[styles.title, { color: theme.colors.onSurface }]}>
+          <View className="flex-row items-center mb-4">
+            <Icon name="credit-card" size={24} color={theme.primary} />
+            <Title className="text-xl ml-2 text-foreground">
               Secure Payment (Cashfree)
             </Title>
           </View>
 
-          <Paragraph style={[styles.description, { color: theme.colors.onSurfaceVariant }]}>
+          <Paragraph className="mb-4 text-center text-text-secondary">
             Enter your payment details. Supports UPI, cards, net banking, and more via Cashfree.
           </Paragraph>
 
@@ -106,7 +106,7 @@ const CashfreePaymentScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
             value={amount.toString()}
             onChangeText={(text) => setAmount(parseFloat(text) || 0)}
             keyboardType="numeric"
-            style={styles.input}
+            style={{ marginBottom: 12 }}
             disabled={loading}
           />
 
@@ -114,7 +114,7 @@ const CashfreePaymentScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
             label="Description"
             value={description}
             onChangeText={setDescription}
-            style={styles.input}
+            style={{ marginBottom: 12 }}
             disabled={loading}
           />
 
@@ -124,13 +124,13 @@ const CashfreePaymentScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
             onPress={handlePayment}
             loading={loading}
             disabled={loading || !amount}
-            style={[styles.payButton, { backgroundColor: theme.colors.primary }]}
+            style={{ marginTop: 16, borderRadius: 8, backgroundColor: theme.primary }}
             icon="lock"
           >
             {loading ? 'Processing...' : `Pay ₹${amount}`}
           </Button>
 
-          <Paragraph style={[styles.note, { color: theme.colors.onSurfaceVariant }]}>
+          <Paragraph className="mt-4 text-xs text-center text-text-secondary">
             Note: Using Cashfree for free, India-optimized payments. Supports multiple payment modes.
           </Paragraph>
         </Card.Content>
@@ -149,14 +149,8 @@ const CashfreePaymentScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5' },
-  card: { margin: 16, elevation: 4, borderRadius: 12 },
-  header: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
-  title: { fontSize: 20, marginLeft: 8 },
-  description: { marginBottom: 16, textAlign: 'center' },
-  input: { marginBottom: 12 },
-  payButton: { marginTop: 16, borderRadius: 8 },
-  note: { marginTop: 16, fontSize: 12, textAlign: 'center' },
+  // Kept minimal
 });
 
 export default CashfreePaymentScreen;
+

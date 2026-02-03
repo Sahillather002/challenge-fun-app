@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/yourusername/health-competition-go/internal/models"
 	"github.com/google/uuid"
+	"github.com/yourusername/health-competition-go/internal/models"
 )
 
 type CompetitionService struct {
@@ -26,10 +26,10 @@ func NewCompetitionService(db *sql.DB, cache *CacheService) *CompetitionService 
 func (s *CompetitionService) GetCompetitions(ctx context.Context, status string, limit, offset int) ([]models.Competition, error) {
 	query := `
 		SELECT id, name, description, entry_fee, prize_pool, start_date, end_date, status, type, created_at
-		FROM competitions
+		FROM public.competitions
 		WHERE 1=1
 	`
-	
+
 	args := []interface{}{}
 	argPos := 1
 
@@ -67,7 +67,7 @@ func (s *CompetitionService) GetCompetitions(ctx context.Context, status string,
 func (s *CompetitionService) GetCompetitionByID(ctx context.Context, id string) (*models.Competition, error) {
 	query := `
 		SELECT id, name, description, entry_fee, prize_pool, start_date, end_date, status, type, created_at
-		FROM competitions
+		FROM public.competitions
 		WHERE id = $1
 	`
 
@@ -116,7 +116,7 @@ func (s *CompetitionService) CreateCompetition(ctx context.Context, req *models.
 	}
 
 	query := `
-		INSERT INTO competitions (id, name, description, entry_fee, prize_pool, start_date, end_date, status, type, created_at, creator_id)
+		INSERT INTO public.competitions (id, name, description, entry_fee, prize_pool, start_date, end_date, status, type, created_at, creator_id)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
 	`
 
@@ -145,7 +145,7 @@ func (s *CompetitionService) JoinCompetition(ctx context.Context, competitionID,
 
 	// Check if user already joined
 	var exists bool
-	checkQuery := `SELECT EXISTS(SELECT 1 FROM competition_participants WHERE competition_id = $1 AND user_id = $2)`
+	checkQuery := `SELECT EXISTS(SELECT 1 FROM public.competition_participants WHERE competition_id = $1 AND user_id = $2)`
 	if err := s.db.QueryRowContext(ctx, checkQuery, competitionID, userID).Scan(&exists); err != nil {
 		return fmt.Errorf("failed to check participation: %w", err)
 	}
@@ -156,7 +156,7 @@ func (s *CompetitionService) JoinCompetition(ctx context.Context, competitionID,
 
 	// Insert participation record
 	insertQuery := `
-		INSERT INTO competition_participants (id, competition_id, user_id, joined_at)
+		INSERT INTO public.competition_participants (id, competition_id, user_id, joined_at)
 		VALUES ($1, $2, $3, $4)
 	`
 
@@ -178,9 +178,9 @@ func (s *CompetitionService) GetUserCompetitions(ctx context.Context, userID, st
 			COALESCE(SUM(fd.steps), 0) as user_steps,
 			COALESCE(SUM(fd.calories), 0) as user_calories,
 			COALESCE(SUM(fd.distance), 0) as user_distance
-		FROM competitions c
-		INNER JOIN competition_participants cp ON c.id = cp.competition_id
-		LEFT JOIN fitness_data fd ON fd.competition_id = c.id AND fd.user_id = cp.user_id
+		FROM public.competitions c
+		INNER JOIN public.competition_participants cp ON c.id = cp.competition_id
+		LEFT JOIN public.fitness_data fd ON fd.competition_id = c.id AND fd.user_id = cp.user_id
 		WHERE cp.user_id = $1
 	`
 

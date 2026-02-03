@@ -16,7 +16,7 @@ export function Header() {
           <Input
             type="text"
             placeholder="Search competitions..."
-            className="w-full bg-slate-900/40 border border-slate-800 rounded-2xl py-2 pl-11 pr-4 text-sm text-foreground focus:outline-none focus:border-primary/50 transition-all placeholder:text-muted-foreground"
+            className="w-full bg-muted/40 border border-border rounded-2xl py-2 pl-11 pr-4 text-sm text-foreground focus:outline-none focus:border-primary/50 transition-all placeholder:text-muted-foreground"
           />
         </div>
       </div>
@@ -25,14 +25,14 @@ export function Header() {
         variant="ghost"
         size="icon"
         onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-        className="text-muted-foreground hover:text-foreground hover:bg-white/5 rounded-xl"
+        className="text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl"
       >
         <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
         <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
         <span className="sr-only">Toggle theme</span>
       </Button>
 
-      <Button variant="ghost" size="icon" className="relative text-muted-foreground hover:text-foreground hover:bg-white/5 rounded-xl">
+      <Button variant="ghost" size="icon" className="relative text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl">
         <Bell className="h-5 w-5" />
         <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-red-500 border-2 border-background" />
       </Button>
