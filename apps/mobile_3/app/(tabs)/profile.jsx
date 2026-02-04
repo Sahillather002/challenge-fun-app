@@ -11,18 +11,51 @@ import {
   BarChart3,
   Edit,
   LogOut,
+  Camera,
+  MessageSquare,
 } from "lucide-react-native";
+
 
 import { ThemedScreen } from "@/components/ui/ThemedScreen";
 import { ThemedText } from "@/components/ui/ThemedText";
 import { ThemedCard } from "@/components/ui/ThemedCard";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { useTheme } from "@/theme/useTheme";
+import { useAuth } from "@/contexts/AuthContext";
+import { api } from "@/services/api";
+import { useState, useEffect } from "react";
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const theme = useTheme();
+  const { user, signOut } = useAuth();
+  const [profile, setProfile] = useState(null);
+
+  useEffect(() => {
+    loadProfile();
+  }, []);
+
+  const loadProfile = async () => {
+    try {
+      const response = await api.getProfile();
+      setProfile(response.data);
+    } catch (error) {
+      console.error("Error loading profile:", error);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      router.replace("/auth/login");
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
+
+  const displayName = user?.user_metadata?.name || user?.email?.split('@')[0] || "User";
+  const initials = displayName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
 
   return (
     <ThemedScreen>
@@ -48,65 +81,76 @@ export default function ProfileScreen() {
             }}
           >
             <ThemedText style={{ fontSize: 32, fontWeight: "bold" }}>
-              JD
+              {initials}
             </ThemedText>
           </LinearGradient>
 
           <ThemedText style={{ fontSize: 24, fontWeight: "bold" }}>
-            John Doe
+            {profile?.name || displayName}
           </ThemedText>
+
+          {profile?.bio && (
+            <ThemedText style={{ marginTop: 8, opacity: 0.8, textAlign: "center" }}>
+              {profile.bio}
+            </ThemedText>
+          )}
 
           <ThemedText style={{ marginTop: 4, opacity: 0.6 }}>
-            @johndoe_fit
+            {user?.email}
           </ThemedText>
-
-          <TouchableOpacity style={{ marginTop: 20 }}>
-            <ThemedCard style={{ flexDirection: "row", alignItems: "center" }}>
-              <Edit size={18} color={theme.secondary} />
-              <ThemedText style={{ marginLeft: 10, fontWeight: "600" }}>
-                Edit Profile
-              </ThemedText>
-            </ThemedCard>
-          </TouchableOpacity>
         </View>
 
-        {/* Stats */}
-        <View style={{ flexDirection: "row", gap: 12, marginBottom: 40 }}>
-          <StatCard label="Wins" value="24" />
-          <StatCard label="Battles" value="67" />
-          <StatCard label="Streak" value="7" />
-        </View>
+        <MenuItem
+          icon={<Edit size={22} color={theme.secondary} />}
+          title="Edit Profile"
+          onPress={() => router.push("/(profile)/edit-profile")}
+        />
 
-        {/* Menu */}
         <MenuItem
           icon={<Users size={22} color={theme.secondary} />}
           title="Friends & Teams"
-          onPress={() => router.push("/friends")}
+          onPress={() => router.push("/(profile)/friends")}
         />
 
         <MenuItem
           icon={<BarChart3 size={22} color={theme.primary} />}
           title="Statistics"
+          onPress={() => router.push("/(profile)/statistics")}
         />
 
         <MenuItem
           icon={<Award size={22} color="#FFD700" />}
           title="Achievements"
+          onPress={() => router.push("/(profile)/achievements")}
         />
 
         <MenuItem
           icon={<Share2 size={22} color={theme.danger} />}
           title="Invite Friends"
+          onPress={() => router.push("/(profile)/invite")}
+        />
+
+        <MenuItem
+          icon={<MessageSquare size={22} color={theme.primary} />}
+          title="Snaps Inbox"
+          onPress={() => router.push("/snaps/inbox")}
+        />
+
+        <MenuItem
+          icon={<Camera size={22} color={theme.secondary} />}
+          title="Open Camera"
+          onPress={() => router.push("/camera")}
         />
 
         <MenuItem
           icon={<Settings size={22} color={theme.muted} />}
           title="Settings"
-          onPress={() => router.push("/settings")}
+          onPress={() => router.push("/(profile)/settings")}
         />
 
+
         {/* Logout */}
-        <TouchableOpacity style={{ marginTop: 30 }}>
+        <TouchableOpacity onPress={handleLogout} style={{ marginTop: 30 }}>
           <ThemedCard
             style={{
               flexDirection: "row",

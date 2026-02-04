@@ -1,20 +1,49 @@
-import { View, Text, ScrollView, TouchableOpacity } from "react-native";
+import { View, Text, ScrollView, Alert, TouchableOpacity } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
-import { Flame, Trophy, Target, TrendingUp, Bell } from "lucide-react-native";
+import { Flame, Trophy, Target, TrendingUp, Bell, Dumbbell } from "lucide-react-native";
 import { ThemedScreen } from "@/components/ui/ThemedScreen";
 import { ThemedText } from "@/components/ui/ThemedText";
 import { ThemedCard } from "@/components/ui/ThemedCard";
+import { ThemedButton } from "@/components/ui/ThemedButton";
 import { useThemeStore } from "@/theme/themeStore";
 import { useTheme } from "@/theme/useTheme";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { api } from "@/services/api";
+import { StoriesBar } from "@/components/Snap/StoriesBar";
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const theme = useTheme();
   const mode = useThemeStore((s) => s.mode);
+  const queryClient = useQueryClient();
+
+  const { data: stories = [] } = useQuery({
+    queryKey: ["stories"],
+    queryFn: () => api.getStories().then((res) => res.data),
+    staleTime: 60000,
+  });
+
+  const { data: userStats } = useQuery({
+    queryKey: ["userStats"],
+    queryFn: () => api.getStats().then((res) => res.data),
+  });
+
+  const { data: streakData } = useQuery({
+    queryKey: ["streak"],
+    queryFn: () => api.getStreak().then((res) => res.data),
+  });
+
+  const checkInMutation = useMutation({
+    mutationFn: () => api.checkIn(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["streak"] });
+      Alert.alert("Success", "Daily check-in complete!");
+    },
+  });
 
   return (
     <ThemedScreen>
@@ -42,31 +71,36 @@ export default function HomeScreen() {
                 Ready to crush your goals?
               </ThemedText>
             </View>
-            <TouchableOpacity
+            <ThemedButton
+              variant="ghost"
+              size="sm"
               onPress={() => router.push("/notifications")}
               style={{
-                backgroundColor: theme.card,
                 width: 48,
                 height: 48,
                 borderRadius: 24,
-                justifyContent: "center",
-                alignItems: "center",
+                padding: 0,
               }}
             >
-              <Bell size={20} color={theme.text} />
+              <Bell size={24} color={theme.text} />
               <View
                 style={{
                   position: "absolute",
-                  top: 8,
-                  right: 8,
-                  width: 8,
-                  height: 8,
+                  top: 12,
+                  right: 12,
+                  width: 10,
+                  height: 10,
                   backgroundColor: theme.danger,
-                  borderRadius: 4,
+                  borderRadius: 5,
+                  borderWidth: 2,
+                  borderColor: theme.card,
                 }}
               />
-            </TouchableOpacity>
+            </ThemedButton>
           </View>
+
+          {/* Stories Bar */}
+          <StoriesBar stories={stories} />
 
           {/* XP & Level Card */}
           <LinearGradient
@@ -99,7 +133,7 @@ export default function HomeScreen() {
                 <Text
                   style={{ fontSize: 32, fontWeight: "bold", color: "#fff" }}
                 >
-                  Level 12
+                  Level {userStats?.level || 1}
                 </Text>
               </View>
               <View style={{ alignItems: "flex-end" }}>
@@ -115,7 +149,7 @@ export default function HomeScreen() {
                 <Text
                   style={{ fontSize: 24, fontWeight: "bold", color: theme.secondary }}
                 >
-                  2,450
+                  {userStats?.xp?.toLocaleString() || 0}
                 </Text>
               </View>
             </View>
@@ -144,10 +178,11 @@ export default function HomeScreen() {
                   marginTop: 8,
                 }}
               >
-                750 XP to Level 13
+                {userStats?.xpToNextLevel || 1000} XP to Level {(userStats?.level || 1) + 1}
               </Text>
             </View>
           </LinearGradient>
+
 
           {/* Streak Card */}
           <ThemedCard
@@ -161,24 +196,39 @@ export default function HomeScreen() {
               style={{
                 flexDirection: "row",
                 alignItems: "center",
+                justifyContent: "space-between",
                 marginBottom: 12,
               }}
             >
-              <Flame size={28} color="#FF6B35" />
-              <ThemedText
-                style={{
-                  fontSize: 20,
-                  fontWeight: "bold",
-                  marginLeft: 12,
-                }}
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <Flame size={28} color="#FF6B35" />
+                <ThemedText
+                  style={{
+                    fontSize: 20,
+                    fontWeight: "bold",
+                    marginLeft: 12,
+                  }}
+                >
+                  {streakData?.currentStreak || 0} Day Streak! 🔥
+                </ThemedText>
+              </View>
+              <ThemedButton
+                variant={streakData?.hasCheckedInToday ? "ghost" : "primary"}
+                size="sm"
+                onPress={() => checkInMutation.mutate()}
+                disabled={checkInMutation.isPending || streakData?.hasCheckedInToday}
+                haptic="success"
               >
-                7 Day Streak! 🔥
-              </ThemedText>
+                {streakData?.hasCheckedInToday ? "Checked In" : "Check In"}
+              </ThemedButton>
             </View>
             <ThemedText style={{ fontSize: 14, opacity: 0.6 }}>
-              Keep it going! Complete today's goal to maintain your streak.
+              {streakData?.hasCheckedInToday
+                ? "You've checked in today! Come back tomorrow."
+                : "Keep it going! Check in to maintain your streak."}
             </ThemedText>
           </ThemedCard>
+
 
           {/* Daily Goal Progress */}
           <ThemedCard
@@ -247,16 +297,25 @@ export default function HomeScreen() {
             </View>
           </ThemedCard>
 
-          {/* Quick Stats */}
-          <ThemedText
-            style={{
-              fontSize: 20,
-              fontWeight: "bold",
-              marginBottom: 16,
-            }}
-          >
-            Quick Stats
-          </ThemedText>
+          {/* Quick Stats Header with Log Button */}
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+            <ThemedText style={{ fontSize: 20, fontWeight: "bold" }}>Quick Stats</ThemedText>
+            <ThemedButton
+              variant="secondary"
+              size="sm"
+              onPress={() => router.push("/workout/log")}
+              haptic="medium"
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 6,
+              }}
+            >
+              <Dumbbell size={16} color="#000" />
+              <Text style={{ fontWeight: "bold", fontSize: 12, color: "#000" }}>Log Workout</Text>
+            </ThemedButton>
+          </View>
+
           <View
             style={{
               flexDirection: "row",
@@ -475,6 +534,6 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </View>
       </ScrollView>
-    </ThemedScreen>
+    </ThemedScreen >
   );
 }

@@ -9,6 +9,8 @@ import { ThemedText } from "@/components/ui/ThemedText";
 import { ThemedCard } from "@/components/ui/ThemedCard";
 import { useTheme } from "@/theme/useTheme";
 import { useThemeStore } from "@/theme/themeStore";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/services/api";
 
 export default function CompetitionDetailsScreen() {
   const insets = useSafeAreaInsets();
@@ -16,6 +18,17 @@ export default function CompetitionDetailsScreen() {
   const { id } = useLocalSearchParams();
   const theme = useTheme();
   const mode = useThemeStore((s) => s.mode);
+
+  const { data: competition, isLoading } = useQuery({
+    queryKey: ["competition", id],
+    queryFn: () => api.getCompetition(id).then((res) => res.data),
+  });
+
+  const { data: leaderboard } = useQuery({
+    queryKey: ["leaderboard", id],
+    queryFn: () => api.getLeaderboard(id).then((res) => res.data),
+  });
+
 
   const participants = [
     { id: 1, name: "Sarah Johnson", score: 156, rank: 1 },
@@ -56,7 +69,7 @@ export default function CompetitionDetailsScreen() {
               marginBottom: 8,
             }}
           >
-            💪 Push-Up Challenge
+            {competition?.title || "💪 Push-Up Challenge"}
           </Text>
           <View
             style={{
@@ -110,7 +123,7 @@ export default function CompetitionDetailsScreen() {
                   marginTop: 4,
                 }}
               >
-                $500
+                ${competition?.prizePool || 0}
               </Text>
             </ThemedCard>
             <ThemedCard
@@ -131,7 +144,7 @@ export default function CompetitionDetailsScreen() {
                   marginTop: 4,
                 }}
               >
-                234
+                {competition?._count?.participants || 0}
               </ThemedText>
             </ThemedCard>
             <ThemedCard
@@ -186,7 +199,8 @@ export default function CompetitionDetailsScreen() {
             <ThemedText style={{ fontSize: 14, opacity: 0.6, lineHeight: 20 }}>
               • Complete as many push-ups as possible{"\n"}• Each rep must be
               recorded via camera{"\n"}• Top 10 participants win prizes{"\n"}•
-              Entry fee: 50 points{"\n"}• Competition ends in 2 hours 15 minutes
+              • Entry fee: {competition?.entryFee || 0} Coins{"\n"}•
+              Competition ends in {competition?.endTime ? new Date(competition.endTime).toLocaleDateString() : 'soon'}
             </ThemedText>
           </ThemedCard>
 
@@ -201,7 +215,7 @@ export default function CompetitionDetailsScreen() {
             Current Leaderboard
           </ThemedText>
 
-          {participants.map((participant) => (
+          {(leaderboard || participants).map((participant) => (
             <ThemedCard
               key={participant.id}
               style={{
@@ -288,7 +302,7 @@ export default function CompetitionDetailsScreen() {
             }}
           >
             <Text style={{ color: "#000", fontSize: 16, fontWeight: "bold" }}>
-              Join Battle (50 points)
+              Join Battle ({competition?.entryFee || 0} Coins)
             </Text>
           </LinearGradient>
         </TouchableOpacity>
