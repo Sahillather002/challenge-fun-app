@@ -1,0 +1,216 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id       String  @id @db.Uuid
+  email    String  @unique
+  username String  @unique
+  name     String
+  avatar   String?
+  bio      String?
+  height   String?
+  weight   String?
+  age      Int?
+
+  // Stats
+  level         Int       @default(1)
+  xp            Int       @default(0)
+  coins         Int       @default(0)
+  currentStreak Int       @default(0)
+  longestStreak Int       @default(0)
+  lastWorkout   DateTime?
+  streakFreezes Int       @default(1)
+
+  // Preferences
+  pushEnabled  Boolean @default(true)
+  reminderTime String?
+
+  //Relations
+  workouts         Workout[]
+  competitions     CompetitionParticipant[]
+  friendsInitiated Friendship[]             @relation("UserFriends")
+  friendsReceived  Friendship[]             @relation("FriendUser")
+  achievements     UserAchievement[]
+  stories          Story[]
+  sentSnaps        Snap[]                   @relation("SentSnaps")
+  receivedSnaps    Snap[]                   @relation("ReceivedSnaps")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([username])
+  @@index([email])
+}
+
+model Workout {
+  id     String @id @default(cuid())
+  userId String @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  exerciseType String
+  reps         Int?
+  duration     Int? // seconds
+  calories     Int?
+  videoUrl     String?
+  verified     Boolean @default(false)
+
+  xpEarned    Int @default(0)
+  coinsEarned Int @default(0)
+
+  competitionId String?
+  competition   Competition? @relation(fields: [competitionId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([competitionId])
+  @@index([createdAt])
+}
+
+model Competition {
+  id          String            @id @default(cuid())
+  title       String
+  description String?
+  type        CompetitionType
+  status      CompetitionStatus @default(UPCOMING)
+
+  startTime DateTime
+  endTime   DateTime
+
+  prizePool Int?
+  entryFee  Int? // in coins
+
+  participants CompetitionParticipant[]
+  workouts     Workout[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([startTime])
+}
+
+model CompetitionParticipant {
+  id            String      @id @default(cuid())
+  userId        String      @db.Uuid
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  competitionId String
+  competition   Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+
+  score    Int  @default(0)
+  rank     Int?
+  prizeWon Int?
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, competitionId])
+  @@index([competitionId])
+}
+
+model Friendship {
+  id       String @id @default(cuid())
+  userId   String @db.Uuid
+  user     User   @relation("UserFriends", fields: [userId], references: [id], onDelete: Cascade)
+  friendId String @db.Uuid
+  friend   User   @relation("FriendUser", fields: [friendId], references: [id], onDelete: Cascade)
+
+  status FriendshipStatus @default(PENDING)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, friendId])
+  @@index([userId])
+  @@index([friendId])
+}
+
+model Achievement {
+  id          String @id @default(cuid())
+  key         String @unique
+  title       String
+  description String
+  icon        String
+  xpReward    Int    @default(0)
+  coinReward  Int    @default(0)
+
+  users UserAchievement[]
+
+  @@index([key])
+}
+
+model UserAchievement {
+  id            String      @id @default(cuid())
+  userId        String      @db.Uuid
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievementId String
+  achievement   Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+
+  unlockedAt DateTime @default(now())
+
+  @@unique([userId, achievementId])
+  @@index([userId])
+}
+
+enum CompetitionType {
+  SOLO
+  ONE_V_ONE
+  GROUP
+  GLOBAL
+}
+
+enum CompetitionStatus {
+  UPCOMING
+  LIVE
+  COMPLETED
+}
+
+enum FriendshipStatus {
+  PENDING
+  ACCEPTED
+  BLOCKED
+}
+
+model Story {
+  id        String   @id @default(cuid())
+  userId    String   @db.Uuid
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mediaUrl  String
+  mediaType String // "IMAGE" | "VIDEO"
+  caption   String?
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model Snap {
+  id         String     @id @default(cuid())
+  senderId   String     @db.Uuid
+  sender     User       @relation("SentSnaps", fields: [senderId], references: [id], onDelete: Cascade)
+  receiverId String     @db.Uuid
+  receiver   User       @relation("ReceivedSnaps", fields: [receiverId], references: [id], onDelete: Cascade)
+  mediaUrl   String
+  mediaType  String // "IMAGE" | "VIDEO"
+  status     SnapStatus @default(PENDING)
+  expiresAt  DateTime
+  createdAt  DateTime   @default(now())
+
+  @@index([senderId])
+  @@index([receiverId])
+}
+
+enum SnapStatus {
+  PENDING
+  VIEWED
+  EXPIRED
+}
