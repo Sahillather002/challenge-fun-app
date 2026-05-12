@@ -1,0 +1,51 @@
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃     MONOREPO QUICK START - ONE-LINERS               ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+🚀 FIRST TIME SETUP (after cloning)
+   npm run setup:clean
+
+🔧 WHEN DEPENDENCIES BREAK
+   npm run setup:clean   # Nuclear clean + reinstall
+
+📦 INSTALL EVERYTHING FRESH
+   npm run setup:clean    # Same as above - does it all
+
+🔄 COMPLETE RESET (nuclear option)
+   npm run reset
+
+✅ CHECK MONOREPO HEALTH
+   bash scripts/health-check.sh    # Bash/WSL
+   # (PowerShell equivalent coming soon)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+DEVELOPMENT COMMANDS
+
+   npm run dev              # All services (mobile + web + backend)
+   npm run dev:web          # Web only (port 3001)
+   npm run dev:mobile       # Mobile (Expo) only
+   npm run dev:nest         # NestJS backend only
+
+   npm run build            # Build all workspaces
+   npm run test             # Test all workspaces
+   npm run lint             # Lint all workspaces
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+GIT SAFETY
+
+   git add .                # Safe - node_modules are ignored
+   git status               # Verify no internal packages listed
+   git diff --cached        # Review before committing
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+SCRIPT LOCATIONS
+
+   PowerShell:  scripts/monorepo-setup.ps1
+   Bash:        scripts/monorepo-setup.sh
+   Batch:       scripts/monorepo-setup.bat
+   Docs:        scripts/SETUP_GUIDE.md
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

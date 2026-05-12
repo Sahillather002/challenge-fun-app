@@ -1,33 +1,78 @@
 {
   "expo": {
-    "name": "HealthCompetitionApp",
-    "slug": "health-competition-app",
-    "owner": "kiroku",
+    "name": "FitBattle - Fitness Challenges",
+    "slug": "fitbattle",
     "version": "1.0.0",
     "orientation": "portrait",
-    "userInterfaceStyle": "light",
-    "platforms": [
-      "ios",
-      "android",
-      "web"
-    ],
-    "scheme": "com.healthcompetition.app",
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "icon": "./assets/images/icon.png",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.healthcompetition.app"
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSHealthShareUsageDescription": "FitBattle reads your step count and activity data to track your fitness progress",
+        "NSHealthUpdateUsageDescription": "FitBattle writes workout data to HealthKit"
+      }
     },
     "android": {
-      "package": "com.healthcompetition.app"
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.ACTIVITY_RECOGNITION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ],
+      "package": "com.fitbattle.app",
+      "googleServicesFile": "./google-services.json"
     },
+    "plugins": [
+      [
+        "expo-router",
+        {
+          "sitemap": false
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain"
+        }
+      ],
+      "expo-audio",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "useFrameworks": "static"
+          }
+        }
+      ],
+      [
+        "expo-video",
+        {
+          "supportsBackgroundPlayback": true,
+          "supportsPictureInPicture": true
+        }
+      ],
+      "expo-font",
+      "expo-secure-store"
+    ],
     "web": {
-      "bundler": "metro"
+      "bundler": "metro",
+      "favicon": "./assets/images/favicon.png"
     },
-    "extra": {
-      "googleFitClientId": "271265785455-2uog6f9v1ss1mvorq41hnobibvh7i5vr.apps.googleusercontent.com"
+    "experiments": {
+      "typedRoutes": true
     },
-    "plugins": []
+    "extra": {},
+    "runtimeVersion": {
+      "policy": "appVersion"
+    }
   }
 }

@@ -1,5 +1,5 @@
-// Shared types and utilities
-export * from './types';
-export * from './utils';
-export * from './constants';
-export * from './api';
+export * from './types/index';
+export * from './domain/index';
+export * from './utils/index';
+export * from './constants/index';
+export * from './api/index';

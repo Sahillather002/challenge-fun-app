@@ -1,27 +1,29 @@
-import { IsString, IsOptional } from 'class-validator';
+import { UserSchema } from '@health-competition/shared';
+import { z } from 'zod';
 
-export class UpdateProfileDto {
-    @IsString()
-    @IsOptional()
-    name?: string;
+/**
+ * DTO for updating user profile, derived from the shared Domain Schema.
+ * Ensures backend and frontend validation are perfectly synced.
+ */
+export const UpdateProfileSchema = UserSchema.partial().omit({ 
+  id: true, 
+  email: true, 
+  createdAt: true, 
+  updatedAt: true 
+});
 
-    @IsString()
-    @IsOptional()
-    bio?: string;
+export type IUpdateProfileDto = z.infer<typeof UpdateProfileSchema>;
 
-    @IsString()
-    @IsOptional()
-    avatar?: string;
-
-    @IsString()
-    @IsOptional()
-    height?: string;
-
-    @IsString()
-    @IsOptional()
-    weight?: string;
-
-    @IsString() // Using IsString for now because the UI sends strings like "28" or "180", but better to handle conversion
-    @IsOptional()
-    age?: string | number;
+/**
+ * Class-based DTO to satisfy NestJS decorator metadata requirements.
+ * Implements the shared domain type for strict alignment.
+ */
+export class UpdateProfileDto implements Partial<IUpdateProfileDto> {
+  name?: string;
+  username?: string;
+  avatar?: string | null;
+  bio?: string | null;
+  height?: string | null;
+  weight?: string | null;
+  age?: number | null;
 }

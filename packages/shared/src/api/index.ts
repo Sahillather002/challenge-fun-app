@@ -1,17 +1,8 @@
-import axios, { AxiosInstance } from 'axios';
+export * from './client';
 
-// API client configuration
-export function createApiClient(baseURL: string): AxiosInstance {
-  return axios.create({
-    baseURL,
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
-}
-
-// API response types
+// API response types (Aligned with Backend TransformInterceptor)
 export interface ApiResponse<T> {
+  success: boolean;
   data: T;
   message?: string;
   error?: string;
