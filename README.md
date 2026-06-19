@@ -1,11 +1,11 @@
 # 🏆 Health Competition Platform - Full Stack Monorepo
 
-A comprehensive health and fitness competition platform with beautiful **mobile (React Native)** and **web (Next.js)** applications, powered by multiple microservices. Track steps, compete with others, and win prizes!
+A comprehensive health and fitness competition platform with beautiful **mobile (React Native)** and **web (Vite/React)** applications, powered by multiple microservices. Track steps, compete with others, and win prizes!
 
 ## 🎉 **PROJECT STATUS: 100% COMPLETE**
 
 ✅ **Mobile App** - React Native with Expo (Complete)
-✅ **Web App** - Next.js 14 with TypeScript (Complete - 13 Pages)
+✅ **Web App** - Vite/React with TypeScript (Complete - refreshed theme, responsive pages, new dashboard sections)
 ✅ **Backend Services** - Go, Rust, Python, NestJS (Complete)
 ✅ **Documentation** - Comprehensive guides (Complete)
 
@@ -17,6 +17,10 @@ This React Native app enables companies to organize health competitions where em
 - Compete using Google Fit step data
 - Win cash prizes for top 3 positions
 - Track progress and achievements
+
+## 🌐 Web App Preview
+
+![FitBattle Web Home](public/web/home_page.png)
 
 ## 📱 App Screenshots
 
