@@ -1,20 +1,22 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
 
-# Run and deploy your AI Studio app
+# FitBattle Health Competition Web App
 
-This contains everything you need to run your app locally.
+This workspace contains the Vite/React web version of the FitBattle health competition app. It mirrors the mobile app experience with responsive web pages for home, health tracking, community, competitions, goals, rewards, profile, settings, and help.
 
-View your app in AI Studio: https://ai.studio/apps/drive/19gK2f6ZdbAMqqT_g_DV6f37Grg_1rjaV
+## Run locally
 
-## Run Locally
+1. Install dependencies from the monorepo root:
+   ```bash
+   npm install
+   ```
 
-**Prerequisites:**  Node.js
+2. Start the web app:
+   ```bash
+   npm run dev:web
+   ```
 
+3. Open the app at the URL shown by Vite, usually `http://localhost:3002`.
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+## Backend integration
+
+The web app uses `apps/web/lib/api.ts` to call the shared health competition backend through `@health-competition/shared`. If backend endpoints are not running, pages fall back to mobile-inspired mock data so the UI remains usable during local development.

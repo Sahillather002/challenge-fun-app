@@ -25,7 +25,7 @@ export const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title, descrip
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.1 }}
       >
-        <h1 className="text-4xl font-black mb-4">{title}</h1>
+        <h1 className="text-2xl font-black mb-4">{title}</h1>
         <p className="text-slate-400 text-lg font-medium leading-relaxed">{description}</p>
       </motion.div>
       <motion.div 

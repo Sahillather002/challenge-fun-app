@@ -1,134 +1,119 @@
 
 import React, { useState } from 'react';
 import { motion as motionBase } from 'framer-motion';
-import { User, Shield, Bell, Users, Globe, LogOut, CheckCircle2, ChevronRight, Upload } from 'lucide-react';
+import { User, Shield, Bell, Users, Globe, LogOut, Upload, CheckCircle2, ChevronRight, Smartphone } from 'lucide-react';
 
 const motion = motionBase as any;
 
-type SettingsTab = 'Profile' | 'Security' | 'Team' | 'Billing' | 'Advanced';
+type SettingsTab = 'Profile' | 'Health' | 'Notifications' | 'Privacy' | 'Devices';
+
+const settingsMenu = [
+  { id: 'Profile', label: 'Profile', icon: <User size={20}/> },
+  { id: 'Health', label: 'Health Data', icon: <Shield size={20}/> },
+  { id: 'Notifications', label: 'Notifications', icon: <Bell size={20}/> },
+  { id: 'Devices', label: 'Connected Devices', icon: <Smartphone size={20}/> },
+  { id: 'Privacy', label: 'Privacy', icon: <Globe size={20}/> },
+];
 
 export const Settings: React.FC = () => {
   const [activeTab, setActiveTab] = useState<SettingsTab>('Profile');
-
-  const menu = [
-    { id: 'Profile', icon: <User size={20}/> },
-    { id: 'Security', icon: <Shield size={20}/> },
-    { id: 'Team', icon: <Users size={20}/> },
-    { id: 'Advanced', icon: <Globe size={20}/> },
-  ];
+  const menu = settingsMenu;
 
   return (
-    <div className="p-8 space-y-12 pb-32 max-w-5xl mx-auto">
+    <div className="p-6 lg:p-10 space-y-8 pb-32 max-w-6xl mx-auto">
       <header>
-        <h1 className="text-4xl font-black tracking-tight mb-2">Platform Settings</h1>
-        <p className="text-slate-500">Configure your personal workspace and security protocols</p>
+        <p className="text-slate-400 font-black uppercase tracking-[0.35em] text-xs mb-3">Account settings</p>
+        <h1 className="text-2xl md:text-3xl font-black tracking-tight text-white">Configure Your Competition Experience</h1>
+        <p className="text-slate-400 mt-3 font-medium">Manage profile details, health data permissions, notifications, and connected devices.</p>
       </header>
 
-      <div className="flex flex-col lg:flex-row gap-12">
-        {/* Navigation Sidebar */}
-        <div className="w-full lg:w-64 space-y-2">
+      <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8">
+        <div className="space-y-2">
           {menu.map((item) => (
-            <button 
+            <button
               key={item.id}
               onClick={() => setActiveTab(item.id as SettingsTab)}
-              className={`w-full flex items-center justify-between px-6 py-4 rounded-2xl transition-all ${activeTab === item.id ? 'btn-gradient text-white shadow-xl shadow-blue-500/20' : 'glass border border-white/5 text-slate-400 hover:text-white hover:bg-white/5'}`}
+              className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl transition-all ${activeTab === item.id ? 'bg-gradient-to-r from-emerald-400 to-cyan-400 text-slate-950 font-black' : 'glass border border-white/5 text-slate-400 hover:text-white hover:bg-white/5'}`}
             >
-              <div className="flex items-center gap-4">
-                {item.icon}
-                <span className="font-bold text-sm">{item.id}</span>
-              </div>
+              <span className="flex items-center gap-3">{item.icon}<span>{item.label}</span></span>
               <ChevronRight size={16} />
             </button>
           ))}
           <div className="h-px bg-white/5 my-6" />
-          <button className="w-full flex items-center gap-4 px-6 py-4 rounded-2xl text-red-500 hover:bg-red-500/10 transition-all font-bold text-sm">
+          <button className="w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-red-400 hover:bg-red-500/10 transition-all font-black text-sm">
             <LogOut size={20} />
-            Sign Out Session
+            Sign Out
           </button>
         </div>
 
-        {/* Form Area */}
-        <div className="flex-1 glass rounded-[3rem] border border-white/10 p-10 space-y-10">
+        <div className="glass rounded-[3rem] border border-white/10 p-6 md:p-10 space-y-8">
           {activeTab === 'Profile' && (
-            <div className="space-y-10">
+            <div className="space-y-8">
               <div className="flex flex-col sm:flex-row items-center gap-8">
                 <div className="relative group">
-                  <div className="w-32 h-32 rounded-full glass border-2 border-white/10 overflow-hidden flex items-center justify-center text-4xl font-black text-slate-500 bg-slate-900 group-hover:border-blue-500 transition-all">
-                    AD
+                  <div className="w-32 h-32 rounded-full bg-gradient-to-br from-emerald-400 to-cyan-400 p-[3px]">
+                    <div className="w-full h-full rounded-full bg-slate-950 flex items-center justify-center text-2xl font-black text-white">FF</div>
                   </div>
-                  <button className="absolute bottom-1 right-1 p-2 btn-gradient rounded-xl text-white shadow-xl">
+                  <button className="absolute bottom-1 right-1 p-2 bg-gradient-to-r from-emerald-400 to-cyan-400 rounded-xl text-slate-950 shadow-xl">
                     <Upload size={16} />
                   </button>
                 </div>
                 <div>
-                  <h3 className="text-2xl font-black">Workspace Identity</h3>
-                  <p className="text-slate-500 text-sm mb-4">Your avatar is displayed in collaborative threads.</p>
-                  <button className="px-6 py-2 glass border border-white/10 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-white/5 transition-all">Remove Photo</button>
+                  <h3 className="text-2xl font-black text-white">Athlete Identity</h3>
+                  <p className="text-slate-400 text-sm mt-2">Your avatar and display name appear on leaderboards and community posts.</p>
+                  <button className="mt-4 px-5 py-3 rounded-2xl bg-white/5 border border-white/10 text-white text-sm font-black">Remove Photo</button>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Full Name</label>
-                  <input className="w-full bg-black/40 border border-white/5 rounded-2xl px-6 py-4 text-slate-200 outline-none focus:border-blue-500/50 transition-all" defaultValue="Alex Drago" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Workspace Email</label>
-                  <input className="w-full bg-black/40 border border-white/5 rounded-2xl px-6 py-4 text-slate-200 outline-none focus:border-blue-500/50 transition-all" defaultValue="alex@omnigen.ai" />
-                </div>
-                <div className="md:col-span-2 space-y-2">
-                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Organization ID</label>
-                  <div className="w-full bg-black/40 border border-white/5 rounded-2xl px-6 py-4 text-slate-500 flex justify-between items-center select-none italic">
-                    org_prod_8429_x2
-                    <CheckCircle2 size={16} className="text-green-500" />
-                  </div>
-                </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField label="Display Name" defaultValue="Fit Fighter" />
+                <FormField label="Email" defaultValue="athlete@fitbattle.app" />
+                <FormField label="Username" defaultValue="fit_fighter" />
+                <FormField label="Location" defaultValue="Global Arena" />
               </div>
-
-              <div className="pt-6">
-                <button className="btn-gradient px-10 py-4 rounded-2xl text-white font-black shadow-xl shadow-blue-500/20 hover:scale-105 transition-all">Save Changes</button>
-              </div>
+              <button className="px-8 py-4 rounded-2xl bg-gradient-to-r from-emerald-400 to-cyan-400 text-slate-950 font-black">Save Profile</button>
             </div>
           )}
 
-          {activeTab === 'Security' && (
-            <div className="space-y-10">
-              <section className="space-y-4">
-                <h3 className="text-2xl font-black">Authentication Shield</h3>
-                <p className="text-slate-400 text-sm leading-relaxed">Protect your compute resources and API credentials with multi-factor verification.</p>
-                <div className="p-6 glass border border-white/5 rounded-3xl flex items-center justify-between">
-                  <div className="flex gap-4">
-                    <div className="p-3 glass rounded-2xl text-blue-400"><Shield size={24}/></div>
-                    <div>
-                      <div className="font-bold">Two-Factor Authentication</div>
-                      <div className="text-xs text-slate-500">Standard for enterprise accounts</div>
-                    </div>
-                  </div>
-                  <button className="px-6 py-2 glass border border-green-500/20 text-green-400 font-bold rounded-xl text-xs uppercase tracking-widest">Enabled</button>
-                </div>
-              </section>
+          {activeTab === 'Health' && (
+            <div className="space-y-6">
+              <h2 className="text-2xl font-black text-white">Health Data Permissions</h2>
+              <ToggleRow title="Step Counter" desc="Allow FitBattle to read daily step data for competitions." enabled />
+              <ToggleRow title="Hydration Logging" desc="Store water intake entries against your daily goals." enabled />
+              <ToggleRow title="Calorie Estimates" desc="Use activity data to estimate calories burned." enabled />
+              <ToggleRow title="Route Tracking" desc="Allow GPS-backed cardio competitions when available." enabled={false} />
+            </div>
+          )}
 
-              <section className="space-y-4">
-                 <h3 className="text-xl font-bold">Active Sessions</h3>
-                 <div className="space-y-2">
-                   {[
-                     { os: 'macOS Sonoma', browser: 'Chrome', loc: 'San Francisco, US', active: true },
-                     { os: 'iOS 17', browser: 'Safari', loc: 'Berlin, DE', active: false },
-                   ].map((s, i) => (
-                     <div key={i} className="p-4 glass rounded-2xl border border-white/5 flex items-center justify-between">
-                        <div className="text-sm">
-                           <span className="font-bold text-slate-200">{s.os} • {s.browser}</span>
-                           <div className="text-xs text-slate-500">{s.loc} {s.active && '• Current session'}</div>
-                        </div>
-                        {s.active ? (
-                          <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                        ) : (
-                          <button className="text-xs font-black text-slate-500 hover:text-red-400">Revoke</button>
-                        )}
-                     </div>
-                   ))}
-                 </div>
-              </section>
+          {activeTab === 'Notifications' && (
+            <div className="space-y-6">
+              <h2 className="text-2xl font-black text-white">Competition Notifications</h2>
+              <ToggleRow title="Live Battle Alerts" desc="Get notified when a new competition opens." enabled />
+              <ToggleRow title="Leaderboard Moves" desc="Receive updates when your rank changes." enabled />
+              <ToggleRow title="Friend Activity" desc="See when friends complete goals or join battles." enabled />
+              <ToggleRow title="Reward Reminders" desc="Get reminders when you are close to redeeming a reward." enabled />
+            </div>
+          )}
+
+          {activeTab === 'Devices' && (
+            <div className="space-y-6">
+              <h2 className="text-2xl font-black text-white">Connected Devices</h2>
+              <DeviceRow name="iPhone Fitness Sync" status="Connected" lastSync="2 minutes ago" />
+              <DeviceRow name="Web PWA Session" status="Current" lastSync="Just now" />
+              <DeviceRow name="Wearable Band" status="Disconnected" lastSync="Yesterday" />
+              <button className="px-6 py-4 rounded-2xl bg-white/5 border border-white/10 text-white font-black">Connect New Device</button>
+            </div>
+          )}
+
+          {activeTab === 'Privacy' && (
+            <div className="space-y-6">
+              <h2 className="text-2xl font-black text-white">Privacy Controls</h2>
+              <ToggleRow title="Public Profile" desc="Show your profile on community leaderboards." enabled />
+              <ToggleRow title="Activity Visibility" desc="Let friends see your workouts and goals." enabled />
+              <ToggleRow title="Competition History" desc="Display past battles on your profile." enabled />
+              <div className="p-5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-200 leading-relaxed font-medium">
+                Health data is used only for competitions, goals, and rewards. You can disconnect devices or delete your account from this panel.
+              </div>
             </div>
           )}
         </div>
@@ -136,3 +121,41 @@ export const Settings: React.FC = () => {
     </div>
   );
 };
+
+function FormField({ label, defaultValue }: { label: string; defaultValue: string }) {
+  return (
+    <div className="space-y-2">
+      <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{label}</label>
+      <input defaultValue={defaultValue} className="w-full bg-slate-950/40 border border-white/10 rounded-2xl px-5 py-4 text-slate-200 outline-none focus:border-emerald-500/50 transition-all" />
+    </div>
+  );
+}
+
+function ToggleRow({ title, desc, enabled }: { title: string; desc: string; enabled: boolean }) {
+  return (
+    <div className="flex items-center justify-between gap-4 p-5 rounded-2xl bg-white/5 border border-white/5">
+      <div>
+        <div className="text-white font-black">{title}</div>
+        <div className="text-sm text-slate-400 mt-1 leading-relaxed">{desc}</div>
+      </div>
+      <div className={`w-14 h-8 rounded-full p-1 transition-all ${enabled ? 'bg-emerald-400' : 'bg-slate-700'}`}>
+        <div className={`w-6 h-6 rounded-full bg-white transition-all ${enabled ? 'translate-x-6' : ''}`} />
+      </div>
+    </div>
+  );
+}
+
+function DeviceRow({ name, status, lastSync }: { name: string; status: string; lastSync: string }) {
+  return (
+    <div className="flex items-center justify-between gap-4 p-5 rounded-2xl bg-white/5 border border-white/5">
+      <div className="flex items-center gap-4">
+        <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-emerald-300"><Smartphone size={22} /></div>
+        <div>
+          <div className="text-white font-black">{name}</div>
+          <div className="text-sm text-slate-400 mt-1">Last synced {lastSync}</div>
+        </div>
+      </div>
+      <div className="flex items-center gap-2 text-sm font-black text-emerald-300"><CheckCircle2 size={18} />{status}</div>
+    </div>
+  );
+}

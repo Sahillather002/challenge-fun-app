@@ -1,7 +1,7 @@
 
 {
-  "name": "OmniGen AI Platform",
-  "description": "Enterprise AI inference platform with real-time video, image, and text generation capabilities.",
+  "name": "FitBattle Health Competition",
+  "description": "Fitness battles, health goals, rewards, and community challenges.",
   "requestFramePermissions": [
     "camera",
     "microphone",
