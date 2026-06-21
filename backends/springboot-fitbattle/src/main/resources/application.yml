@@ -1,0 +1,33 @@
+server:
+  port: ${PORT:8084}
+
+spring:
+  application:
+    name: springboot-fitbattle
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/postgres}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:postgres}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: false
+    hibernate:
+      naming:
+        physical-strategy: org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+fitbattle:
+  supabase:
+    url: ${SUPABASE_URL:}
+    jwtSecret: ${SUPABASE_JWT_SECRET:local-development-jwt-secret}
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3002,http://localhost:5173,http://localhost:19006}

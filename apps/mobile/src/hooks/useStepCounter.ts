@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Pedometer } from 'expo-sensors';
 import { Platform } from 'react-native';
+import { syncService } from '../services/syncService';
 
 interface StepData {
   today: number;
@@ -34,6 +35,7 @@ export const useStepCounter = () => {
     };
 
     checkAvailability();
+    syncService.init();
   }, []);
 
   useEffect(() => {
@@ -44,11 +46,19 @@ export const useStepCounter = () => {
     const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
 
     const subscription = Pedometer.watchStepCount(result => {
-      setStepData(prev => ({ ...prev, today: result.steps }));
-    }, { startDate: startOfDay });
+      const nextSteps = result.steps;
+      setStepData(prev => ({ ...prev, today: nextSteps }));
+      const now = new Date();
+      const date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      syncService.enqueueSteps(date, nextSteps, Platform.OS);
+    });
 
     Pedometer.getStepCountAsync(startOfDay, endOfDay).then(result => {
-      setStepData(prev => ({ ...prev, today: result.steps }));
+      const nextSteps = result.steps;
+      setStepData(prev => ({ ...prev, today: nextSteps }));
+      const now = new Date();
+      const date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      syncService.enqueueSteps(date, nextSteps, Platform.OS);
     }).catch(err => {
       console.error('Error getting step count:', err);
     });
