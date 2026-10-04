@@ -17,7 +17,7 @@ This React Native app enables companies to organize health competitions where em
 - Compete using Google Fit step data
 - Win cash prizes for top 3 positions
 - Track progress and achievements
-
+- 
 ## 🌐 Web App Preview
 
 ![FitBattle Web Home](public/web/home_page.png)
